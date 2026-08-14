@@ -129,23 +129,25 @@ if os.environ.get('RAILWAY_ENVIRONMENT'):
     CORS_ALLOW_ALL_ORIGINS = True
 
 # =========================================================================
-# 🎯 ARQUITECTURA DE DATOS HÍBRIDA DE ALTA ESCALA (SOTO SYSTEM 2026)
+# 🎯 ARQUITECTURA DE DATOS CLOUD SE_GU_RA (SOTO SYSTEM 2026)
 # =========================================================================
-# Si el entorno de Railway está activo (producción cloud), usa Postgres;
-# si estamos localmente en Yaracuy, activa el búnker offline SQLite3 de forma automática.
+import dj_database_url
+import os
+
 if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('DATABASE_URL'):
-    print("☁️ [SOTO CORE]: Detectada infraestructura Cloud. Conectando a PostgreSQL en Railway...")
+    print("☁️ [SOTO CORE]: Conexión Cloud Activa. Extrayendo tubería de datos de Railway...")
     DATABASES = {
         'default': dj_database_url.config(
-            default='postgresql://postgres:nPYwXvHGDZHhWbtdBJBKOPWejCosEweG@sakura.proxy.rlwy.net:58280/railway',
-            conn_max_age=600
+            conn_max_age=600,
+            ssl_require=False
         )
     }
 else:
-    print("🔒 [SOTO CORE]: Ejecución en búnker local Offline. Activando SQLite3 interno...")
+    print("🔒 [SOTO CORE]: Ejecución Offline. Activando SQLite3 interno...")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
+
