@@ -1,0 +1,43 @@
+# =====================================================================
+# 📡 ENRUTADOR DE ACCESOS Y COMPUERTAS API - SUITE SAAS APIO (BUILD 2026)
+# Ubicación: bodega/urls.py
+# =====================================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # =====================================================================
+    # 1. INTERFAZ VISUAL (Para las pantallas HTML de la Cajera)
+    # =====================================================================
+    path('productos/', views.lista_productos, name='lista_productos'),
+    path('productos/<int:id>/', views.detalle_producto, name='detalle_producto'),
+
+    # =====================================================================
+    # 2. ENDPOINTS API REST (Para la Pasarela, el ERP y Daniela IA)
+    # =====================================================================
+    # Catálogo completo de los 53 productos para la memoria de Daniela IA
+    path('api/v1/productos/', views.lista_productos_api, name='api_lista_productos'),
+    
+    # Consulta de producto individual al pasar un código QR físico en el smartphone
+    path('api/v1/productos/<uuid:id_qr>/', views.detalle_producto_api, name='api_detalle_producto'),
+    
+    # 🧠 BUSCADOR MAESTRO EN TIEMPO REAL (SOTO SYSTEM 2026): Con barra inclinada final obligatoria
+    path('api/v1/buscador/', views.buscador_productos_api, name='api_buscador_productos'),
+
+    # 🚀 LA COMPUERTA DE CLIENTES (ONBOARDING CLOUD)
+    path('api/v1/clientes/', views.manejar_api_clientes, name='api_clientes'),
+
+    # 👑 ENDPOINT DE REGISTRO INICIAL SAAS COMERCIAL (EL CABLE DEL BOTÓN NARANJA)
+    path('api/v1/registro-inicial-saas/', views.registro_inicial_saas_api, name='registro_inicial_saas'),
+
+        # 🎯 REPARACIÓN DE ENRUTADO CORE: Sincronizamos la ruta con el método real de views.py
+    path('api/v1/procesar-transaccion/', views.procesar_transaccion, name='procesar_transaccion'),
+
+    # 🔒 LA COMPUERTA DEL ERP: Abre la compuerta para el botón de Cierre de Caja (Generar PDF)
+    path('api/v1/ejecutar-cierre-pdf/', views.ejecutar_cierre_pdf_api, name='ejecutar_cierre_pdf'),
+
+        # 📈 CAMINOS DE AUDITORÍA OPERATIVA SOTO SYSTEM (BUILD 2026)
+    path('api/v1/ejecutar-cierre-semanal/', views.ejecutar_cierre_semanal_pdf_api, name='cierre_semanal_pdf'),
+    path('api/v1/ejecutar-cierre-mensual/', views.ejecutar_cierre_mensual_pdf_api, name='cierre_mensual_pdf'),
+
+]

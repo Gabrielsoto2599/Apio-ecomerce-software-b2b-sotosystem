@@ -1,0 +1,145 @@
+# =========================================================================
+# SOTO SYSTEM ERP - NÚCLEO ESTRUCTURAL DE BASE DE DATOS (POSTGRESQL CLOUD)
+# Ubicación: bodega/models.py
+# Build: 2026 - Conexión Satelital Autónoma para Suite Apio B2B SaaS
+# =========================================================================
+import uuid
+from django.db import models
+
+
+class Categoria(models.Model):
+    """📂 Segmentación comercial para organizar el catálogo de la bodega."""
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Producto(models.Model):
+    """📦 Inventario mayorista sincronizado en vivo con el instalador de Windows."""
+    # db_index=True en campos clave acelera las consultas de la IA exponencialmente
+    id_qr = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    sku = models.CharField(max_length=30, unique=True, db_index=True)
+    nombre = models.CharField(max_length=150)
+    precio_usd = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name='productos')
+    actualizado = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.nombre} ({self.sku})"
+
+    def to_dict(self):
+        """Evita botes de memoria evaluando el string directo para el proxy de Node."""
+        return {
+            "id_qr": str(self.id_qr),
+            "sku": self.sku,
+            "nombre": self.nombre,
+            "precio_usd": float(self.precio_usd),
+            "stock": self.stock,
+            "categoria": str(self.categoria.nombre)
+        }
+
+
+class Factura(models.Model):
+    """🧾 Encabezado fiscal del mostrador administrado por el motor dual."""
+    ESTADOS = [
+        ('PENDIENTE', 'Pendiente por QR'),
+        ('PROCESADA', 'Procesada por Daniela'),
+        ('ANULADA', 'Anulada'),
+    ]
+    codigo_transaccion = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=15, choices=ESTADOS, default='PENDIENTE')
+    total_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    
+    # 📡 ADICIÓN MAESTRA: Sostiene el nombre del operador enviado por el proxy Node (Gabriel, Rosmary, etc.)
+    operador = models.CharField(max_length=100, default='Cajero_Generico')
+
+    def __str__(self):
+        return f"Apio Tx: {self.codigo_transaccion} - Operador: {self.operador} - Status: {self.estado}"
+
+
+class DetalleFactura(models.Model):
+    """📊 Renglones binarios de las mercancías añadidas al pedido por el cajero."""
+    factura = models.ForeignKey(Factura, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    cantidad = models.PositiveIntegerField()
+    precio_unitario_usd = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal_usd = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def save(self, *args, **kwargs):
+        # Asegura el cálculo matemático estricto antes de escribir en disco
+        self.subtotal_usd = self.cantidad * self.precio_unitario_usd
+        super().save(*args, **kwargs)
+
+
+class TasaCambio(models.Model):
+    """💵 Indicador cambiario oficial para transacciones multidivisa en tiempo real."""
+    precio_bcv = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Tasa BCV: {self.precio_bcv} (Actualizado: {self.fecha_actualizacion})"
+
+
+class Cliente(models.Model):
+    """🏢 ESTRUCTURA FISCAL CORPORATIVA PARA ONBOARDING B2B (SOTO SYSTEM 2026)
+    Centraliza la cartera de clientes y bodegueros directamente en PostgreSQL Railway.
+    """
+    cedula = models.CharField(max_length=30, unique=True, db_index=True)
+    nombre = models.CharField(max_length=150)
+    telefono = models.CharField(max_length=50, blank=True, null=True)
+    tipo_cliente = models.CharField(max_length=100, default='Cliente Minorista (Vecino Diario)')
+    registrado_el = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.nombre} ({self.cedula}) - {self.tipo_cliente}"
+class ConfiguracionNegocio(models.Model):
+    nombre_comercial = models.CharField(max_length=150, default="Apio Store C.A.")
+    rif = models.CharField(max_length=30, default="J-12345678-0")
+    telefono = models.CharField(max_length=50, default="0414-1234567")
+    ciudad = models.CharField(max_length=100, default="Chivacoa")
+    estado = models.CharField(max_length=100, default="Yaracuy")
+    moneda_base = models.CharField(max_length=10, default="USD")
+
+    def __str__(self):
+        return f"Configuración: {self.nombre_comercial} ({self.ciudad})"
+
+# =========================================================================
+# 📊 MATRIZ TRANSACCIONAL UNIFICADA Y HISTORIAL DEL ERP (EL PLAN DE GABRIEL 2026)
+# Ubicación: bodega/models.py
+# =========================================================================
+from django.db import models
+
+class TransaccionFactura(models.Model):
+    # Definimos la matriz de cobro del abasto venezolano
+    METODOS_PAGO = [
+        ('BIOPAGO', 'Biopago BDV'),
+        ('PUNTO', 'Punto de Venta'),
+        ('PAGO_MOVIL', 'Pago Móvil Inmediato'),
+    ]
+
+    numero_factura = models.CharField(max_length=20, unique=True)
+    fecha = models.DateTimeField(auto_now_add=True)
+    operador = models.CharField(max_length=100, default="Gabriel - Administrador Central")
+    
+    # 🎯 CORE REPAIR: Aseguramos que la base de datos guarde el valor por defecto como MINORISTA o Consumidor Final
+    cliente_identificacion = models.CharField(max_length=50, default="V-99999999 (Consumidor Final)")
+    productos_despachados = models.TextField(default="Mercancía General")
+    metodo_pago = models.CharField(max_length=20, default='BIOPAGO')
+    
+    # 📐 Campos fiscales basados en la tasa de cambio reaccionaria
+    tasa_bcv = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    total_bs = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    
+    # Mantenemos el campo JSON de respaldo por integridad de software
+    articulos_json = models.TextField(blank=True, default="[]") 
+
+    def __str__(self):
+        return f"{self.numero_factura} - {self.cliente_identificacion} ({self.total_bs} Bs.)"
+
+
+
+

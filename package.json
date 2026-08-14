@@ -1,0 +1,45 @@
+{
+  "name": "apio-b2b-sistema",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "dev": "nodemon app/server/server.cjs",
+    "front": "vite",
+    "all": "concurrently \"npm run dev\" \"npm run front\"",
+    "electron:dev": "concurrently \"npm run dev\" \"npm run front\" \"electron .\"",
+    "build-exe": "vite build && electron-builder --win portable"
+
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pg": "^8.12.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.1",
+    "@tailwindcss/vite": "^4.0.0",
+    "concurrently": "^8.2.2",
+    "electron": "^43.2.0",
+    "electron-builder": "^26.15.3",
+    "nodemon": "^3.1.0",
+    "tailwindcss": "^4.0.0",
+    "vite": "^5.4.0"
+  },
+  "build": {
+    "appId": "com.sotosystem.apioerp",
+    "productName": "Apio System Contable",
+    "directories": {
+       "output": "build-win-final"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "public/**/*",
+      "app/server/**/*"
+    ]
+  }
+}
