@@ -113,20 +113,20 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # =====================================================================
-# 🔐 CONFIGURACIÓN DE SEGURIDAD CORS PARA COMPORTAMIENTO SAAS (APIO POS - RENDER)
+# 🔐 BLINDAJE DE SEGURIDAD ABSOLUTO PARA DEMO SOTO SYSTEM (RAILWAY)
 # =====================================================================
-# 🔓 DEMOLICIÓN TOTAL DE RESTRICCIONES: Abre el acceso absoluto para tu Localhost, Expo Go y Render
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True  # 🔓 Abre las compuertas para cualquier origen externo
 CORS_ALLOW_CREDENTIALS = True
 
-# Lista de orígenes seguros permitidos por Django para el envío de formularios y cookies
+# Lista de orígenes de confianza permitidos para peticiones seguras de formularios
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
+    "http://localhost:5173", # 🎯 REPARACIÓN MAESTRA: Dale acceso a tu pestaña web actual de Chrome
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
-    "https://*.onrender.com" # Permite que cualquier subdominio de tu Render hable entre sí
+    "https://*.up.railway.app"
 ]
+
 
 # =========================================================================
 # 🎯 ARQUITECTURA DE DATOS CLOUD SEGU_RA (SOTO SYSTEM 2026)
