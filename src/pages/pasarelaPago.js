@@ -1287,7 +1287,7 @@ PasarelaPago.procesarCompraYDespachar = function() {
     const fetchNativoPuro = iframeLimpio.contentWindow.fetch;
 
     // Disparamos la ráfaga comercial usando la antena virgen aislada
-    fetchNativoPuro('http://127.0.0.1:8000/api/v1/procesar-transaccion/', {
+    fetchNativoPuro('https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payloadFactura)

@@ -271,9 +271,7 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
 
     // 2. ⏱️ GATILLO DE ACCESO ULTRA-RÁPIDO DIRECTO A LA RED DE DJANGO
     // Reutilizamos el endpoint local corregido libre del prefijo mocho 404
-    let backendBase = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-        ? "http://127.0.0.1:8000"
-        : window.location.origin;
+    let backendBase = 'https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app'
 
     // Si el campo cae a un silencio total o borrado de letras, restauramos los 53 productos
     if (terminoLimpio.length === 0) {

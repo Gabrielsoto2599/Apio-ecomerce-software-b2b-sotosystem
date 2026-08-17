@@ -48,9 +48,12 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Opcional: Blindaje extendido para solicitudes del navegador
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://*.onrender.com'
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "https://*.up.railway.app"
+    
 ]
 
 TEMPLATES = [
@@ -130,13 +133,13 @@ CSRF_TRUSTED_ORIGINS = [
 # =========================================================================
 import dj_database_url
 
-# Extrae automáticamente las credenciales de la variable DATABASE_URL inyectada en Render
+# Extrae automáticamente las credenciales de la variable DATABASE_URL interna que inyectamos
 if os.environ.get('DATABASE_URL'):
     print("☁️ [SOTO CORE]: Conexión Cloud Activa. Extrayendo tubería de datos desde Railway...")
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
-            ssl_require=False  # Permite conectar con Railway sin requerir certificados SSL estrictos de forma local
+            ssl_require=False  # Permite conectar por la red privada interna sin requerir certificados SSL estrictos
         )
     }
 else:

@@ -5,7 +5,7 @@
 import { Home } from './home.js';
 
 // 📡 ANTENA DE RED EN DISPARO DIRECTO CORREGIDA AL VACÍO
-const URL_API_SAAS = 'http://127.0.0.1:8000';
+const URL_API_SAAS = 'https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app';
 
 const AuthModulo = {
     state: {
@@ -41,7 +41,7 @@ const AuthModulo = {
         this.forzarRefrescoDeModalLocal();
     },
 
-        // =========================================================================
+    // =========================================================================
     // 🧱 BLOQUE 1 (PARTE A): CONSTRUCTOR, CAPA DE CRISTAL Y LOGIN TRADICIONAL
     // =========================================================================
     render() {
@@ -156,7 +156,7 @@ const AuthModulo = {
         return modalOverlay;
     },
     
-            // =========================================================================
+    // =========================================================================
     // 🚀 BLOQUE 2: PROCESADORES LOGICOS Y SIMULACIÓN SAAS (CONTINGENCIA 100%)
     // =========================================================================
 
