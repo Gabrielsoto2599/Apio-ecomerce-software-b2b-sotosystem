@@ -46,6 +46,30 @@ ROOT_URLCONF = 'core.urls'
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Evita que las redirecciones por falta de "/" rompan el CORS en producción
+APPEND_SLASH = False 
+
 # Opcional: Blindaje extendido para solicitudes del navegador
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
@@ -53,7 +77,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5174",
     "http://127.0.0.1:5174",
     "https://*.up.railway.app"
-    
 ]
 
 TEMPLATES = [
