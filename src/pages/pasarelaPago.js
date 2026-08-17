@@ -282,80 +282,91 @@ const INSTRUCCIONES_COBRO_BODEGA = {
 };
 
 // =========================================================================
-// INTERCEPCIÓN EN CALIENTE PARA DANIELA IA VIA WEBSOCKETS (CONMUTACIÓN CORREGIDA)
+// INTERCEPCIÓN EN CALIENTE PARA PASARELA DE PAGOS HÍBRIDA (BUILD 2026)
 // =========================================================================
-// Este listener expuesto permite que cuando Daniela reciba la instrucción por el celular
-// del tipo "El cliente quiere pagar por Pago Móvil", ella mande el evento y el frontend se sincronice.
 PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     const keyFormateada = metodoKey.toUpperCase();
     
-    // Mapeo inverso por si la IA envía la clave corta del dataset HTML
+    // Mapeo inverso unificado para las opciones de tu pasarela
     let claveDatos = keyFormateada;
     if (keyFormateada === "PAGO_MOVIL") claveDatos = "PAGO_MOVIL";
-    if (keyFormateada === "BIOPAGO_BDV") claveDatos = "BIOPAGO";
-    if (keyFormateada === "PUNTO_VENTA") claveDatos = "PUNTO";
+    if (keyFormateada === "BIOPAGO_BDV" || keyFormateada === "BIOPAGO") claveDatos = "BIOPAGO";
+    if (keyFormateada === "PUNTO_VENTA" || keyFormateada === "PUNTO") claveDatos = "PUNTO";
+    if (keyFormateada === "CASHEA") claveDatos = "CASHEA"; // 🎯 Añadido soporte oficial
 
-    if (INSTRUCCIONES_COBRO_BODEGA[claveDatos]) {
-        // 1. Sincronizamos el estado transaccional contable nativo de tu app
-        this.estadoTransaccion.metodoSeleccionado = keyFormateada;
-        
-        // 2. BUSQUEDA SELECTORES PREMIUM: Seleccionamos los botones de tu Grid en el HTML
-        const contenedorMetodos = document.getElementById('step-payment-methods');
-        if (contenedorMetodos) {
-            const botones = contenedorMetodos.querySelectorAll('button[data-metodo]');
-            const boxCaja = contenedorMetodos.querySelector('#box-instrucciones-caja');
-            const contenidoDinamico = contenedorMetodos.querySelector('#contenido-instrucciones-dinamico');
-
-            // 3. RECORRIDO VISUAL: Encendemos en VERDE NEÓN la opción elegida por Daniela IA
-            botones.forEach(btn => {
-                const metodoAttr = btn.getAttribute('data-metodo');
-                if (metodoAttr === claveDatos) {
-                    // Estado ACTIVO: Verde brillante con sombra neón
-                    btn.style.borderColor = '#10b981';
-                    btn.style.backgroundColor = '#0b1320';
-                    btn.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.25)';
-                } else {
-                    // Estado INACTIVO: Reseteo oscuro
-                    btn.style.borderColor = '#1e293b';
-                    btn.style.backgroundColor = '#030712';
-                    btn.style.boxShadow = 'none';
-                }
-            });
-
-            // 4. ANIMACIÓN DE INSTRUCCIONES: Desplegamos la caja bancaria automáticamente
-            if (boxCaja && contenidoDinamico) {
-                boxCaja.style.opacity = '0';
-                boxCaja.style.display = 'block';
-                
-                setTimeout(() => {
-                    contenidoDinamico.innerHTML = INSTRUCCIONES_COBRO_BODEGA[claveDatos].getHtmlInstructions();
-                    
-                    // Ajuste milimétrico de la lista interna
-                    const ulInterno = contenidoDinamico.querySelector('ul');
-                    if (ulInterno) {
-                        ulInterno.style.backgroundColor = '#030712';
-                        ulInterno.style.borderColor = '#1e293b';
-                        ulInterno.style.borderLeft = '3px solid #10b981';
-                        ulInterno.style.paddingLeft = '16px';
-                    }
-                    boxCaja.style.opacity = '1';
-                }, 100);
-            }
+    // 📡 DISPARADOR NATIVO AL CHASIS DE ELECTRON (Se ejecuta en paralelo a la interfaz)
+    if (claveDatos === 'CASHEA' || claveDatos === 'BIOPAGO') {
+        if (window.electronAPI && typeof window.electronAPI.abrirAppCobroLocal === 'function') {
+            window.electronAPI.abrirAppCobroLocal(claveDatos.toLowerCase());
+        } else {
+            console.log(`[Apio OS Bridge]: Invocación externa de ${claveDatos} detectada en entorno web.`);
         }
-
-        console.log(`[Daniela IA Sync]: Interfaz conmutada con éxito a -> ${keyFormateada}`);
-        
-        // 5. Le confirmamos a Daniela que la pantalla física ya está lista en el local
-        if (window.DanielaSocket && window.DanielaSocket.readyState === WebSocket.OPEN) {
-            window.DanielaSocket.send(JSON.stringify({
-                evento: "METODO_PAGO_FIJADO",
-                metodo: keyFormateada,
-                instrucciones_enviadas: INSTRUCCIONES_COBRO_BODEGA[claveDatos].datosDanielaIA
-            }));
-        }
-    } else {
-        console.error(`Método de pago no soportado por Apio: ${metodoKey}`);
     }
+
+    // 1. Sincronizamos el estado transaccional contable nativo de tu app
+    this.estadoTransaccion.metodoSeleccionado = claveDatos;
+    
+    // 2. BUSQUEDA SELECTORES PREMIUM: Seleccionamos los botones de tu Grid en el HTML
+    const contenedorMetodos = document.getElementById('step-payment-methods');
+    if (contenedorMetodos) {
+        const botones = contenedorMetodos.querySelectorAll('button[data-metodo]');
+        const boxCaja = contenedorMetodos.querySelector('#box-instrucciones-caja');
+        const contenidoDinamico = contenedorMetodos.querySelector('#contenido-instrucciones-dinamico');
+
+        // 3. RECORRIDO VISUAL: Encendemos en VERDE NEÓN la opción elegida
+        botones.forEach(btn => {
+            const metodoAttr = btn.getAttribute('data-metodo');
+            if (metodoAttr === claveDatos) {
+                // Estado ACTIVO: Verde brillante con sombra neón
+                btn.style.borderColor = '#10b981';
+                btn.style.backgroundColor = '#0b1320';
+                btn.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.25)';
+            } else {
+                // Estado INACTIVO: Reseteo oscuro
+                btn.style.borderColor = '#1e293b';
+                btn.style.backgroundColor = '#030712';
+                btn.style.boxShadow = 'none';
+            }
+        });
+
+        // 4. ANIMACIÓN DE INSTRUCCIONES: Desplegamos la caja bancaria automáticamente
+        if (boxCaja && contenidoDinamico) {
+            boxCaja.style.opacity = '0';
+            boxCaja.style.display = 'block';
+            
+            setTimeout(() => {
+                // Inyectamos texto dinámico directamente según la clave elegida
+                if (claveDatos === "CASHEA") {
+                    contenidoDinamico.innerHTML = `
+                        <div style="font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6;">
+                            <strong style="color: #10b981; text-transform: uppercase;">Pasarela Comercial Cashea:</strong>
+                            <ul style="margin: 8px 0 0 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
+                                <li>Se ha desplegado el portal oficial de <strong>Cashea Merchant</strong> en tu navegador externo.</li>
+                                <li>Ingrese el monto total facturado y procese el código QR de compra del cliente desde su smartphone.</li>
+                                <li>Una vez validado el pago en cuotas, presione el botón inferior para procesar el despacho de la mercancía.</li>
+                            </ul>
+                        </div>
+                    `;
+                } else if (INSTRUCCIONES_COBRO_BODEGA && INSTRUCCIONES_COBRO_BODEGA[claveDatos]) {
+                    contenidoDinamico.innerHTML = INSTRUCCIONES_COBRO_BODEGA[claveDatos].getHtmlInstructions();
+                } else {
+                    contenidoDinamico.innerHTML = "• Siga las pautas del punto de venta físico en el mostrador.";
+                }
+                
+                // Ajuste estético de la lista interna
+                const ulInterno = contenidoDinamico.querySelector('ul');
+                if (ulInterno) {
+                    ulInterno.style.backgroundColor = '#030712';
+                    ulInterno.style.borderColor = '#1e293b';
+                    ulInterno.style.borderLeft = '3px solid #10b981';
+                    ulInterno.style.paddingLeft = '16px';
+                }
+                boxCaja.style.opacity = '1';
+            }, 100);
+        }
+    }
+
+    console.log(`[Apio Pasarela Sync]: Interfaz conmutada con éxito a -> ${claveDatos}`);
 };
 
        // =========================================================================
