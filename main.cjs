@@ -37,12 +37,16 @@ ipcMain.on('abrir-app-cobro', (_, metodo) => { // 🎯 Usamos "_" para indicar q
         console.log(`[Apio OS Bridge]: Desplegando portal web de Cashea Merchant.`);
         
     } else if (metodo === 'biopago') {
-        // ☝️ BIOPAGO LOCAL EXEC: Ejecuta el aplicativo nativo de Windows (Ajusta la ruta exacta)
-        const rutaBiopago = '"C:\\Program Files\\Biopago\\biopago.exe"'; 
+        console.log(`[Apio OS Bridge]: Invocando ejecutable nativo de Biopago BDV...`);
         
-        exec(rutaBiopago, (error) => {
+        // ☝️ RUTA EXACTA DETECTADA EN LA AUDITORÍA DE PROPIEDADES
+        const rutaRealBiopago = '"C:\\BiopagoBDV\\Biopago.exe"'; 
+        
+        exec(rutaRealBiopago, (error) => {
             if (error) {
-                console.error(`[Apio OS Bridge]: No se pudo abrir Biopago. Verifique si está instalado:`, error);
+                console.error(`[Apio OS Bridge]: Error al levantar Biopago. Verifique los permisos del sistema:`, error);
+            } else {
+                console.log(`[Apio OS Bridge]: ¡Biopago BDV ejecutado con éxito de forma nativa!`);
             }
         });
     }
