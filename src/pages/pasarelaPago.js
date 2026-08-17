@@ -292,14 +292,37 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     if (keyFormateada === "PAGO_MOVIL") claveDatos = "PAGO_MOVIL";
     if (keyFormateada === "BIOPAGO_BDV" || keyFormateada === "BIOPAGO") claveDatos = "BIOPAGO";
     if (keyFormateada === "PUNTO_VENTA" || keyFormateada === "PUNTO") claveDatos = "PUNTO";
-    if (keyFormateada === "CASHEA") claveDatos = "CASHEA"; // 🎯 Añadido soporte oficial
+    if (keyFormateada === "CASHEA") claveDatos = "CASHEA"; // 🎯 Soporte oficial
 
-    // 📡 DISPARADOR NATIVO AL CHASIS DE ELECTRON (Se ejecuta en paralelo a la interfaz)
+    // =========================================================================
+    // 📡 DISPARADOR NATIVO AL CHASIS DE ELECTRON + RESPALDO WEB INMEDIATO
+    // =========================================================================
     if (claveDatos === 'CASHEA' || claveDatos === 'BIOPAGO') {
+        
+        // 1. Intento por la vía expuesta oficial del preload.cjs
         if (window.electronAPI && typeof window.electronAPI.abrirAppCobroLocal === 'function') {
+            console.log(`[Apio Linker]: Enviando señal nativa al chasis para: ${claveDatos}`);
             window.electronAPI.abrirAppCobroLocal(claveDatos.toLowerCase());
-        } else {
-            console.log(`[Apio OS Bridge]: Invocación externa de ${claveDatos} detectada en entorno web.`);
+        } 
+        // 2. Intento directo alternativo por ipcRenderer
+        else if (window.require) {
+            try {
+                const { ipcRenderer } = window.require('electron');
+                ipcRenderer.send('abrir-app-cobro', claveDatos.toLowerCase());
+            } catch (err) {
+                console.log("[Apio Linker]: Falló canal ipcRenderer alternativo:", err);
+            }
+        } 
+        // 3. Log de entorno web
+        else {
+            console.log(`[Apio OS Bridge]: Ejecución externa de ${claveDatos} en navegador.`);
+        }
+
+        // 🚀 FULMINANTE: Si el método elegido es CASHEA, forzamos la apertura web directa.
+        // Esto garantiza que si el puente nativo de Electron parpadea, la URL abra de todas formas.
+        if (claveDatos === 'CASHEA') {
+            console.log("[Apio Linker]: Lanzando portal oficial de Cashea Merchant...");
+            window.open('https://merchants.cashea.app/', '_blank');
         }
     }
 
