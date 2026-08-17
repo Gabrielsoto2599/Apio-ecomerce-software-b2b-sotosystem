@@ -41,11 +41,12 @@ def detalle_producto(request, id):
 # =====================================================================
 # 🔍 ENDPOINT API DEL BUSCADOR REACTIVO INMUNE A TILDES (BUILD 2026)
 # =====================================================================
-def buscador_productos_api(request): # 🎯 Sincronizado exactamente con urls.py
+def buscador_productos_api(request):
     """
     Filtra el catálogo completo de la bodega en la RAM del servidor.
     Muerde concordancias por iniciales, nombres o categorías sin importar acentos.
     """
+    # Captura la ráfaga que manda el .exe (ej: ?q=cafe)
     termino_crudo = request.GET.get('q', '').strip()
     
     # Conseguimos todo el inventario mayorista real desde PostgreSQL
@@ -57,9 +58,10 @@ def buscador_productos_api(request): # 🎯 Sincronizado exactamente con urls.py
         # Saneamos el término que digitó el cajero o inyectó Daniela por voz
         terminoSaneado = eliminar_tildes_python(termino_crudo).lower()
         
+        # Filtramos en la RAM comparando ambos lados desinfectados de tildes
         productos_filtrados = []
         for prod in todos_los_productos:
-            # 🛡️ Blindaje contra valores None de la base de datos cloud
+            # 🛡️ Blindaje contra valores None de la base de datos cloud en Railway
             nombre_saneado = eliminar_tildes_python(prod.nombre or "").lower()
             categoria_saneada = eliminar_tildes_python(prod.categoria or "").lower()
             sku_saneado = (prod.sku or "").lower().strip()
@@ -71,7 +73,7 @@ def buscador_productos_api(request): # 🎯 Sincronizado exactamente con urls.py
                 terminoSaneado == sku_saneado):
                 productos_filtrados.append(prod)
 
-    # Construimos el cargamento JSON limpio
+    # Construimos el cargamento JSON limpio con las propiedades originales intactas
     lista_json = []
     for prod in productos_filtrados:
         lista_json.append({
@@ -84,6 +86,7 @@ def buscador_productos_api(request): # 🎯 Sincronizado exactamente con urls.py
         })
         
     return JsonResponse(lista_json, safe=False)
+
 
 # =====================================================================
 # 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
