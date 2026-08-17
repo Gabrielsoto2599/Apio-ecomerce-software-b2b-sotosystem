@@ -1319,26 +1319,36 @@ PasarelaPago.procesarCompraYDespachar = function() {
         articulos: carritoActual
     };
 
-        // 🚀 BYPASS INDESTRUCTIBLE SOTO SYSTEM: Extraemos el fetch nativo del motor del navegador
-    // Creamos un entorno limpio aislado de las mutaciones de requests.js o 200.js
+        // 🚀 BYPASS PURIFICADO SOTO SYSTEM (CORREGIDO): Forzamos el origen correcto en el iframe
     const iframeLimpio = document.createElement('iframe');
+    
+    // El secreto: Forzamos a que el iframe comparta exactamente el mismo origen de tu app local
+    iframeLimpio.src = window.location.origin; 
     iframeLimpio.style.display = 'none';
     document.body.appendChild(iframeLimpio);
+    
+    // Extraemos el fetch virgen una vez acoplado el origen
     const fetchNativoPuro = iframeLimpio.contentWindow.fetch;
 
-    // Disparamos la ráfaga comercial usando la antena virgen aislada
-    fetchNativoPuro('https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/', {
+    const endpointRailway = 'https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+
+    fetchNativoPuro(endpointRailway, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
         body: JSON.stringify(payloadFactura)
     })
-
     .then(respuesta => {
         if (!respuesta.ok) throw new Error("Rebote de red en el búnker de Django");
         return respuesta.json();
     })
     .then(data => {
-        print("✅ [SOTO DATABASE SUCCESS]: Venta asentada en PostgreSQL Railway:", data);
+        console.log("✅ [SOTO DATABASE SUCCESS]: Venta asentada en PostgreSQL Railway:", data);
+        
+        // Remueve el iframe de la memoria una vez usado para mantener la RAM limpia
+        document.body.removeChild(iframeLimpio);
         
         const nroFacturaReal = data.numero_factura || `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
         const horaActual = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
