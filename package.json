@@ -1,7 +1,7 @@
 {
   "name": "apio-b2b-sistema",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "main.cjs",
   "scripts": {
     "dev": "nodemon app/server/server.cjs",
     "front": "vite",
