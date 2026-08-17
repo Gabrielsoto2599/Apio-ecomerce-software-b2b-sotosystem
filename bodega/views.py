@@ -41,12 +41,11 @@ def detalle_producto(request, id):
 # =====================================================================
 # 🔍 ENDPOINT API DEL BUSCADOR REACTIVO INMUNE A TILDES (BUILD 2026)
 # =====================================================================
-def buscar_productos_mostrador(request):
+def buscador_productos_api(request): # 🎯 Sincronizado exactamente con urls.py
     """
     Filtra el catálogo completo de la bodega en la RAM del servidor.
     Muerde concordancias por iniciales, nombres o categorías sin importar acentos.
     """
-    # Captura la ráfaga que manda el .exe (ej: ?q=cafe)
     termino_crudo = request.GET.get('q', '').strip()
     
     # Conseguimos todo el inventario mayorista real desde PostgreSQL
@@ -56,14 +55,14 @@ def buscar_productos_mostrador(request):
         productos_filtrados = todos_los_productos
     else:
         # Saneamos el término que digitó el cajero o inyectó Daniela por voz
-        terminoSaneado = eliminar_tildes_python(termino_crudo)
+        terminoSaneado = eliminar_tildes_python(termino_crudo).lower()
         
-        # Filtramos en la RAM comparando ambos lados desinfectados de tildes
         productos_filtrados = []
         for prod in todos_los_productos:
-            nombre_saneado = eliminar_tildes_python(prod.nombre)
-            categoria_saneada = eliminar_tildes_python(prod.categoria)
-            sku_saneado = prod.sku.lower().strip() if prod.sku else ""
+            # 🛡️ Blindaje contra valores None de la base de datos cloud
+            nombre_saneado = eliminar_tildes_python(prod.nombre or "").lower()
+            categoria_saneada = eliminar_tildes_python(prod.categoria or "").lower()
+            sku_saneado = (prod.sku or "").lower().strip()
             
             # 🎯 PRECISIÓN ATÓMICA: Compara por iniciales, coincidencia interna o SKU
             if (terminoSaneado in nombre_saneado or 
@@ -72,16 +71,16 @@ def buscar_productos_mostrador(request):
                 terminoSaneado == sku_saneado):
                 productos_filtrados.append(prod)
 
-    # Construimos el cargamento JSON limpio con las propiedades originales intactas
+    # Construimos el cargamento JSON limpio
     lista_json = []
     for prod in productos_filtrados:
         lista_json.append({
             "id": prod.id,
-            "sku": prod.sku,
-            "nombre": prod.nombre,
-            "categoria": prod.categoria,
-            "precio_usd": float(prod.precio_usd),
-            "stock": prod.stock
+            "sku": prod.sku or "",
+            "nombre": prod.nombre or "Producto sin nombre",
+            "categoria": prod.categoria or "General",
+            "precio_usd": float(prod.precio_usd or 0.0),
+            "stock": prod.stock or 0
         })
         
     return JsonResponse(lista_json, safe=False)

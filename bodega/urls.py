@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/v1/productos/<uuid:id_qr>/', views.detalle_producto_api, name='api_detalle_producto'),
     
     # 🧠 BUSCADOR MAESTRO EN TIEMPO REAL (SOTO SYSTEM 2026): Con barra inclinada final obligatoria
-    path('api/v1/buscador/', views.buscador_productos_api, name='api_buscador_productos'),
+    path('api/v1/buscador/', views.buscar_productos_mostrador, name='api_buscador_productos'),
 
     # 🚀 LA COMPUERTA DE CLIENTES (ONBOARDING CLOUD)
     path('api/v1/clientes/', views.manejar_api_clientes, name='api_clientes'),
