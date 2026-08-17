@@ -36,20 +36,22 @@ ipcMain.on('abrir-app-cobro', (_, metodo) => { // 🎯 Usamos "_" para indicar q
         shell.openExternal('https://merchants.cashea.app/');
         console.log(`[Apio OS Bridge]: Desplegando portal web de Cashea Merchant.`);
         
-    } else if (metodo === 'biopago') {
-        console.log(`[Apio OS Bridge]: Invocando ejecutable nativo de Biopago BDV...`);
+            } else if (metodo === 'biopago') {
+        console.log(`[Apio OS Bridge]: Invocando Biopago fijando el directorio raíz...`);
         
-        // ☝️ RUTA EXACTA DETECTADA EN LA AUDITORÍA DE PROPIEDADES
-        const rutaRealBiopago = '"C:\\BiopagoBDV\\Biopago.exe"'; 
+        // 🎯 Forzamos a PowerShell a iniciar el proceso de forma aislada e independiente de Electron
+        const comandoPowerShell = "powershell -Command \"Start-Process 'C:\\BiopagoBDV\\Biopago.exe' -Verb RunAs\"";
         
-        exec(rutaRealBiopago, (error) => {
+        // 🛡️ El secreto de ingeniería: Forzamos a Node.js a pararse DENTRO de la carpeta del banco
+        exec(comandoPowerShell, { cwd: 'C:\\BiopagoBDV' }, (error) => {
             if (error) {
-                console.error(`[Apio OS Bridge]: Error al levantar Biopago. Verifique los permisos del sistema:`, error);
+                console.error(`[Apio OS Bridge]: Error al lanzar el proceso elevado:`, error);
             } else {
-                console.log(`[Apio OS Bridge]: ¡Biopago BDV ejecutado con éxito de forma nativa!`);
+                console.log(`[Apio OS Bridge]: Orden de ejecución despachada correctamente.`);
             }
         });
     }
+
 });
 
 app.whenReady().then(() => {
