@@ -425,7 +425,7 @@ Home.renderMasterHeader = function() {
                        // ⏱️ PARCHE DE DEBOUNCE SANEADO: Consulta a Django sin romper el layout visual
             temporizadorBusqueda = setTimeout(() => {
                 // 🎯 CONTROL ABSOLUTO: Inyectamos la URL rígida integral hacia Django
-                let urlApi = `https://apio-ecomerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=${encodeURIComponent(termino.trim())}`;
+                let urlApi = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=${encodeURIComponent(termino.trim())}`;
 
                 
                 console.log(`📡 [Buscador Apio POS]: Consultando backend local -> ${urlApi}`);

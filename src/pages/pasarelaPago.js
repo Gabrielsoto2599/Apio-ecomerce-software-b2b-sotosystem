@@ -356,7 +356,7 @@ if (claveDatos === "PAGO_MOVIL_QR") {
     const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
 
     // 3. Construimos la URL limpia que visitará el cliente en su smartphone
-    const urlCelular = "http://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
+    const urlCelular = "https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
 
     // 4. Inyectamos la estructura HTML dejando el lienzo <canvas> listo abajo de los botones
     contenidoDinamico.innerHTML = `
@@ -453,7 +453,7 @@ PasarelaPago.iniciarEscuchaCaptureCelular = function(txId, botonDespachar) {
     window.intervaloValidacionQR = setInterval(() => {
         
         // 🎯 PARCHE MAESTRO: Forzamos la barra diagonal "/" al puro final de la ruta dinámica
-        const urlVerificacion = `https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/verificar-pago-movil/${txId}/`;
+        const urlVerificacion = `https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/verificar-pago-movil/${txId}/`;
 
         fetch(urlVerificacion, { method: 'GET' })
         .then(res => {
