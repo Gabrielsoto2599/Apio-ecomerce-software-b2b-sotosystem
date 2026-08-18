@@ -30,14 +30,25 @@ urlpatterns = [
     # 👑 ENDPOINT DE REGISTRO INICIAL SAAS COMERCIAL (EL CABLE DEL BOTÓN NARANJA)
     path('api/v1/registro-inicial-saas/', views.registro_inicial_saas_api, name='registro_inicial_saas'),
 
-        # 🎯 REPARACIÓN DE ENRUTADO CORE: Sincronizamos la ruta con el método real de views.py
+    # 🎯 REPARACIÓN DE ENRUTADO CORE: Sincronizamos la ruta con el método real de views.py
     path('api/v1/procesar-transaccion/', views.procesar_transaccion, name='procesar_transaccion'),
 
     # 🔒 LA COMPUERTA DEL ERP: Abre la compuerta para el botón de Cierre de Caja (Generar PDF)
     path('api/v1/ejecutar-cierre-pdf/', views.ejecutar_cierre_pdf_api, name='ejecutar_cierre_pdf'),
 
-        # 📈 CAMINOS DE AUDITORÍA OPERATIVA SOTO SYSTEM (BUILD 2026)
+    # 📈 CAMINOS DE AUDITORÍA OPERATIVA SOTO SYSTEM (BUILD 2026)
     path('api/v1/ejecutar-cierre-semanal/', views.ejecutar_cierre_semanal_pdf_api, name='cierre_semanal_pdf'),
     path('api/v1/ejecutar-cierre-mensual/', views.ejecutar_cierre_mensual_pdf_api, name='cierre_mensual_pdf'),
 
+    # =====================================================================
+    # 📱 COMPUERTAS HÍBRIDAS: PAGO MÓVIL QR ASÍNCRONO (NÚCLEO MAYORISTA 2026)
+    # =====================================================================
+    # A. Interfaz web a la que entra el cliente escaneando el QR con su teléfono
+    path('pago-movil-cliente/', views.pago_movil_cliente, name='pago_movil_cliente'),
+
+    # B. API que recibe el capture físico desde el smartphone y lo codifica a Base64 en Postgres
+    path('api/v1/subir-capture/<str:tx_id>/', views.subir_capture_api, name='api_subir_capture'),
+
+    # C. API de consulta cíclica a la que Electron (pasarelaPago.js) interroga cada 3 segundos
+    path('api/v1/verificar-pago-movil/<str:tx_id>/', views.verificar_pago_movil_api, name='api_verificar_pago_movil'),
 ]

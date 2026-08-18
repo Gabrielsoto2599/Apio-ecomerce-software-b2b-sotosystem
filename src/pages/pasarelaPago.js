@@ -409,6 +409,52 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     console.log(`[Apio Pasarela Sync]: Conmutado a -> ${claveDatos}`);
 };
 
+// =========================================================================
+// 🔄 MOTOR DE ESCUCHA ASÍNCRONA CORREGIDO (LÍNEA 449)
+// =========================================================================
+PasarelaPago.iniciarEscuchaCaptureCelular = function(txId, botonDespachar) {
+    console.log(`📡 [SOTO NET]: Antena de escucha activada para Transacción ID: ${txId}`);
+
+    if (window.intervaloValidacionQR) {
+        clearInterval(window.intervaloValidacionQR);
+    }
+
+    window.intervaloValidacionQR = setInterval(() => {
+        
+        // 🎯 PARCHE MAESTRO: Forzamos la barra diagonal "/" al puro final de la ruta dinámica
+        const urlVerificacion = `https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/verificar-pago-movil/${txId}/`;
+
+        fetch(urlVerificacion, { method: 'GET' })
+        .then(res => {
+            if (!res.ok) throw new Error("Servidor no responde");
+            return res.json();
+        })
+        .then(data => {
+            if (data.capture_recibido === true) {
+                console.log("✅ [SOTO VALIDATION SUCCESS]: ¡Capture de Pago Móvil detectado en Railway!");
+                clearInterval(window.intervaloValidacionQR);
+
+                if (botonDespachar) {
+                    botonDespachar.disabled = false;
+                    botonDespachar.style.opacity = '1';
+                    botonDespachar.style.cursor = 'pointer';
+                    botonDespachar.style.backgroundColor = '#0b1320';
+                    botonDespachar.style.borderColor = '#10b981';
+                    botonDespachar.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.4)';
+                    botonDespachar.innerText = "Aceptar y Despachar Mercancía (✔ Pago Validado)";
+                }
+
+                PasarelaPago.estadoTransaccion.captureBase64 = data.capture_base64;
+            }
+        })
+        .catch(err => {
+            // Este es el log de la línea 449 que vemos en tu captura de pantalla
+            console.log(`[SOTO NET STATUS]: Escuchando señales... (${err.message})`);
+        });
+
+    }, 3000);
+};
+
        // =========================================================================
 // BLOQUE 2-A: SELECTOR PREMIUM CON IMÁGENES BANCARIAS VENEZOLANAS (VERDE NEÓN)
 // =========================================================================

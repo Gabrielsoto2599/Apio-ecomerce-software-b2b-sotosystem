@@ -768,3 +768,101 @@ def ejecutar_cierre_mensual_pdf_api(request):
     except Exception as e:
         return HttpResponse(f"Fallo Mensual: {str(e)}", status=500, content_type="text/plain")
 
+import json
+import base64
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from .models import Factura
+
+# =========================================================================
+# 1. 📱 INTERFAZ PREMIUM WEB PARA EL CELULAR DEL CLIENTE
+# =========================================================================
+def pago_movil_cliente(request):
+    """
+    Renderiza la mini-plantilla web optimizada para smartphones.
+    Recibe el identificador único por parámetro GET (?tx=123456)
+    """
+    tx_id = request.GET.get('tx', '')
+    contexto = {
+        'tx_id': tx_id,
+        'banco': 'Banesco (0134)',
+        'telefono': '0412-5555555',
+        'rif': 'J-300000000'
+    }
+    # Esta vista renderizará un HTML limpio en el teléfono (lo crearemos en el siguiente paso)
+    return render(request, 'bodega/pago_movil_formulario.html', contexto)
+
+
+# =========================================================================
+# 2. 📡 API: PROCESADOR Y CONVERTIDOR DE IMAGEN A BASE64
+# =========================================================================
+@csrf_exempt  # 🔓 Exento de CSRF para permitir la ráfaga directa desde el navegador móvil
+def subir_capture_api(request, tx_id):
+    """
+    Recibe el archivo físico de la foto desde el celular, lo codifica 
+    en Base64 y asienta el registro inmutable en PostgreSQL Railway.
+    """
+    if request.method == 'POST':
+        try:
+            # Buscamos o creamos la factura temporal en la base de datos
+            # Nota: Si tu Electron genera un ID numérico aleatorio, podemos buscarlo 
+            # de forma elástica o por el código_transaccion según corresponda.
+            # Para este laboratorio, buscaremos por ID o crearemos un registro base.
+            factura, created = Factura.objects.get_or_create(
+                id=int(tx_id) if tx_id.isdigit() else 1,
+                defaults={'estado': 'PENDIENTE', 'metodo_pago': 'PAGO_MOVIL_QR'}
+            )
+
+            # Capturamos el archivo binario enviado por el formulario del smartphone
+            archivo_imagen = request.FILES.get('capture_file')
+            if not archivo_imagen:
+                return JsonResponse({'status': 'error', 'message': 'No se cargó ningún archivo de imagen.'}, status=400)
+
+            # 🧠 LA JUGADA ARQUITECTÓNICA: Leemos los bytes del archivo y los pasamos a Base64
+            imagen_bytes = archivo_imagen.read()
+            base64_encoded = base64.b64encode(imagen_bytes).decode('utf-8')
+            
+            # Formateamos el string con el prefijo MIME para que el navegador sepa pintarlo directo en las devoluciones
+            tipo_contenido = archivo_imagen.content_type
+            string_data_uri = f"data:{tipo_contenido};base64,{base64_encoded}"
+
+            # Seteamos los campos maestros en la base de datos de Railway
+            factura.metodo_pago = 'PAGO_MOVIL_QR'
+            factura.capture_base64 = string_data_uri
+            factura.capture_recibido = True
+            factura.save()
+
+            print(f"☁️ [SOTO BACKEND SUCCESS]: Capture asentado con éxito para Tx ID: {tx_id}")
+            return JsonResponse({'status': 'success', 'message': '¡Comprobante procesado exitosamente en Railway!'})
+
+        except Exception as e:
+            print(f"❌ [SOTO BACKEND CRITICAL]: Error en subida: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido.'}, status=405)
+
+
+# =========================================================================
+# 3. 🔄 API: ENDPOINT DE ESCUCHA CONTINUA PARA TU APP DE ELECTRON (.EXE)
+# =========================================================================
+def verificar_pago_movil_api(request, tx_id):
+    """
+    Responde cíclicamente a las consultas fetch de segundo plano de tu pasarelaPago.js
+    """
+    try:
+        # Buscamos la factura en PostgreSQL usando una consulta elástica tolerante a pruebas
+        id_busqueda = int(tx_id) if tx_id.isdigit() else 1
+        factura = Factura.objects.filter(id=id_busqueda).first()
+
+        if factura:
+            return JsonResponse({
+                'capture_recibido': factura.capture_recibido,
+                'capture_base64': factura.capture_base64 if factura.capture_recibido else None
+            })
+        else:
+            # Respaldo para entorno de desarrollo local (Simulación de escucha activa si no existe el ID)
+            return JsonResponse({'capture_recibido': False, 'message': 'Esperando inicialización de factura...'})
+
+    except Exception as e:
+        return JsonResponse({'capture_recibido': False, 'error': str(e)}, status=500)
