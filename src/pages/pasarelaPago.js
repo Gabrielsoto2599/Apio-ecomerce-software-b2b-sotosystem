@@ -2,6 +2,7 @@
 // BLOQUE 0: CONFIGURACIÓN INTEGRAL DEL ENTORNO DE PASARELA (APIO CORE)
 // =========================================================================
 import { Home } from './home.js';
+import * as QRCode from 'qrcode'; 
 
 const PasarelaPago = {
     // Propiedad mutable global para tu calculadora manual o API del BCV
@@ -338,8 +339,10 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             boxCaja.style.opacity = '0';
             boxCaja.style.display = 'block';
             
-            setTimeout(() => {
-                if (claveDatos === "PAGO_MOVIL_QR") {
+            setTimeout(() => {// =========================================================================
+// 📱 CASO 4: PAGO MÓVIL CON VALIDACIÓN DE QR ASÍNCRONO NATIVO (CANVAS)
+// =========================================================================
+if (claveDatos === "PAGO_MOVIL_QR") {
     
     // 1. Congelamos inmediatamente el botón de despacho por seguridad
     if (botonDespachar) {
@@ -349,21 +352,19 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
         botonDespachar.innerText = "⏳ Esperando Comprobante desde Celular...";
     }
 
-    // 2. Definimos la ID única de la orden de compra (Toma la de tu estado o genera un random)
+    // 2. Definimos la ID única de la orden de compra
     const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
 
     // 3. Construimos la URL limpia que visitará el cliente en su smartphone
     const urlCelular = "https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
 
-    // 4. Generamos el enlace definitivo para el gráfico QR de Google Charts usando codificación segura
-    const urlImagenQR = "https://chart.googleapis.com/chart?chs=140x140&cht=qr&chl=" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
-
-         // 5. 🚀 INYECCIÓN NATURAL PLANA ABAJO DE LOS BOTONES
+    // 4. Inyectamos la estructura HTML dejando el lienzo <canvas> listo abajo de los botones
     contenidoDinamico.innerHTML = `
         <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-            <!-- Bloque del QR Dinámico -->
-            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 130px; height: 130px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
-                <img src="${urlImagenQR}" alt="Escanear Pago" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+            <!-- Bloque del QR Nativo por Canvas -->
+            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
+                <!-- Usamos la misma etiqueta canvas que usó Daniela IA -->
+                <canvas id="soto-dynamic-desktop-qr" style="width: 120px !important; height: 120px !important; display: block;"></canvas>
             </div>
             <!-- Datos de Pago Móvil de la Farmacia -->
             <div style="flex: 1; font-size: 13px; line-height: 1.6; color: #ffffff;">
@@ -378,10 +379,36 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
         </div>
     `;
 
-                    // 6. 📡 LA ANTENA AL FINAL: Activamos el bucle de escucha SOLO después de pintar la interfaz visual
-    PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
+    // 5. 🚀 EL AJUSTE MAESTRO: Respiro de 400ms para asegurar que el canvas exista en el DOM
+    setTimeout(() => {
+        try {
+            const canvasQR = document.getElementById('soto-dynamic-desktop-qr');
+            
+            if (canvasQR && typeof QRCode !== 'undefined') {
+                // Forzamos el renderizado de la matriz usando tu URL de Pago Móvil real
+                QRCode.toCanvas(canvasQR, urlCelular, {
+                    width: 120,
+                    margin: 0,
+                    color: { dark: '#030712', light: '#FFFFFF' }, // Fondo oscuro a juego con tu app
+                    errorCorrectionLevel: 'H'
+                }, function (error) {
+                    if (error) console.error("❌ [SOTO QR ERROR]:", error);
+                });
+                
+                console.log("📡 [SOTO NET]: Matriz de puntos QR inyectada con éxito en el canvas.");
+            } else {
+                console.warn("⚠️ [SOTO NET]: Esperando que el Canvas o la librería QRCode se acoplen en RAM.");
+            }
+        } catch (err) {
+            console.error("❌ [SOTO CRITICAL]: Fallo en la inyección de tinta del QR:", err.message);
+        }
+    }, 400);
 
-                } else {
+    // 6. 📡 LA ANTENA DE CONTROL: Activamos el bucle de escucha asíncrona hacia Railway
+    PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
+}
+    
+         else {
                     // Resto de métodos de pago (Punto, Cashea, Biopago) -> Liberan el botón de despacho al instante
                     if (botonDespachar) {
                         botonDespachar.disabled = false;
