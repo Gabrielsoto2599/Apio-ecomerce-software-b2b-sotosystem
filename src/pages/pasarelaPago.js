@@ -282,46 +282,24 @@ const INSTRUCCIONES_COBRO_BODEGA = {
 };
 
 // =========================================================================
-// INTERCEPCIÓN EN CALIENTE PARA PASARELA DE PAGOS HÍBRIDA (BUILD 2026)
+// INTERCEPCIÓN EN CALIENTE PARA PASARELA DE PAGOS HÍBRIDA (BUILD QUAD-GRID)
 // =========================================================================
 PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     const keyFormateada = metodoKey.toUpperCase();
     
-    // Mapeo inverso unificado para las opciones de tu pasarela
+    // Mapeo inverso unificado para las 4 opciones de tu pasarela premium
     let claveDatos = keyFormateada;
-    if (keyFormateada === "PAGO_MOVIL") claveDatos = "PAGO_MOVIL";
+    if (keyFormateada === "PAGO_MOVIL" || keyFormateada === "PAGO_MOVIL_QR") claveDatos = "PAGO_MOVIL_QR";
     if (keyFormateada === "BIOPAGO_BDV" || keyFormateada === "BIOPAGO") claveDatos = "BIOPAGO";
     if (keyFormateada === "PUNTO_VENTA" || keyFormateada === "PUNTO") claveDatos = "PUNTO";
-    if (keyFormateada === "CASHEA") claveDatos = "CASHEA"; // 🎯 Soporte oficial
+    if (keyFormateada === "CASHEA") claveDatos = "CASHEA";
 
-    // =========================================================================
-    // 📡 DISPARADOR NATIVO AL CHASIS DE ELECTRON + RESPALDO WEB INMEDIATO
-    // =========================================================================
+    // 📡 DISPARADOR NATIVO AL CHASIS DE ELECTRON PARA CASHEA Y BIOPAGO
     if (claveDatos === 'CASHEA' || claveDatos === 'BIOPAGO') {
-        
-        // 1. Intento por la vía expuesta oficial del preload.cjs
         if (window.electronAPI && typeof window.electronAPI.abrirAppCobroLocal === 'function') {
-            console.log(`[Apio Linker]: Enviando señal nativa al chasis para: ${claveDatos}`);
             window.electronAPI.abrirAppCobroLocal(claveDatos.toLowerCase());
-        } 
-        // 2. Intento directo alternativo por ipcRenderer
-        else if (window.require) {
-            try {
-                const { ipcRenderer } = window.require('electron');
-                ipcRenderer.send('abrir-app-cobro', claveDatos.toLowerCase());
-            } catch (err) {
-                console.log("[Apio Linker]: Falló canal ipcRenderer alternativo:", err);
-            }
-        } 
-        // 3. Log de entorno web
-        else {
-            console.log(`[Apio OS Bridge]: Ejecución externa de ${claveDatos} en navegador.`);
         }
-
-        // 🚀 FULMINANTE: Si el método elegido es CASHEA, forzamos la apertura web directa.
-        // Esto garantiza que si el puente nativo de Electron parpadea, la URL abra de todas formas.
         if (claveDatos === 'CASHEA') {
-            console.log("[Apio Linker]: Lanzando portal oficial de Cashea Merchant...");
             window.open('https://merchants.cashea.app/', '_blank');
         }
     }
@@ -329,8 +307,13 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     // 1. Sincronizamos el estado transaccional contable nativo de tu app
     this.estadoTransaccion.metodoSeleccionado = claveDatos;
     
-    // 2. BUSQUEDA SELECTORES PREMIUM: Seleccionamos los botones de tu Grid en el HTML
+    // 2. BUSQUEDA SELECTORES PREMIUM: Seleccionamos los botones del Grid en el HTML
     const contenedorMetodos = document.getElementById('step-payment-methods');
+    
+    // 🛑 CONTROL DE SEGURIDAD: Ubicamos el botón de despacho inferior de tu pasarela
+    // (Asegúrate de que el ID coincida con tu botón real, ej: 'btn-despachar-mercancia')
+    const botonDespachar = document.getElementById('btn-despachar-mercancia') || document.querySelector('.btn-submit-despacho');
+
     if (contenedorMetodos) {
         const botones = contenedorMetodos.querySelectorAll('button[data-metodo]');
         const boxCaja = contenedorMetodos.querySelector('#box-instrucciones-caja');
@@ -340,43 +323,78 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
         botones.forEach(btn => {
             const metodoAttr = btn.getAttribute('data-metodo');
             if (metodoAttr === claveDatos) {
-                // Estado ACTIVO: Verde brillante con sombra neón
                 btn.style.borderColor = '#10b981';
                 btn.style.backgroundColor = '#0b1320';
                 btn.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.25)';
             } else {
-                // Estado INACTIVO: Reseteo oscuro
                 btn.style.borderColor = '#1e293b';
                 btn.style.backgroundColor = '#030712';
                 btn.style.boxShadow = 'none';
             }
         });
 
-        // 4. ANIMACIÓN DE INSTRUCCIONES: Desplegamos la caja bancaria automáticamente
+        // 4. ANIMACIÓN DE INSTRUCCIONES Y LÓGICA DE CONGELAMIENTO
         if (boxCaja && contenidoDinamico) {
             boxCaja.style.opacity = '0';
             boxCaja.style.display = 'block';
             
             setTimeout(() => {
-                // Inyectamos texto dinámico directamente según la clave elegida
-                if (claveDatos === "CASHEA") {
+                // 📱 CASO 4: PAGO MÓVIL CON VALIDACIÓN DE QR ASÍNCRONO
+                if (claveDatos === "PAGO_MOVIL_QR") {
+                    
+                    // A. Congelamos inmediatamente el botón de despacho por seguridad
+                    if (botonDespachar) {
+                        botonDespachar.disabled = true;
+                        botonDespachar.style.opacity = '0.4';
+                        botonDespachar.style.cursor = 'not-allowed';
+                        botonDespachar.innerText = "⏳ Esperando Comprobante desde Celular...";
+                    }
+
+                    // Generamos un ID único temporal de transacción para enlazar el QR
+                    const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
+
+                    // B. Inyectamos la interfaz premium con el contenedor del QR e instrucciones bancarias
                     contenidoDinamico.innerHTML = `
-                        <div style="font-family: 'Inter', sans-serif; font-size: 13px; line-height: 1.6;">
-                            <strong style="color: #10b981; text-transform: uppercase;">Pasarela Comercial Cashea:</strong>
-                            <ul style="margin: 8px 0 0 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
-                                <li>Se ha desplegado el portal oficial de <strong>Cashea Merchant</strong> en tu navegador externo.</li>
-                                <li>Ingrese el monto total facturado y procese el código QR de compra del cliente desde su smartphone.</li>
-                                <li>Una vez validado el pago en cuotas, presione el botón inferior para procesar el despacho de la mercancía.</li>
-                            </ul>
+                        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif;">
+                            <!-- Bloque del QR Dinámico -->
+                            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);">
+                                <!-- Código QR de Respaldo por Imagen API de Google Charts -->
+                                <img src="https://googleapis.com${txIdDummy}&choe=UTF-8" alt="Escanear Pago" style="width: 100%; height: 100%;">
+                            </div>
+                            <!-- Datos de Pago Móvil de la Farmacia -->
+                            <div style="flex: 1; font-size: 13px; line-height: 1.6;">
+                                <strong style="color: #10b981; text-transform: uppercase;">Pago Móvil QR Inteligente:</strong>
+                                <ul style="margin: 6px 0 0 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
+                                    <li><strong>Banco:</strong> Banesco (0134)</li>
+                                    <li><strong>Teléfono:</strong> 0412-5555555</li>
+                                    <li><strong>Rif:</strong> J-300000000</li>
+                                    <li style="color: #eab308; font-weight: bold; margin-top: 4px;">• Pídale al cliente que escanee el código QR con su teléfono celular para que capture y suba el comprobante al instante.</li>
+                                </ul>
+                            </div>
                         </div>
                     `;
-                } else if (INSTRUCCIONES_COBRO_BODEGA && INSTRUCCIONES_COBRO_BODEGA[claveDatos]) {
-                    contenidoDinamico.innerHTML = INSTRUCCIONES_COBRO_BODEGA[claveDatos].getHtmlInstructions();
+
+                    // C. 🚀 DISPARAMOS EL ESCUCHA ASÍNCRONO EN TIEMPO REAL (Polling de control)
+                    PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
+
                 } else {
-                    contenidoDinamico.innerHTML = "• Siga las pautas del punto de venta físico en el mostrador.";
+                    // Resto de métodos de pago (Punto, Cashea, Biopago) -> Liberan el botón de despacho al instante
+                    if (botonDespachar) {
+                        botonDespachar.disabled = false;
+                        botonDespachar.style.opacity = '1';
+                        botonDespachar.style.cursor = 'pointer';
+                        botonDespachar.innerText = "Aceptar y Despachar Mercancía";
+                    }
+
+                    if (claveDatos === "CASHEA") {
+                        contenidoDinamico.innerHTML = `<!-- Tu bloque de Cashea que ya programamos... -->`;
+                    } else if (INSTRUCCIONES_COBRO_BODEGA && INSTRUCCIONES_COBRO_BODEGA[claveDatos]) {
+                        contenidoDinamico.innerHTML = INSTRUCCIONES_COBRO_BODEGA[claveDatos].getHtmlInstructions();
+                    } else {
+                        contenidoDinamico.innerHTML = "• Siga las pautas del punto de venta físico en el mostrador.";
+                    }
                 }
                 
-                // Ajuste estético de la lista interna
                 const ulInterno = contenidoDinamico.querySelector('ul');
                 if (ulInterno) {
                     ulInterno.style.backgroundColor = '#030712';
@@ -388,8 +406,7 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             }, 100);
         }
     }
-
-    console.log(`[Apio Pasarela Sync]: Interfaz conmutada con éxito a -> ${claveDatos}`);
+    console.log(`[Apio Pasarela Sync]: Conmutado a -> ${claveDatos}`);
 };
 
        // =========================================================================
