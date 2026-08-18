@@ -339,43 +339,47 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             boxCaja.style.display = 'block';
             
             setTimeout(() => {
-                // 📱 CASO 4: PAGO MÓVIL CON VALIDACIÓN DE QR ASÍNCRONO
                 if (claveDatos === "PAGO_MOVIL_QR") {
-                    
-                    // A. Congelamos inmediatamente el botón de despacho por seguridad
-                    if (botonDespachar) {
-                        botonDespachar.disabled = true;
-                        botonDespachar.style.opacity = '0.4';
-                        botonDespachar.style.cursor = 'not-allowed';
-                        botonDespachar.innerText = "⏳ Esperando Comprobante desde Celular...";
-                    }
+    
+    // 1. Congelamos inmediatamente el botón de despacho por seguridad
+    if (botonDespachar) {
+        botonDespachar.disabled = true;
+        botonDespachar.style.opacity = '0.4';
+        botonDespachar.style.cursor = 'not-allowed';
+        botonDespachar.innerText = "⏳ Esperando Comprobante desde Celular...";
+    }
 
-                    // Generamos un ID único temporal de transacción para enlazar el QR
-                    const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
+    // 2. Definimos la ID única de la orden de compra (Toma la de tu estado o genera un random)
+    const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
 
-                    // B. Inyectamos la interfaz premium con el contenedor del QR e instrucciones bancarias
-                    contenidoDinamico.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif;">
-                            <!-- Bloque del QR Dinámico -->
-                            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);">
-                                <!-- Código QR de Respaldo por Imagen API de Google Charts -->
-                                <img src="https://googleapis.com?chs=140x140&cht=qr&chl=https://railway.app${txIdDummy}&choe=UTF-8" alt="Escanear Pago" style="width: 100%; height: 100%;">
-                            </div>
-                            <!-- Datos de Pago Móvil de la Farmacia -->
-                            <div style="flex: 1; font-size: 13px; line-height: 1.6;">
-                                <strong style="color: #10b981; text-transform: uppercase;">Pago Móvil QR Inteligente:</strong>
-                                <ul style="margin: 6px 0 0 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
-                                    <li><strong>Banco:</strong> Banesco (0134)</li>
-                                    <li><strong>Teléfono:</strong> 0412-5555555</li>
-                                    <li><strong>Rif:</strong> J-300000000</li>
-                                    <li style="color: #eab308; font-weight: bold; margin-top: 4px;">• Pídale al cliente que escanee el código QR con su teléfono celular para que capture y suba el comprobante al instante.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    `;
+    // 3. Construimos la URL limpia que visitará el cliente en su smartphone
+    const urlCelular = "https://railway.app" + txIdDummy;
 
-                    // C. 🚀 DISPARAMOS EL ESCUCHA ASÍNCRONO EN TIEMPO REAL (Polling de control)
-                    PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
+    // 4. Generamos el enlace definitivo para el gráfico QR de Google Charts usando codificación segura
+    const urlImagenQR = "https://googleapis.com" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
+
+    // 5. 🚀 INYECCIÓN LIMPIA: Usamos comillas invertidas puras asegurando que renderice el contenedor blanco
+    contenidoDinamico.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%;">
+            <!-- Bloque del QR Dinámico -->
+            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
+                <img src="${urlImagenQR}" alt="Escanear Pago" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+            </div>
+            <!-- Datos de Pago Móvil de la Farmacia -->
+            <div style="flex: 1; font-size: 13px; line-height: 1.6; color: #ffffff;">
+                <strong style="color: #10b981; text-transform: uppercase; display: block; margin-bottom: 4px;">Pago Móvil QR Inteligente:</strong>
+                <ul style="margin: 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
+                    <li><strong>Banco:</strong> Banesco (0134)</li>
+                    <li><strong>Teléfono:</strong> 0412-5555555</li>
+                    <li><strong>Rif:</strong> J-300000000</li>
+                    <li style="color: #eab308; font-weight: bold; margin-top: 6px; list-style-type: none; margin-left: -16px;">• Pídale al cliente que escanee el código QR con su teléfono celular para que capture y suba el comprobante al instante.</li>
+                </ul>
+            </div>
+        </div>
+    `;
+
+                    // 6. 📡 LA ANTENA AL FINAL: Activamos el bucle de escucha SOLO después de pintar la interfaz visual
+    PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
 
                 } else {
                     // Resto de métodos de pago (Punto, Cashea, Biopago) -> Liberan el botón de despacho al instante
