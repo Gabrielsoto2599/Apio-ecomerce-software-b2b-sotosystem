@@ -9,7 +9,21 @@ const WebSocket = require('ws');
 const { Pool } = require('pg');
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+    origin: [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173'
+        // Aquí posteriormente agregaremos el dominio
+        // de producción del frontend
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 
 // 📊 CONEXIÓN MAESTRA AL POSTGRESQL DE RAILWAY DESDE LA PC

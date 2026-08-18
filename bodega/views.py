@@ -797,72 +797,114 @@ def pago_movil_cliente(request):
 # =========================================================================
 # 2. 📡 API: PROCESADOR Y CONVERTIDOR DE IMAGEN A BASE64
 # =========================================================================
-@csrf_exempt  # 🔓 Exento de CSRF para permitir la ráfaga directa desde el navegador móvil
+@csrf_exempt
 def subir_capture_api(request, tx_id):
-    """
-    Recibe el archivo físico de la foto desde el celular, lo codifica 
-    en Base64 y asienta el registro inmutable en PostgreSQL Railway.
-    """
-    if request.method == 'POST':
-        try:
-            # Buscamos o creamos la factura temporal en la base de datos
-            # Nota: Si tu Electron genera un ID numérico aleatorio, podemos buscarlo 
-            # de forma elástica o por el código_transaccion según corresponda.
-            # Para este laboratorio, buscaremos por ID o crearemos un registro base.
-            factura, created = Factura.objects.get_or_create(
-                id=int(tx_id) if tx_id.isdigit() else 1,
-                defaults={'estado': 'PENDIENTE', 'metodo_pago': 'PAGO_MOVIL_QR'}
-            )
+    if request.method != 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Método no permitido.'
+        }, status=405)
 
-            # Capturamos el archivo binario enviado por el formulario del smartphone
-            archivo_imagen = request.FILES.get('capture_file')
-            if not archivo_imagen:
-                return JsonResponse({'status': 'error', 'message': 'No se cargó ningún archivo de imagen.'}, status=400)
+    try:
+        factura = Factura.objects.filter(
+            codigo_transaccion=str(tx_id)
+        ).first()
 
-            # 🧠 LA JUGADA ARQUITECTÓNICA: Leemos los bytes del archivo y los pasamos a Base64
-            imagen_bytes = archivo_imagen.read()
-            base64_encoded = base64.b64encode(imagen_bytes).decode('utf-8')
-            
-            # Formateamos el string con el prefijo MIME para que el navegador sepa pintarlo directo en las devoluciones
-            tipo_contenido = archivo_imagen.content_type
-            string_data_uri = f"data:{tipo_contenido};base64,{base64_encoded}"
+        if not factura:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'No existe la transacción {tx_id}.'
+            }, status=404)
 
-            # Seteamos los campos maestros en la base de datos de Railway
-            factura.metodo_pago = 'PAGO_MOVIL_QR'
-            factura.capture_base64 = string_data_uri
-            factura.capture_recibido = True
-            factura.save()
+        archivo_imagen = request.FILES.get('capture_file')
 
-            print(f"☁️ [SOTO BACKEND SUCCESS]: Capture asentado con éxito para Tx ID: {tx_id}")
-            return JsonResponse({'status': 'success', 'message': '¡Comprobante procesado exitosamente en Railway!'})
+        if not archivo_imagen:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'No se cargó ningún archivo de imagen.'
+            }, status=400)
 
-        except Exception as e:
-            print(f"❌ [SOTO BACKEND CRITICAL]: Error en subida: {str(e)}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-            
-    return JsonResponse({'status': 'error', 'message': 'Método no permitido.'}, status=405)
+        imagen_bytes = archivo_imagen.read()
+        base64_encoded = base64.b64encode(imagen_bytes).decode('utf-8')
 
+        tipo_contenido = archivo_imagen.content_type or 'image/jpeg'
+
+        factura.metodo_pago = 'PAGO_MOVIL_QR'
+        factura.capture_base64 = (
+            f"data:{tipo_contenido};base64,{base64_encoded}"
+        )
+        factura.capture_recibido = True
+        factura.save(
+            update_fields=[
+                'metodo_pago',
+                'capture_base64',
+                'capture_recibido'
+            ]
+        )
+
+        print(
+            f"☁️ [SOTO BACKEND SUCCESS]: "
+            f"Capture asentado para Tx: {tx_id}"
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': '¡Comprobante procesado exitosamente!'
+        })
+
+    except Exception as e:
+        print(
+            f"❌ [SOTO BACKEND CRITICAL]: "
+            f"Error en subida: {str(e)}"
+        )
+
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
 
 # =========================================================================
 # 3. 🔄 API: ENDPOINT DE ESCUCHA CONTINUA PARA TU APP DE ELECTRON (.EXE)
 # =========================================================================
+@csrf_exempt
 def verificar_pago_movil_api(request, tx_id):
     """
-    Responde cíclicamente a las consultas fetch de segundo plano de tu pasarelaPago.js
+    La caja consulta periódicamente si el cliente
+    ya envió el comprobante desde su teléfono.
     """
-    try:
-        # Buscamos la factura en PostgreSQL usando una consulta elástica tolerante a pruebas
-        id_busqueda = int(tx_id) if tx_id.isdigit() else 1
-        factura = Factura.objects.filter(id=id_busqueda).first()
 
-        if factura:
+    if request.method != 'GET':
+        return JsonResponse({
+            'error': 'Método no permitido.'
+        }, status=405)
+
+    try:
+        factura = Factura.objects.filter(
+            codigo_transaccion=str(tx_id)
+        ).first()
+
+        if not factura:
             return JsonResponse({
-                'capture_recibido': factura.capture_recibido,
-                'capture_base64': factura.capture_base64 if factura.capture_recibido else None
-            })
-        else:
-            # Respaldo para entorno de desarrollo local (Simulación de escucha activa si no existe el ID)
-            return JsonResponse({'capture_recibido': False, 'message': 'Esperando inicialización de factura...'})
+                'capture_recibido': False,
+                'capture_base64': None,
+                'error': 'Transacción no encontrada.'
+            }, status=404)
+
+        return JsonResponse({
+            'capture_recibido': bool(factura.capture_recibido),
+            'capture_base64': factura.capture_base64
+                if factura.capture_recibido else None,
+            'tx_id': tx_id
+        })
 
     except Exception as e:
-        return JsonResponse({'capture_recibido': False, 'error': str(e)}, status=500)
+        print(
+            f"❌ [SOTO VERIFY]: "
+            f"Error verificando Tx {tx_id}: {str(e)}"
+        )
+
+        return JsonResponse({
+            'capture_recibido': False,
+            'capture_base64': None,
+            'error': str(e)
+        }, status=500)
