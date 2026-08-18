@@ -407,48 +407,67 @@ moduloPasarelas.innerHTML = `
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; width: 100%; box-sizing: border-box;">
         
-        <!-- Opción 1: Punto de Venta con Foto -->
-        <button type="button" id="pay-punto" data-metodo="PUNTO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
-                    <img src="./assets/punto-venta.jpg" alt="Punto" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='💳';">
-                </div>
-                <div>
-                    <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Punto de Venta</h4>
-                    <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Débito / Crédito</p>
-                </div>
+        <!-- Grid de Pasarelas Premium Dark Mode - 4 Opciones en una Sola Línea Horizontal -->
+<div id="step-payment-methods" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; box-sizing: border-box; width: 100%;">
+    
+    <!-- Opción 1: Punto de Venta con Foto -->
+    <button type="button" id="pay-punto" data-metodo="PUNTO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+                <img src="./assets/punto-venta.jpg" alt="Punto" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='💳';">
             </div>
-            <div style="font-size: 10px; background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Punto</div>
-        </button>
+            <div>
+                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Punto de Venta</h4>
+                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Débito / Crédito</p>
+            </div>
+        </div>
+        <div style="font-size: 10px; background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Punto</div>
+    </button>
 
-        <!-- Opción 2: Cashea (Sustituye a Pago Móvil) -->
-        <button type="button" id="pay-cashea" data-metodo="CASHEA" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
-                    <img src="./assets/cashea.jpg" alt="Cashea" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='🟢';">
-                </div>
-                <div>
-                    <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Cashea</h4>
-                    <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Compra más tarde en cuotas</p>
-                </div>
+    <!-- Opción 2: Cashea -->
+    <button type="button" id="pay-cashea" data-metodo="CASHEA" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+                <img src="./assets/cashea.jpg" alt="Cashea" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='🟢';">
             </div>
-            <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Cuotas</div>
-        </button>
+            <div>
+                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Cashea</h4>
+                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Compra en cuotas</p>
+            </div>
+        </div>
+        <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Cuotas</div>
+    </button>
 
-        <!-- Opción 3: Biopago BDV con Foto -->
-        <button type="button" id="pay-biopago" data-metodo="BIOPAGO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-                <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
-                    <img src="./assets/biopago-pasarela.jpg" alt="Biopago" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='☝️';">
-                </div>
-                <div>
-                    <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Biopago BDV</h4>
-                    <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Autenticación Huella</p>
-                </div>
+    <!-- Opción 3: Biopago BDV con Foto -->
+    <button type="button" id="pay-biopago" data-metodo="BIOPAGO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+                <img src="./assets/biopago-pasarela.jpg" alt="Biopago" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='☝️';">
             </div>
-            <div style="font-size: 10px; background-color: rgba(249, 115, 22, 0.1); color: #f97316; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">BDV</div>
-        </button>
-    </div>
+            <div>
+                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Biopago BDV</h4>
+                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Autenticación Huella</p>
+            </div>
+        </div>
+        <div style="font-size: 10px; background-color: rgba(249, 115, 22, 0.1); color: #f97316; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">BDV</div>
+    </button>
+
+    <!-- 🎯 Opción 4: Pago Móvil QR Dinámico (Soto System Premium) -->
+    <button type="button" id="pay-pagomovil" data-metodo="PAGO_MOVIL_QR" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+                <!-- Reutilizamos una imagen representativa para Pago Móvil QR -->
+                <img src="./assets/pago-movil.jpg" alt="Pago Móvil" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='📱';">
+            </div>
+            <div>
+                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Pago Móvil QR</h4>
+                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Validación Asíncrona</p>
+            </div>
+        </div>
+        <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Móvil</div>
+    </button>
+
+</div>
 
     <!-- CAJA DE INSTRUCCIONES ESTILIZADA EN MODO OSCURO (Inicialmente oculta) -->
     <div id="box-instrucciones-caja" style="margin-top: 20px; padding: 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 8px; width: 100%; box-sizing: border-box; display: none; transition: opacity 0.25s ease;">

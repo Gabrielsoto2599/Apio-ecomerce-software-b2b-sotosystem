@@ -48,17 +48,32 @@ class Factura(models.Model):
         ('PROCESADA', 'Procesada por Daniela'),
         ('ANULADA', 'Anulada'),
     ]
+    
+    METODOS_PAGO = [
+        ('PUNTO', 'Punto de Venta'),
+        ('BIOPAGO', 'Biopago BDV'),
+        ('CASHEA', 'Cashea'),
+        ('PAGO_MOVIL_QR', 'Pago Móvil Mayorista QR'),  # 🎯 4to Método Premium
+    ]
+
     codigo_transaccion = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     fecha = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=15, choices=ESTADOS, default='PENDIENTE')
+    metodo_pago = models.CharField(max_length=20, choices=METODOS_PAGO, default='PUNTO') # 💳 Control de caja
     total_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    
-    # 📡 ADICIÓN MAESTRA: Sostiene el nombre del operador enviado por el proxy Node (Gabriel, Rosmary, etc.)
     operador = models.CharField(max_length=100, default='Cajero_Generico')
 
-    def __str__(self):
-        return f"Apio Tx: {self.codigo_transaccion} - Operador: {self.operador} - Status: {self.estado}"
+    # =========================================================================
+    # 📸 BÚNKER DE CAPTURES MAYORISTAS - STORAGE SEGURO (POSTGRESQL CLOUD)
+    # =========================================================================
+    # Guarda el string masivo Base64 de la imagen de manera inmutable en Railway
+    capture_base64 = models.TextField(blank=True, null=True)
+    
+    # Interruptor lógico: Cambia a True en milisegundos cuando el cliente hunde "Enviar" en su celular
+    capture_recibido = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"Apio Tx: {self.codigo_transaccion} - Metodo: {self.metodo_pago} - Status: {self.estado}"
 
 class DetalleFactura(models.Model):
     """📊 Renglones binarios de las mercancías añadidas al pedido por el cajero."""
