@@ -356,7 +356,7 @@ if (claveDatos === "PAGO_MOVIL_QR") {
     const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
 
     // 3. Construimos la URL limpia que visitará el cliente en su smartphone
-    const urlCelular = "https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
+    const urlCelular = "http://127.0.0.1:8000/pago-movil-cliente/?tx=" + txIdDummy;
 
     // 4. Inyectamos la estructura HTML dejando el lienzo <canvas> listo abajo de los botones
     contenidoDinamico.innerHTML = `
