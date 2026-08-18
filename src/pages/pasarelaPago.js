@@ -358,11 +358,11 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     // 4. Generamos el enlace definitivo para el gráfico QR de Google Charts usando codificación segura
     const urlImagenQR = "https://googleapis.com?chs=140x140&cht=qr&chl=" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
 
-        // 5. 🚀 INYECCIÓN LIMPIA REPARADA: Capas de profundidad (z-index) forzadas para evitar solapamientos
+         // 5. 🚀 INYECCIÓN NATURAL PLANA ABAJO DE LOS BOTONES
     contenidoDinamico.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; position: relative; z-index: 9999; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
             <!-- Bloque del QR Dinámico -->
-            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
+            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 130px; height: 130px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
                 <img src="${urlImagenQR}" alt="Escanear Pago" style="width: 100%; height: 100%; object-fit: contain; display: block;">
             </div>
             <!-- Datos de Pago Móvil de la Farmacia -->
@@ -377,7 +377,6 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             </div>
         </div>
     `;
-
 
                     // 6. 📡 LA ANTENA AL FINAL: Activamos el bucle de escucha SOLO después de pintar la interfaz visual
     PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
@@ -468,80 +467,69 @@ moduloPasarelas.id = "step-payment-methods";
 moduloPasarelas.setAttribute('style', 'background-color: #0b0f19; padding: 24px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #10b981; position: relative; overflow: hidden; width: 100%; box-sizing: border-box; margin-bottom: 24px; font-family: "Inter", sans-serif;');
 
 moduloPasarelas.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-        <span style="width: 24px; height: 24px; border-radius: 50%; background-color: #10b981; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #FFFFFF; font-size: 13px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);">2</span>
-        <h3 style="font-weight: 800; font-size: 16px; color: #FFFFFF; margin: 0; letter-spacing: -0.01em;">Selecciona el Método de Facturación</h3>
-    </div>
+    <div id="step-payment-methods" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; box-sizing: border-box; width: 100%;">
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; width: 100%; box-sizing: border-box;">
-        
-        <!-- Grid de Pasarelas Premium Dark Mode - 4 Opciones en una Sola Línea Horizontal -->
-<div id="step-payment-methods" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px; box-sizing: border-box; width: 100%;">
-    
-    <!-- Opción 1: Punto de Venta con Foto -->
-    <button type="button" id="pay-punto" data-metodo="PUNTO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+    <!-- Opción 1: Punto de Venta -->
+    <button type="button" id="pay-punto" data-metodo="PUNTO" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 6px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b; flex-shrink: 0;">
                 <img src="./assets/punto-venta.jpg" alt="Punto" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='💳';">
             </div>
             <div>
-                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Punto de Venta</h4>
-                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Débito / Crédito</p>
+                <h4 style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin: 0;">Punto Venta</h4>
+                <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Débito / Crédito</p>
             </div>
         </div>
-        <div style="font-size: 10px; background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Punto</div>
     </button>
 
     <!-- Opción 2: Cashea -->
-    <button type="button" id="pay-cashea" data-metodo="CASHEA" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+    <button type="button" id="pay-cashea" data-metodo="CASHEA" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 6px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b; flex-shrink: 0;">
                 <img src="./assets/cashea.jpg" alt="Cashea" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='🟢';">
             </div>
             <div>
-                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Cashea</h4>
-                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Compra en cuotas</p>
+                <h4 style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin: 0;">Cashea</h4>
+                <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Compra en cuotas</p>
             </div>
         </div>
-        <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Cuotas</div>
     </button>
 
-        <!-- Opción 3: Biopago BDV con Foto -->
-    <button type="button" id="pay-biopago" data-metodo="BIOPAGO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+    <!-- Opción 3: Biopago BDV -->
+    <button type="button" id="pay-biopago" data-metodo="BIOPAGO" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 6px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b; flex-shrink: 0;">
                 <img src="./assets/biopago-pasarela.jpg" alt="Biopago" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='☝️';">
             </div>
             <div>
-                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Biopago BDV</h4>
-                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Autenticación Huella</p>
+                <h4 style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin: 0;">Biopago BDV</h4>
+                <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Huella dactilar</p>
             </div>
         </div>
-        <div style="font-size: 10px; background-color: rgba(249, 115, 22, 0.1); color: #f97316; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">BDV</div>
     </button>
 
-    <!-- 🎯 Opción 4: Pago Móvil QR Dinámico (Soto System Premium) -->
-    <button type="button" id="pay-pagomovil" data-metodo="PAGO_MOVIL_QR" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
+    <!-- Opción 4: Pago Móvil QR -->
+    <button type="button" id="pay-pagomovil" data-metodo="PAGO_MOVIL_QR" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 6px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b; flex-shrink: 0;">
                 <img src="./assets/pago-movil.jpg" alt="Pago Móvil" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='📱';">
             </div>
             <div>
-                <h4 style="font-weight: 700; font-size: 14px; color: #FFFFFF; margin: 0;">Pago Móvil QR</h4>
-                <p style="font-size: 11px; color: #94a3b8; margin: 2px 0 0 0;">Validación Asíncrona</p>
+                <h4 style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin: 0;">Pago Móvil QR</h4>
+                <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Escaneo asíncrono</p>
             </div>
         </div>
-        <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Móvil</div>
     </button>
 
-</div> <!-- 🎯 CIERRE DEL GRID: Las 4 tarjetas quedan aisladas en su propia fila superior -->
+</div> <!-- 🎯 AQUÍ TERMINA EL CONTENEDOR DE BOTONES. NADA MÁS ENTRA AQUÍ -->
 
 
 <!-- ===================================================================== -->
-<!-- 📥 BÚNKER DE INSTRUCCIONES AISLADO EN FILA INFERIOR INDEPENDIENTE -->
+<!-- 2. CAJA DE INSTRUCCIONES PREMIUM (UBICADA NATURALMENTE ABAJO)         -->
 <!-- ===================================================================== -->
-<div id="box-instrucciones-caja" style="margin-top: 24px; padding: 20px; background-color: #0b1320; border: 1px solid #1e293b; border-left: 4px solid #10b981; border-radius: 12px; width: 100%; box-sizing: border-box; display: none; transition: opacity 0.25s ease; position: relative; z-index: 99; clear: both;">
-    <div id="contenido-instrucciones-dinamico" style="color: #cbd5e1; width: 100%;"></div>
+<!-- Al estar fuera, se despliega abajo de los 4 botones sin solapamientos visuales -->
+<div id="box-instrucciones-caja" style="display: none; opacity: 0; margin-top: 18px; padding: 16px; background-color: #0b1320; border: 1px solid #1e293b; border-left: 4px solid #10b981; border-radius: 12px; transition: all 0.25s ease; width: 100%; box-sizing: border-box; clear: both;">
+    <div id="contenido-instrucciones-dinamico" style="color: #cbd5e1; width: 100%; font-size: 13px;"></div>
 </div>`;
    
         // --- VINCULACIÓN DE LOGICA MANUAL DE CLICK CON CONMUTADOR DE IA Y PUENTE OS ---
