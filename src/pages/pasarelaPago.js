@@ -353,14 +353,14 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
 
     // 3. Construimos la URL limpia que visitará el cliente en su smartphone
-    const urlCelular = "https://railway.app" + txIdDummy;
+    const urlCelular = "https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
 
     // 4. Generamos el enlace definitivo para el gráfico QR de Google Charts usando codificación segura
-    const urlImagenQR = "https://googleapis.com" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
+    const urlImagenQR = "https://googleapis.com?chs=140x140&cht=qr&chl=" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
 
-    // 5. 🚀 INYECCIÓN LIMPIA: Usamos comillas invertidas puras asegurando que renderice el contenedor blanco
+        // 5. 🚀 INYECCIÓN LIMPIA REPARADA: Capas de profundidad (z-index) forzadas para evitar solapamientos
     contenidoDinamico.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; position: relative; z-index: 9999; box-sizing: border-box;">
             <!-- Bloque del QR Dinámico -->
             <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
                 <img src="${urlImagenQR}" alt="Escanear Pago" style="width: 100%; height: 100%; object-fit: contain; display: block;">
@@ -377,6 +377,7 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             </div>
         </div>
     `;
+
 
                     // 6. 📡 LA ANTENA AL FINAL: Activamos el bucle de escucha SOLO después de pintar la interfaz visual
     PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
@@ -505,7 +506,7 @@ moduloPasarelas.innerHTML = `
         <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Cuotas</div>
     </button>
 
-    <!-- Opción 3: Biopago BDV con Foto -->
+        <!-- Opción 3: Biopago BDV con Foto -->
     <button type="button" id="pay-biopago" data-metodo="BIOPAGO" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
         <div style="display: flex; align-items: center; gap: 14px;">
             <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
@@ -523,7 +524,6 @@ moduloPasarelas.innerHTML = `
     <button type="button" id="pay-pagomovil" data-metodo="PAGO_MOVIL_QR" style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.25s ease; outline: none; box-sizing: border-box; width: 100%;">
         <div style="display: flex; align-items: center; gap: 14px;">
             <div style="width: 44px; height: 44px; border-radius: 8px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b;">
-                <!-- Reutilizamos una imagen representativa para Pago Móvil QR -->
                 <img src="./assets/pago-movil.jpg" alt="Pago Móvil" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='📱';">
             </div>
             <div>
@@ -534,13 +534,15 @@ moduloPasarelas.innerHTML = `
         <div style="font-size: 10px; background-color: rgba(16, 185, 129, 0.1); color: #10b981; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em;">Móvil</div>
     </button>
 
-</div>
+</div> <!-- 🎯 CIERRE DEL GRID: Las 4 tarjetas quedan aisladas en su propia fila superior -->
 
-    <!-- CAJA DE INSTRUCCIONES ESTILIZADA EN MODO OSCURO (Inicialmente oculta) -->
-    <div id="box-instrucciones-caja" style="margin-top: 20px; padding: 16px; background-color: #030712; border: 1px solid #1e293b; border-radius: 8px; width: 100%; box-sizing: border-box; display: none; transition: opacity 0.25s ease;">
-        <div id="contenido-instrucciones-dinamico" style="color: #cbd5e1;"></div>
-    </div>
-`;
+
+<!-- ===================================================================== -->
+<!-- 📥 BÚNKER DE INSTRUCCIONES AISLADO EN FILA INFERIOR INDEPENDIENTE -->
+<!-- ===================================================================== -->
+<div id="box-instrucciones-caja" style="margin-top: 24px; padding: 20px; background-color: #0b1320; border: 1px solid #1e293b; border-left: 4px solid #10b981; border-radius: 12px; width: 100%; box-sizing: border-box; display: none; transition: opacity 0.25s ease; position: relative; z-index: 99; clear: both;">
+    <div id="contenido-instrucciones-dinamico" style="color: #cbd5e1; width: 100%;"></div>
+</div>`;
    
         // --- VINCULACIÓN DE LOGICA MANUAL DE CLICK CON CONMUTADOR DE IA Y PUENTE OS ---
 moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
