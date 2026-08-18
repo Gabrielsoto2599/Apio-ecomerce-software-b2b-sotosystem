@@ -356,7 +356,7 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     const urlCelular = "https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
 
     // 4. Generamos el enlace definitivo para el gráfico QR de Google Charts usando codificación segura
-    const urlImagenQR = "https://googleapis.com?chs=140x140&cht=qr&chl=" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
+    const urlImagenQR = "https://chart.googleapis.com/chart?chs=140x140&cht=qr&chl=" + encodeURIComponent(urlCelular) + "&choe=UTF-8";
 
          // 5. 🚀 INYECCIÓN NATURAL PLANA ABAJO DE LOS BOTONES
     contenidoDinamico.innerHTML = `
