@@ -359,7 +359,7 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
                             <!-- Bloque del QR Dinámico -->
                             <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);">
                                 <!-- Código QR de Respaldo por Imagen API de Google Charts -->
-                                <img src="https://googleapis.com${txIdDummy}&choe=UTF-8" alt="Escanear Pago" style="width: 100%; height: 100%;">
+                                <img src="https://googleapis.com?chs=140x140&cht=qr&chl=https://railway.app${txIdDummy}&choe=UTF-8" alt="Escanear Pago" style="width: 100%; height: 100%;">
                             </div>
                             <!-- Datos de Pago Móvil de la Farmacia -->
                             <div style="flex: 1; font-size: 13px; line-height: 1.6;">
