@@ -312,13 +312,12 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
     const contenedorMetodos = document.getElementById('step-payment-methods');
     
     // 🛑 CONTROL DE SEGURIDAD: Ubicamos el botón de despacho inferior de tu pasarela
-    // (Asegúrate de que el ID coincida con tu botón real, ej: 'btn-despachar-mercancia')
     const botonDespachar = document.getElementById('btn-despachar-mercancia') || document.querySelector('.btn-submit-despacho');
 
     if (contenedorMetodos) {
         const botones = contenedorMetodos.querySelectorAll('button[data-metodo]');
-        const boxCaja = contenedorMetodos.querySelector('#box-instrucciones-caja');
-        const contenidoDinamico = contenedorMetodos.querySelector('#contenido-instrucciones-dinamico');
+        const boxCaja = document.getElementById('box-instrucciones-caja');
+        const contenidoDinamico = document.getElementById('contenido-instrucciones-dinamico');
 
         // 3. RECORRIDO VISUAL: Encendemos en VERDE NEÓN la opción elegida
         botones.forEach(btn => {
@@ -339,77 +338,69 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             boxCaja.style.opacity = '0';
             boxCaja.style.display = 'block';
             
-            setTimeout(() => {// =========================================================================
-// 📱 CASO 4: PAGO MÓVIL CON VALIDACIÓN DE QR ASÍNCRONO NATIVO (CANVAS)
-// =========================================================================
-if (claveDatos === "PAGO_MOVIL_QR") {
-    
-    // 1. Congelamos inmediatamente el botón de despacho por seguridad
-    if (botonDespachar) {
-        botonDespachar.disabled = true;
-        botonDespachar.style.opacity = '0.4';
-        botonDespachar.style.cursor = 'not-allowed';
-        botonDespachar.innerText = "⏳ Esperando Comprobante desde Celular...";
-    }
+            setTimeout(() => {
+                // =========================================================================
+                // 📱 CASO 4: PAGO MÓVIL AUTOMATIZADO (QR BANCARIO OFFLINE - LAB GABRIEL)
+                // =========================================================================
+                if (claveDatos === "PAGO_MOVIL_QR") {
+                    
+                    // 🚀 LIBERACIÓN DE TAQUILLA: El cajero puede despachar la factura al instante
+                    if (botonDespachar) {
+                        botonDespachar.disabled = false;
+                        botonDespachar.style.opacity = '1';
+                        botonDespachar.style.cursor = 'pointer';
+                        botonDespachar.innerText = "🚀 Procesar y Despachar Factura";
+                    }
 
-    // 2. Definimos la ID única de la orden de compra
-    const txIdDummy = this.estadoTransaccion?.codigo_tx || Math.floor(100000 + Math.random() * 900000);
+                    // 🧱 ESTRUCTURA BAJO ESTÁNDAR BANCARIO VENEZOLANO CON TUS DATOS REALES
+                    const datosQRBancario = "BCV:RIF=V27966675;CEL=04125386285;BANCO=0105;";
 
-    // 3. Construimos la URL limpia que visitará el cliente en su smartphone
-    const urlCelular = "https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/pago-movil-cliente/?tx=" + txIdDummy;
+                    // Inyectamos la estructura visual premium dejando el lienzo <canvas> listo abajo de los botones
+                    contenidoDinamico.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+                            <!-- Bloque del QR Nativo por Canvas -->
+                            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
+                                <canvas id="soto-dynamic-desktop-qr" style="width: 120px !important; height: 120px !important; display: block;"></canvas>
+                            </div>
+                            <!-- Datos de Pago Móvil de Gabriel para validación visual -->
+                            <div style="flex: 1; font-size: 13px; line-height: 1.6; color: #ffffff;">
+                                <strong style="color: #10b981; text-transform: uppercase; display: block; margin-bottom: 4px;">Pago Móvil Interbancario:</strong>
+                                <ul style="margin: 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
+                                    <li><strong>Banco:</strong> Mercantil (0105)</li>
+                                    <li><strong>Teléfono:</strong> 0412-5386285</li>
+                                    <li><strong>Cédula:</strong> V-27.966.675</li>
+                                    <li style="color: #eab308; font-weight: bold; margin-top: 6px; list-style-type: none; margin-left: -16px;">• Pídale al cliente que escanee el código QR con su app bancaria para autocompletar los datos de transferencia.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
 
-    // 4. Inyectamos la estructura HTML dejando el lienzo <canvas> listo abajo de los botones
-    contenidoDinamico.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-            <!-- Bloque del QR Nativo por Canvas -->
-            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
-                <!-- Usamos la misma etiqueta canvas que usó Daniela IA -->
-                <canvas id="soto-dynamic-desktop-qr" style="width: 120px !important; height: 120px !important; display: block;"></canvas>
-            </div>
-            <!-- Datos de Pago Móvil de la Farmacia -->
-            <div style="flex: 1; font-size: 13px; line-height: 1.6; color: #ffffff;">
-                <strong style="color: #10b981; text-transform: uppercase; display: block; margin-bottom: 4px;">Pago Móvil QR Inteligente:</strong>
-                <ul style="margin: 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
-                    <li><strong>Banco:</strong> Banesco (0134)</li>
-                    <li><strong>Teléfono:</strong> 0412-5555555</li>
-                    <li><strong>Rif:</strong> J-300000000</li>
-                    <li style="color: #eab308; font-weight: bold; margin-top: 6px; list-style-type: none; margin-left: -16px;">• Pídale al cliente que escanee el código QR con su teléfono celular para que capture y suba el comprobante al instante.</li>
-                </ul>
-            </div>
-        </div>
-    `;
+                    // 🎛️ INYECCIÓN NATIVA DE PUNTOS BINARIOS (Respiro de 400ms para asegurar el DOM)
+                    setTimeout(() => {
+                        try {
+                            const canvasQR = document.getElementById('soto-dynamic-desktop-qr');
+                            if (canvasQR && typeof QRCode !== 'undefined') {
+                                QRCode.toCanvas(canvasQR, datosQRBancario, {
+                                    width: 120,
+                                    margin: 0,
+                                    color: { dark: '#030712', light: '#FFFFFF' },
+                                    errorCorrectionLevel: 'M'
+                                }, function (error) {
+                                    if (error) console.error("❌ [SOTO QR ERROR]:", error);
+                                });
+                                console.log("📡 [SOTO NET]: QR Bancario estático inyectado con éxito en el canvas.");
+                            } else {
+                                console.warn("⚠️ [SOTO NET]: Esperando que el Canvas o la librería QRCode se acoplen en RAM.");
+                            }
+                        } catch (err) {
+                            console.error("❌ [SOTO CRITICAL]: Fallo en la inyección de tinta del QR:", err.message);
+                        }
+                    }, 400);
 
-    // 5. 🚀 EL AJUSTE MAESTRO: Respiro de 400ms para asegurar que el canvas exista en el DOM
-    setTimeout(() => {
-        try {
-            const canvasQR = document.getElementById('soto-dynamic-desktop-qr');
-            
-            if (canvasQR && typeof QRCode !== 'undefined') {
-                // Forzamos el renderizado de la matriz usando tu URL de Pago Móvil real
-                QRCode.toCanvas(canvasQR, urlCelular, {
-                    width: 120,
-                    margin: 0,
-                    color: { dark: '#030712', light: '#FFFFFF' }, // Fondo oscuro a juego con tu app
-                    errorCorrectionLevel: 'H'
-                }, function (error) {
-                    if (error) console.error("❌ [SOTO QR ERROR]:", error);
-                });
-                
-                console.log("📡 [SOTO NET]: Matriz de puntos QR inyectada con éxito en el canvas.");
-            } else {
-                console.warn("⚠️ [SOTO NET]: Esperando que el Canvas o la librería QRCode se acoplen en RAM.");
-            }
-        } catch (err) {
-            console.error("❌ [SOTO CRITICAL]: Fallo en la inyección de tinta del QR:", err.message);
-        }
-    }, 400);
-
-    // 6. 📡 LA ANTENA DE CONTROL: Activamos el bucle de escucha asíncrona hacia Railway
-    PasarelaPago.iniciarEscuchaCaptureCelular(txIdDummy, botonDespachar);
-}
-    
-         else {
-                    // Resto de métodos de pago (Punto, Cashea, Biopago) -> Liberan el botón de despacho al instante
+                } else {
+                    // =========================================================================
+                    // 💳 RESTO DE MÉTODOS DE PAGO (PUNTO, CASHEA, BIOPAGO)
+                    // =========================================================================
                     if (botonDespachar) {
                         botonDespachar.disabled = false;
                         botonDespachar.style.opacity = '1';
@@ -426,6 +417,9 @@ if (claveDatos === "PAGO_MOVIL_QR") {
                     }
                 }
                 
+                // =========================================================================
+                // 🎨 ANIMACIONES Y ESTILOS ESTÁNDAR DE LA CAJA DE INSTRUCCIONES
+                // =========================================================================
                 const ulInterno = contenidoDinamico.querySelector('ul');
                 if (ulInterno) {
                     ulInterno.style.backgroundColor = '#030712';
