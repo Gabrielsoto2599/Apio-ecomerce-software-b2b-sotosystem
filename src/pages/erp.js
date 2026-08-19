@@ -213,7 +213,7 @@ const ErpModulo = {
         
     },
      
-     // =========================================================================
+// =========================================================================
 // 🟪 EXTENSIÓN MAESTRA: COMPILADOR DE BALANCE DIARIO (REPORTLAB)
 // Ubicación: Justo arriba del Cierre Semanal en tus scripts core
 // =========================================================================
@@ -221,41 +221,52 @@ ejecutarCierreYGenerarPdf() {
     console.log("🟪 [SOTO ENGINE]: Generando balance contable de las últimas 24 horas...");
     const iframeDiario = document.createElement('iframe');
     iframeDiario.style.display = 'none';
+    
+    // 🎯 SOTO CORE BLINDAJE: Le inyectamos el origen local a la raíz del iframe antes de insertarlo en el DOM
+    // Esto destruye el origen 'about:blank' y lo alinea con los permisos CORS de tu Django
+    iframeDiario.src = window.location.origin;
+    
     document.body.appendChild(iframeDiario);
-    const fetchDiario = iframeDiario.contentWindow.fetch;
 
-    fetchDiario('https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    })
-    .then(res => {
-        if (!res.ok) {
-            document.body.removeChild(iframeDiario);
-            throw new Error("Rebote fiscal en el motor diario de Django");
-        }
-        return res.blob();
-    })
+    // Damos un respiro de 50ms para que el iframe asimile el origen en la memoria RAM
+    setTimeout(() => {
+        const fetchDiario = iframeDiario.contentWindow.fetch || window.fetch;
+
+        fetchDiario('https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(res => {
+            if (!res.ok) {
+                if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
+                throw new Error("Rebote fiscal en el motor diario de Django");
+            }
+            return res.blob();
+        })
         .then(blob => {
-        // Transformamos los bytes de ReportLab en un enlace de descarga física nativo
-        const urlDescarga = window.URL.createObjectURL(blob);
-        const enlaceDescarga = document.createElement('a');
-        
-        // 🎯 CORE REPAIR: Borramos 'urlApi ||' para dejar la variable limpia que lee los bytes
-        enlaceDescarga.href = urlDescarga;
-        
-        enlaceDescarga.download = `Cierre_Diario_ERP_${new Date().toISOString().split('T')[0]}.pdf`;
-        document.body.appendChild(enlaceDescarga);
-        enlaceDescarga.click();
-        
-        // Limpiamos los nodos de la RAM para evitar fugas de memoria
-        document.body.removeChild(enlaceDescarga);
-        document.body.removeChild(iframeDiario);
-        console.log("✅ [SOTO ERP]: Cierre Diario PDF descargado con éxito en Windows.");
-    })
-    .catch(error => {
-        console.error("❌ Error de comunicación en Apio ERP Engine:", error.message);
-    });
-}, // 🎯 CANDADO: Mantén esta coma exacta para que el Cierre Semanal de abajo siga corriendo fino
+            // Transformamos los bytes de ReportLab en un enlace de descarga física nativo
+            const urlDescarga = window.URL.createObjectURL(blob);
+            const enlaceDescarga = document.createElement('a');
+            
+            // 🎯 CORE REPAIR: Variable limpia que lee los bytes
+            enlaceDescarga.href = urlDescarga;
+            enlaceDescarga.download = `Cierre_Diario_ERP_${new Date().toISOString().split('T')[0]}.pdf`;
+            
+            document.body.appendChild(enlaceDescarga);
+            enlaceDescarga.click();
+            
+            // Limpiamos los nodos de la RAM para evitar fugas de memoria
+            document.body.removeChild(enlaceDescarga);
+            if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
+            console.log("✅ [SOTO ERP]: Cierre Diario PDF descargado con éxito en Windows.");
+        })
+        .catch(error => {
+            if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
+            console.error("❌ Error de comunicación en Apio ERP Engine:", error.message);
+        });
+    }, 50);
+}, // 🎯 CANDADO: Mantén esta coma exacta para que el Cierre Semanal de abajo siga corriendo fino colega
+
 
     // =========================================================================
     // 📅 EXTENSIÓN A: COMPILADOR DE CONSOLIDADO SEMANAL (REPORTLAB)

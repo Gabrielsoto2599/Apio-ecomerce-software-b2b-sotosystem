@@ -1416,7 +1416,7 @@ PasarelaPago.procesarCompraYDespachar = function() {
         articulos: carritoActual
     };
 
-        // 🚀 BYPASS PURIFICADO SOTO SYSTEM (CORREGIDO): Forzamos el origen correcto en el iframe
+    // 🚀 BYPASS PURIFICADO SOTO SYSTEM (CORREGIDO): Forzamos el origen correcto en el iframe
     const iframeLimpio = document.createElement('iframe');
     
     // El secreto: Forzamos a que el iframe comparta exactamente el mismo origen de tu app local
@@ -1424,90 +1424,104 @@ PasarelaPago.procesarCompraYDespachar = function() {
     iframeLimpio.style.display = 'none';
     document.body.appendChild(iframeLimpio);
     
-    // Extraemos el fetch virgen una vez acoplado el origen
-    const fetchNativoPuro = iframeLimpio.contentWindow.fetch;
+    // 🎯 SOTO CORE BLINDAJE: Damos un respiro de 50ms para que el iframe asimile el origen y destruya 'about:blank'
+    setTimeout(() => {
+        // Extraemos el fetch virgen una vez acoplado el origen de forma segura en RAM
+        const fetchNativoPuro = iframeLimpio.contentWindow.fetch || window.fetch;
 
-    const endpointRailway = 'https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+        const endpointRailway = 'https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
-    fetchNativoPuro(endpointRailway, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(payloadFactura)
-    })
-    .then(respuesta => {
-        if (!respuesta.ok) throw new Error("Rebote de red en el búnker de Django");
-        return respuesta.json();
-    })
-    .then(data => {
-        console.log("✅ [SOTO DATABASE SUCCESS]: Venta asentada en PostgreSQL Railway:", data);
-        
-        // Remueve el iframe de la memoria una vez usado para mantener la RAM limpia
-        document.body.removeChild(iframeLimpio);
-        
-        const nroFacturaReal = data.numero_factura || `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
-        const horaActual = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
-        const fechaActual = new Date().toLocaleDateString('es-VE');
-
-        // 📊 SECO COMPLETO DEL HISTORIAL DE GABRIEL: Alimentamos la matriz de movimientos lineales del ERP
-        if (window.ErpModulo && window.ErpModulo.state) {
-            window.ErpModulo.state.movimientosDiarios.push({
-                ref: nroFacturaReal,
-                hora: horaActual,
-                fecha: fechaActual,
-                cedula: refCedula,
-                productos: stringProductos,
-                metodo: this.estadoTransaccion?.metodoSeleccionado || 'BIOPAGO',
-                montoBs: montoBsConIva,
-                montoUsd: subtotalUSD
-            });
-            // Si la vista del ERP está cargada en pantalla, refresca quirúrgicamente la tabla rows
-            if (typeof window.ErpModulo.reinyectarFilasTabla === 'function') {
-                window.ErpModulo.reinyectarFilasTabla();
+        fetchNativoPuro(endpointRailway, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payloadFactura)
+        })
+        .then(respuesta => {
+            if (!respuesta.ok) {
+                if (document.body.contains(iframeLimpio)) document.body.removeChild(iframeLimpio);
+                throw new Error("Rebote de red en el búnker de Django");
             }
-        }
+            return respuesta.json();
+        })
+        .then(data => {
+            console.log("✅ [SOTO DATABASE SUCCESS]: Venta asentada en PostgreSQL Railway:", data);
+            
+            // Remueve el iframe de la memoria una vez usado para mantener la RAM limpia
+            if (document.body.contains(iframeLimpio)) document.body.removeChild(iframeLimpio);
+            
+            const nroFacturaReal = data.numero_factura || `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
+            const horaActual = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+            const fechaActual = new Date().toLocaleDateString('es-VE');
 
-        // 🏆 ¡LA VICTORIA VISUAL! Hacemos brotar tu hermosa animación neón de recibo en la pantalla
-        if (typeof this.dispararAnimacionCompraExitosa === 'function') {
-            this.dispararAnimacionCompraExitosa(nroFacturaReal);
-        } else {
-            alert(`🏆 ¡Compra Realizada Exitosamente!\n• Factura N° ${nroFacturaReal}\n• Datos sincronizados con el Historial del ERP.`);
-            window.App.state.carrito = [];
-            window.App.navigate('catalogo-b2b');
-        }
-    })
-    .catch(err => {
-        console.error("❌ [SOTO CRITICAL PASARELA CONTINGENCIA]:", err.message);
-        
-        // 💾 PLAN DE RESCATE LOCAL INDESTRUCTIBLE EN EL .EXE (SI EL INTERNET DE LA BODEGA PARPADEA)
-        const nroFacturaEmergencia = `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
-        const horaEmergencia = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
-        const fechaEmergencia = new Date().toLocaleDateString('es-VE');
+            // 📊 SETEO COMPLETO DEL HISTORIAL DE GABRIEL: Alimentamos la matriz de movimientos lineales del ERP
+            if (window.ErpModulo && window.ErpModulo.state) {
+                if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
+                window.ErpModulo.state.movimientosDiarios.push({
+                    ref: nroFacturaReal,
+                    hora: horaActual,
+                    fecha: fechaActual,
+                    cedula: refCedula,
+                    productos: stringProductos,
+                    metodo: this.estadoTransaccion?.metodoSeleccionado || 'BIOPAGO',
+                    montoBs: montoBsConIva,
+                    montoUsd: subtotalUSD
+                });
+                
+                // Si la vista del ERP está cargada en pantalla, refresca quirúrgicamente la tabla rows
+                if (typeof window.ErpModulo.reinyectarFilasTabla === 'function') {
+                    window.ErpModulo.reinyectarFilasTabla();
+                }
+            }
 
-        if (window.ErpModulo && window.ErpModulo.state) {
-            window.ErpModulo.state.movimientosDiarios.push({
-                ref: nroFacturaEmergencia,
-                hora: horaEmergencia,
-                fecha: fechaEmergencia,
-                cedula: refCedula,
-                productos: stringProductos,
-                metodo: this.estadoTransaccion?.metodoSeleccionado || 'BIOPAGO',
-                montoBs: montoBsConIva,
-                montoUsd: subtotalUSD
-            });
-        }
+            // 🏆 ¡LA VICTORIA VISUAL! Hacemos brotar tu hermosa animación neón de recibo en la pantalla
+            if (typeof this.dispararAnimacionCompraExitosa === 'function') {
+                this.dispararAnimacionCompraExitosa(nroFacturaReal);
+            } else {
+                alert(`🏆 ¡Compra Realizada Exitosamente!\n• Factura N° ${nroFacturaReal}\n• Datos sincronizados con el Historial del ERP.`);
+                if (window.App && window.App.state) window.App.state.carrito = [];
+                if (window.App && typeof window.App.navigate === 'function') window.App.navigate('catalogo-b2b');
+            }
+        })
+        .catch(err => {
+            console.error("❌ [SOTO CRITICAL PASARELA CONTINGENCIA]:", err.message);
+            if (document.body.contains(iframeLimpio)) document.body.removeChild(iframeLimpio);
+            
+            // 💾 PLAN DE RESCATE LOCAL INDESTRUCTIBLE EN EL .EXE (SI EL INTERNET DE LA BODEGA PARPADEA)
+            const nroFacturaEmergencia = `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
+            const horaEmergencia = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+            const fechaEmergencia = new Date().toLocaleDateString('es-VE');
 
-        // Forzamos que se encienda tu recibo neón de contingencia local para no trancar la cola del abasto
-        if (typeof this.dispararAnimacionCompraExitosa === 'function') {
-            this.dispararAnimacionCompraExitosa(nroFacturaEmergencia);
-        } else {
-            alert("🛒 Despacho Manual Procesado Exitosamente por Contingencia Local.");
-            window.App.state.carrito = [];
-            window.App.navigate('catalogo-b2b');
-        }
-    });
+            if (window.ErpModulo && window.ErpModulo.state) {
+                if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
+                window.ErpModulo.state.movimientosDiarios.push({
+                    ref: nroFacturaEmergencia,
+                    hora: horaEmergencia,
+                    fecha: fechaEmergencia,
+                    cedula: refCedula,
+                    productos: stringProductos,
+                    metodo: this.estadoTransaccion?.metodoSeleccionado || 'BIOPAGO',
+                    montoBs: montoBsConIva,
+                    montoUsd: subtotalUSD
+                });
+                
+                if (typeof window.ErpModulo.reinyectarFilasTabla === 'function') {
+                    window.ErpModulo.reinyectarFilasTabla();
+                }
+            }
+
+            // Forzamos que se encienda tu recibo neón de contingencia local para no trancar la cola del abasto
+            if (typeof this.dispararAnimacionCompraExitosa === 'function') {
+                this.dispararAnimacionCompraExitosa(nroFacturaEmergencia);
+            } else {
+                alert("🛒 Despacho Manual Procesado Exitosamente por Contingencia Local.");
+                if (window.App && window.App.state) window.App.state.carrito = [];
+                if (window.App && typeof window.App.navigate === 'function') window.App.navigate('catalogo-b2b');
+            }
+        });
+    }, 50);
 };
 
 // 📡 CLONACIÓN REDUNDANTE DE CONTINGENCIA PARA EVITAR ERRORES DE RUTAS EN VITE

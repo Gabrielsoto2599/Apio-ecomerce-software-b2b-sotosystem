@@ -45,6 +45,7 @@ ROOT_URLCONF = 'core.urls'
 # ====================================================================
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_PREFLIGHT_MAX_AGE = 86400  # Cachea el preflight por 24 horas para que Electron no pregunte a cada rato
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -68,7 +69,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Evita que las redirecciones por falta de "/" rompan el CORS en producción
-APPEND_SLASH = False 
+APPEND_SLASH = True
 
 # Opcional: Blindaje extendido para solicitudes del navegador
 CSRF_TRUSTED_ORIGINS = [
