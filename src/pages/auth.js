@@ -5,7 +5,7 @@
 import { Home } from './home.js';
 
 // 📡 ANTENA DE RED EN DISPARO DIRECTO CORREGIDA AL VACÍO
-const URL_API_SAAS = 'https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app';
+const URL_API_SAAS = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app';
 
 const AuthModulo = {
     state: {

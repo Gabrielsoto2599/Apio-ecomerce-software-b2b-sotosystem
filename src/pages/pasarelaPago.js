@@ -447,7 +447,7 @@ PasarelaPago.iniciarEscuchaCaptureCelular = function(txId, botonDespachar) {
     window.intervaloValidacionQR = setInterval(() => {
         
         // 🎯 PARCHE MAESTRO: Forzamos la barra diagonal "/" al puro final de la ruta dinámica
-        const urlVerificacion = `https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/verificar-pago-movil/${txId}/`;
+        const urlVerificacion = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/verificar-pago-movil/${txId}/`;
 
         fetch(urlVerificacion, { method: 'GET' })
         .then(res => {
@@ -1429,7 +1429,7 @@ PasarelaPago.procesarCompraYDespachar = function() {
         // Extraemos el fetch virgen una vez acoplado el origen de forma segura en RAM
         const fetchNativoPuro = iframeLimpio.contentWindow.fetch || window.fetch;
 
-        const endpointRailway = 'https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+        const endpointRailway = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
         fetchNativoPuro(endpointRailway, {
             method: 'POST',

@@ -232,7 +232,7 @@ ejecutarCierreYGenerarPdf() {
     setTimeout(() => {
         const fetchDiario = iframeDiario.contentWindow.fetch || window.fetch;
 
-        fetchDiario('https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
+        fetchDiario('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         })
@@ -278,7 +278,7 @@ ejecutarCierreYGenerarPdf() {
         document.body.appendChild(iframeSemanal);
         const fetchSemanal = iframeSemanal.contentWindow.fetch;
 
-        fetchSemanal('https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-semanal/', {
+        fetchSemanal('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-semanal/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         })
@@ -318,7 +318,7 @@ ejecutarCierreYGenerarPdf() {
         document.body.appendChild(iframeMensual);
         const fetchMensual = iframeMensual.contentWindow.fetch;
 
-        fetchMensual('https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-mensual/', {
+        fetchMensual('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-mensual/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         })
