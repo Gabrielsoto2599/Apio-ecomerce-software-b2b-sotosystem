@@ -353,7 +353,7 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
                     }
 
                     // 🧱 ESTRUCTURA BAJO ESTÁNDAR BANCARIO VENEZOLANO CON TUS DATOS REALES
-                    const datosQRBancario = "BCV:RIF=V27966675;CEL=04125386285;BANCO=0105;";
+                    const datosQRBancario = "PAGOMOVIL|0105|V|27966675|04125386285|;";
 
                     // Inyectamos la estructura visual premium dejando el lienzo <canvas> listo abajo de los botones
                     contenidoDinamico.innerHTML = `
@@ -1427,7 +1427,7 @@ PasarelaPago.procesarCompraYDespachar = function() {
     // Extraemos el fetch virgen una vez acoplado el origen
     const fetchNativoPuro = iframeLimpio.contentWindow.fetch;
 
-    const endpointRailway = 'https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+    const endpointRailway = 'https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
     fetchNativoPuro(endpointRailway, {
         method: 'POST',

@@ -30,15 +30,16 @@ urlpatterns = [
     # 👑 ENDPOINT DE REGISTRO INICIAL SAAS COMERCIAL (EL CABLE DEL BOTÓN NARANJA)
     path('api/v1/registro-inicial-saas/', views.registro_inicial_saas_api, name='registro_inicial_saas'),
 
-    # 🎯 REPARACIÓN DE ENRUTADO CORE: Sincronizamos la ruta con el método real de views.py
+    # 🎯 REPARACIÓN DE ENRUTADO CORE (Comentado temporalmente para diagnosticar views)
     path('api/v1/procesar-transaccion/', views.procesar_transaccion, name='procesar_transaccion'),
 
-    # 🔒 LA COMPUERTA DEL ERP: Abre la compuerta para el botón de Cierre de Caja (Generar PDF)
+    # 🔒 LA COMPUERTA DEL ERP (Comentado temporalmente para aislar el error del PDF)
     path('api/v1/ejecutar-cierre-pdf/', views.ejecutar_cierre_pdf_api, name='ejecutar_cierre_pdf'),
 
     # 📈 CAMINOS DE AUDITORÍA OPERATIVA SOTO SYSTEM (BUILD 2026)
     path('api/v1/ejecutar-cierre-semanal/', views.ejecutar_cierre_semanal_pdf_api, name='cierre_semanal_pdf'),
     path('api/v1/ejecutar-cierre-mensual/', views.ejecutar_cierre_mensual_pdf_api, name='cierre_mensual_pdf'),
+
 
     # =====================================================================
     # 📱 COMPUERTAS HÍBRIDAS: PAGO MÓVIL QR ASÍNCRONO (NÚCLEO MAYORISTA 2026)

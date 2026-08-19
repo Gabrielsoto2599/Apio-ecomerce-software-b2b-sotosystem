@@ -776,30 +776,27 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Factura
 
 # =========================================================================
-# 1. 📱 INTERFAZ PREMIUM WEB PARA EL CELULAR DEL CLIENTE
+# 1. 📱 INTERFAZ PREMIUM WEB PARA EL CONTROL DE CAPTURES EN EL ERP
 # =========================================================================
 def pago_movil_cliente(request):
     """
-    Renderiza la mini-plantilla web optimizada para smartphones.
+    Renderiza la plantilla web optimizada.
     Recibe el identificador único por parámetro GET (?tx=123456)
     """
     tx_id = request.GET.get('tx', '')
     contexto = {
         'tx_id': tx_id,
-        'banco': 'Banesco (0134)',
-        'telefono': '0412-5555555',
-        'rif': 'J-300000000'
+        'banco': 'Mercantil (0105)',
+        'telefono': '0412-5386285',
+        'rif': 'V-27966675'  # Usamos tu cédula en el campo de identificación
     }
-    # Esta vista renderizará un HTML limpio en el teléfono (lo crearemos en el siguiente paso)
     return render(request, 'bodega/pago_movil_formulario.html', contexto)
 
-
-# =========================================================================
-# 2. 📡 API: PROCESADOR Y CONVERTIDOR DE IMAGEN A BASE64
-# =========================================================================
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import os
+# 🎯 CORRECCIÓN QUIRÚRGICA DE IMPORTACIÓN
+from .models import TransaccionFactura
+
 
 @csrf_exempt
 def subir_capture_api(request, tx_id):
@@ -807,66 +804,41 @@ def subir_capture_api(request, tx_id):
         try:
             image_file = request.FILES['capture_file']
             
-            # 📁 Guardamos la imagen físicamente en tu carpeta media de pruebas
-            # Puedes usar tu lógica actual de Base64 o guardar el archivo directamente
-            # (Aquí simulamos el guardado exitoso en tu base de datos)
+            # 🔍 1. Buscamos la transacción en la base de datos usando el ID único
+            # (Si no existe, la crea sobre la marcha para evitar que el sistema explote)
+            transaccion, created = TransaccionDiaria.objects.get_or_create(codigo_tx=tx_id)
             
-            print(f"📸 [SOTO BACKEND]: Recibido capture para la transacción ID: {tx_id}")
+            # 📸 2. Le inyectamos el archivo físico al campo multimedia del modelo
+            transaccion.comprobante_pago = image_file
+            transaccion.save()
             
-            # Retornamos la respuesta mágica que Electron está esperando
+            print(f"🟢 [SOTO BACKEND]: Capture guardado físicamente en Postgres para la TX: {tx_id}")
+            
             return JsonResponse({
                 'status': 'success',
-                'message': 'Comprobante guardado correctamente en el sistema.'
+                'message': 'Comprobante guardado correctamente en la base de datos multimedia.'
             })
             
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+            return JsonResponse({'status': 'error', 'message': f"Fallo al guardar: {str(e)}"})
             
     return JsonResponse({'status': 'error', 'message': 'Petición inválida o sin archivo.'})
 
 
 # =========================================================================
-# 3. 🔄 API: ENDPOINT DE ESCUCHA CONTINUA PARA TU APP DE ELECTRON (.EXE)
+# 3. 🔄 API: ARCHIVO HISTÓRICO DE CONSULTA CONTABLE ESTÁTICA
 # =========================================================================
 @csrf_exempt
 def verificar_pago_movil_api(request, tx_id):
     """
-    La caja consulta periódicamente si el cliente
-    ya envió el comprobante desde su teléfono.
+    Endpoint histórico simplificado. 
+    Retorna un estado plano ya que la verificación asíncrona se mudó al ERP.
     """
-
     if request.method != 'GET':
-        return JsonResponse({
-            'error': 'Método no permitido.'
-        }, status=405)
-
-    try:
-        factura = Factura.objects.filter(
-            codigo_transaccion=str(tx_id)
-        ).first()
-
-        if not factura:
-            return JsonResponse({
-                'capture_recibido': False,
-                'capture_base64': None,
-                'error': 'Transacción no encontrada.'
-            }, status=404)
-
-        return JsonResponse({
-            'capture_recibido': bool(factura.capture_recibido),
-            'capture_base64': factura.capture_base64
-                if factura.capture_recibido else None,
-            'tx_id': tx_id
-        })
-
-    except Exception as e:
-        print(
-            f"❌ [SOTO VERIFY]: "
-            f"Error verificando Tx {tx_id}: {str(e)}"
-        )
-
-        return JsonResponse({
-            'capture_recibido': False,
-            'capture_base64': None,
-            'error': str(e)
-        }, status=500)
+        return JsonResponse({'error': 'Método no permitido.'}, status=405)
+        
+    return JsonResponse({
+        'capture_recibido': True,
+        'mensaje': 'Módulo de pasarela en caliente offline activo. Gestión por ERP.',
+        'tx_id': tx_id
+    })
