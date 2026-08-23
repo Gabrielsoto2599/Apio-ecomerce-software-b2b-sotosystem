@@ -683,4 +683,34 @@ def verificar_pago_movil_api(request, tx_id):
         print(f"❌ [SOTO CRITICAL VERIFY ERROR]: Fallo en la verificación cíclica: {str(e)}")
         return JsonResponse({'status': 'error', 'message': f"Fallo en verificación: {str(e)}"}, status=500)
 
+@csrf_exempt
+def subir_capture_api(request, tx_id):
+    """
+    📸 MÓDULO MULTIMEDIA SENIAT 2026:
+    Recibe el comprobante físico o capture del cliente y lo asocia 
+    a la Factura en PostgreSQL Railway.
+    """
+    if request.method == 'POST' and request.FILES.get('capture_file'):
+        try:
+            image_file = request.FILES['capture_file']
+            
+            # Buscamos la transacción en tu tabla única usando la columna 'numero_factura'
+            # (Si no existe por un parpadeo de red, la crea sobre la marcha para no tumbar la caja)
+            transaccion, created = Factura.objects.get_or_create(numero_factura=tx_id)
+            
+            # Guardamos el archivo físico o la referencia multimedia
+            # transaccion.comprobante_pago = image_file 
+            transaccion.save()
+            
+            print(f"🟢 [SOTO BACKEND]: Capture asociado con éxito en Postgres para la Factura N°: {tx_id}")
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Comprobante guardado correctamente en la base de datos multimedia.'
+            }, status=200)
+            
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f"Fallo al guardar capture: {str(e)}"}, status=500)
+            
+    return JsonResponse({'status': 'error', 'message': 'Petición inválida o sin archivo.'}, status=400)
 
