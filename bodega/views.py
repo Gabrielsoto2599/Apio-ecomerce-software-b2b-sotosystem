@@ -603,64 +603,80 @@ def ejecutar_cierre_semanal_pdf_api(request):
     except Exception as e:
         return HttpResponse(f"Fallo Semanal: {str(e)}", status=500, content_type="text/plain")
 
-@csrf_exempt
-def ejecutar_cierre_mensual_pdf_api(request):
-    if request.method != 'POST':
-        return HttpResponse("Método no permitido", status=405)
-    try:
-        buffer_memoria = io.BytesIO()
-        pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
-        pdf_lienzo.setTitle("APIO SAAS - CIERRE MENSUAL FISCAL")
-
-        # Cabecera Verde Pino Fiscal (Estilo SENIAT)
-        pdf_lienzo.setFillColor(colors.HexColor("#064e3b"))
-        pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
-        
-        pdf_lienzo.setFillColor(colors.white)
-        pdf_lienzo.setFont("Helvetica-Bold", 16)
-        pdf_lienzo.drawString(30, 740, "APIO ERPS SOFTWARE - AUDITORÍA MENSUAL FISCAL")
-        pdf_lienzo.setFont("Helvetica", 10)
-        pdf_lienzo.drawString(30, 720, "Libro de Ventas Unificado y Declaración Externa de Impuestos")
-
-        # Filtramos los movimientos del último mes
-        hace_un_mes = timezone.now() - timedelta(days=30)
-        facturas_mes = TransaccionFactura.objects.filter(fecha__gte=hace_un_mes)
-
-        total_bs = sum(float(f.total_bs) for f in facturas_mes)
-        # 📐 MATEMÁTICA LEGAL VENEZOLANA: Desglosamos el 16% del IVA
-        base_imponible_bs = total_bs / 1.16
-        iva_recaudado_bs = total_bs - base_imponible_bs
-
-        pdf_lienzo.setFillColor(colors.black)
-        pdf_lienzo.setFont("Helvetica-Bold", 12)
-        pdf_lienzo.drawString(30, 640, "CÓMPUTO IMPOSITIVO EXIGIDO POR LA LEY:")
-        
-        pdf_lienzo.setFont("Courier-Bold", 11)
-        pdf_lienzo.drawString(40, 600, f"• TOTAL BRUTO FACTURADO:         {total_bs:.2f} Bs.")
-        pdf_lienzo.drawString(40, 580, f"• BASE IMPONIBLE NETO:           {base_imponible_bs:.2f} Bs.")
-        pdf_lienzo.drawString(40, 560, f"• IVA (16%) RECAUDADO A DECLARAR: {iva_recaudado_bs:.2f} Bs.")
-
-        pdf_lienzo.showPage()
-        pdf_lienzo.save()
-        buffer_memoria.seek(0)
-        
-        response = HttpResponse(buffer_memoria.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="cierre_mensual.pdf"'
-        return response
-    except Exception as e:
-        return HttpResponse(f"Fallo Mensual: {str(e)}", status=500, content_type="text/plain")
-
-import json
-import base64
-from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+import io
+from django.http import FileResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Factura
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from .models import TransaccionFactura
+from django.utils import timezone
+
+@csrf_exempt
+def ejecutar_cierre_pdf_api(request):
+    """
+    Recopila las ventas de las últimas 24 horas desde TransaccionFactura
+    y genera el balance fiscal en PDF usando ReportLab de forma nativa.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        
+    try:
+        # 📊 1. Extraemos las ventas del día de hoy
+        hoy = timezone.now().date()
+        ventas_hoy = TransaccionFactura.objects.filter(fecha__date=hoy)
+        
+        # Computamos los totales matemáticos en caliente usando Python
+        total_usd = sum(float(v.total_usd) for v in ventas_hoy)
+        total_bs = sum(float(v.total_bs) for v in ventas_hoy)
+        conteo_transacciones = ventas_hoy.count()
+
+        # 🖨️ 2. Construimos el flujo binario para ReportLab
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        
+        # Encabezado Estético del Reporte SOTO SYSTEM 2026
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, 750, "SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
+        p.setFont("Helvetica", 10)
+        p.drawString(100, 730, f"Fecha de Emisión: {hoy} | Estado: COMPILADO CLOUD")
+        p.drawString(100, 715, "-------------------------------------------------------------------------")
+        
+        # Cuerpo del Balance Contable
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(100, 680, f"Transacciones Procesadas: {conteo_transacciones}")
+        p.drawString(100, 660, f"Total Facturado (USD): ${total_usd:,.2f}")
+        p.drawString(100, 640, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
+        
+        # Desglose de canales solicitado por la contadora
+        p.setFont("Helvetica", 11)
+        y_position = 600
+        p.drawString(100, y_position, "Desglose de Operaciones en Caja:")
+        y_position -= 20
+        
+        for v in ventas_hoy:
+            if y_position < 100:  # Control de salto de página básico
+                p.showPage()
+                y_position = 750
+            p.drawString(100, y_position, f"• Doc: {v.numero_factura} | RIF: {v.cliente_identificacion} | Pago: {v.metodo_pago} | Total: ${v.total_usd}")
+            y_position -= 15
+
+        # Cierre y sellado del archivo binario
+        p.showPage()
+        p.save()
+        buffer.seek(0)
+        
+        # 🚀 Retornamos el archivo PDF directamente como un flujo de bytes nativo
+        return FileResponse(buffer, as_attachment=True, filename=f"Cierre_Diario_{hoy}.pdf", content_type='application/pdf')
+
+    except Exception as e:
+        print(f"❌ [SOTO CRITICAL PDF]: Fallo al compilar ReportLab: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 # =========================================================================
 # 1. 📱 INTERFAZ PREMIUM WEB PARA EL CONTROL DE CAPTURES EN EL ERP
 # =========================================================================
 def pago_movil_cliente(request):
+    
     """
     Renderiza la plantilla web optimizada.
     Recibe el identificador único por parámetro GET (?tx=123456)
