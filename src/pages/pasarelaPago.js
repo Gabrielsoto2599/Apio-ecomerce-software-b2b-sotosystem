@@ -367,13 +367,36 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
                                 <div>
                                     <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Banco Emisor:</label>
-                                    <select id="pm-banco" style="width: 100%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;">
-                                        <option value="0105">Mercantil (0105)</option>
-                                        <option value="0102">Venezuela (0102)</option>
-                                        <option value="0108">Provincial (0108)</option>
-                                        <option value="0134">Banesco (0134)</option>
-                                        <option value="OTHER">Otro Banco</option>
-                                    </select>
+                                   <!-- 📊 SELECTOR INTELIGENTE CON BUSCADOR FILTRADO Y DESPLAZADOR (SOTO COMPACT ENGINE) -->
+<input list="bancos-bcv-list" id="pm-banco" placeholder="Escriba código o nombre... (Ej: 0102 o Mercantil)" style="width: 95%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px; font-weight: bold; outline: none;" value="0105 - Banco Mercantil">
+
+<datalist id="bancos-bcv-list">
+    <option value="0102 - Banco de Venezuela (BDV)"></option>
+    <option value="0105 - Banco Mercantil"></option>
+    <option value="0108 - BBVA Provincial"></option>
+    <option value="0134 - Banesco"></option>
+    <option value="0191 - Banco National de Crédito (BNC)"></option>
+    <option value="0172 - Bancamiga"></option>
+    <option value="0174 - Banplus"></option>
+    <option value="0163 - Banco del Tesoro"></option>
+    <option value="0114 - Bancaribe"></option>
+    <option value="0115 - Banco Exterior"></option>
+    <option value="0104 - Banco Venezolano de Crédito (BVC)"></option>
+    <option value="0128 - Banco Caroní"></option>
+    <option value="0137 - Sofitasa"></option>
+    <option value="0138 - Banco Plaza"></option>
+    <option value="0146 - Bangente"></option>
+    <option value="0151 - BFC Banco Fondo Común"></option>
+    <option value="0156 - 100% Banco"></option>
+    <option value="0157 - Del Sur Banco Universal"></option>
+    <option value="0166 - Banco Agrícola de Venezuela"></option>
+    <option value="0168 - Bancrecer"></option>
+    <option value="0169 - Mi Banco"></option>
+    <option value="0171 - Banco Activo"></option>
+    <option value="0175 - BDT Banco Digital de los Trabajadores"></option>
+    <option value="0177 - BANFANB"></option>
+    <option value="OTHER - Otro Banco Nacional"></option>
+</datalist>
                                 </div>
                                 <div>
                                     <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Cédula / RIF Emisor:</label>
