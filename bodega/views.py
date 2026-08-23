@@ -480,13 +480,16 @@ def ejecutar_cierre_pdf_api(request):
                 if y_posicion < 50:
                     break
         else:
-             # 💾 PLAN DE CONTINGENCIA CLOUD: Si el frontend no pasa datos, consulta PostgreSQL Railway
+             # 💾 PLAN DE CONTINGENCIA CLOUD: Rango de tiempo absoluto compatible con PostgreSQL Railway
             from django.utils import timezone
-            from .models import Factura  # 🎯 Conectamos directo con tu tabla real unificada Factura
+            from .models import Factura
 
-            hoy = timezone.now().date()
-            # Filtramos todas las facturas procesadas de la jornada de hoy
-            ventas_db = Factura.objects.filter(fecha__date=hoy)
+            # Calculamos el inicio y fin del día actual con zona horaria consciente
+            inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+            
+            # Filtramos de forma inmutable usando el rango de la jornada
+            ventas_db = Factura.objects.filter(fecha__range=(inicio_dia, fin_dia))
 
             if ventas_db.exists():
                 for venta in ventas_db:
@@ -502,7 +505,6 @@ def ejecutar_cierre_pdf_api(request):
                     texto_linea = f"REF: {ref.ljust(10)} | CÉDULA: {cedula.ljust(12)} | MÉTODO: {metodo.ljust(10)} | TOTAL: {monto_bs:10.2f} Bs."
                     pdf_lienzo.drawString(30, y_posicion, texto_linea)
 
-                    # Sublínea estética con el detalle de los víveres o ropa despachada
                     pdf_lienzo.setFillColor(colors.HexColor("#475569"))
                     pdf_lienzo.drawString(45, y_posicion - 10, f"📦 DETALLE: {productos}")
                     pdf_lienzo.setFillColor(colors.black)
@@ -511,7 +513,6 @@ def ejecutar_cierre_pdf_api(request):
                     if y_posicion < 50:
                         break
             else:
-                # Si la base de datos está totalmente vacía en la jornada actual
                 pdf_lienzo.setFont("Helvetica-Oblique", 10)
                 pdf_lienzo.setFillColor(colors.HexColor("#ef4444"))
                 pdf_lienzo.drawString(30, y_posicion, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
