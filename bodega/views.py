@@ -527,29 +527,17 @@ def ejecutar_cierre_pdf_api(request):
         print(f"❌ [SOTO CRITICAL PDF]: Fallo catastrófico al compilar ReportLab: {str(e)}")
         return HttpResponse(f"Error interno del motor PDF: {str(e)}", status=500)
 
-# =========================================================================
-# 📈 CONTROLADORES FISCALES DE CIERRE DE CORTO Y LARGO PLAZO (BUILD 2026)
-# Ubicación: Al puro final de bodega/views.py
-# =========================================================================
-from datetime import datetime, timedelta
-from django.utils import timezone
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-import io
-
 @csrf_exempt
 def ejecutar_cierre_semanal_pdf_api(request):
     if request.method != 'POST':
         return HttpResponse("Método no permitido", status=405)
     try:
+        # 1. Inicializamos el búfer de memoria de ReportLab
         buffer_memoria = io.BytesIO()
         pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
         pdf_lienzo.setTitle("APIO SAAS - REPORTE SEMANAL")
 
-        # Cabecera Índigo Corporativa Semanal
+        # 2. Cabecera Índigo Corporativa Semanal Premium
         pdf_lienzo.setFillColor(colors.HexColor("#1e1b4b"))
         pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
         
@@ -557,111 +545,107 @@ def ejecutar_cierre_semanal_pdf_api(request):
         pdf_lienzo.setFont("Helvetica-Bold", 16)
         pdf_lienzo.drawString(30, 740, "APIO ERPS SOFTWARE - BALANCE CONSOLIDADO SEMANAL")
         pdf_lienzo.setFont("Helvetica", 10)
-        pdf_lienzo.drawString(30, 720, f"Rango Auditoría: Últimos 7 Días Operacionales")
+        
+        # Rango de fecha dinámico para la auditoría de Lara
+        fecha_final = timezone.now().date()
+        fecha_inicial = fecha_final - timedelta(days=7)
+        pdf_lienzo.drawString(30, 720, f"Rango Auditoría: {fecha_inicial} hasta {fecha_final} | Últimos 7 Días")
 
-        # Cómputo telemétrico de facturas semanales
+        # 3. 📉 CÓMPUTO TELEMÉTRICO DIRECTO DESDE LA TABLA FACTURA REAL
         hace_una_semana = timezone.now() - timedelta(days=7)
-        facturas_semana = TransaccionFactura.objects.filter(fecha__gte=hace_una_semana)
+        facturas_semana = Factura.objects.filter(fecha__gte=hace_una_semana)
 
-        total_bs = sum(float(f.total_bs) for f in facturas_semana)
-        total_usd = sum(float(f.total_usd) for f in facturas_semana)
+        # Mapeo matemático blindado convirtiendo los campos Decimal a float
+        total_bs = sum(float(f.total_bs or 0.00) for f in facturas_semana)
+        total_usd = sum(float(f.total_usd or 0.00) for f in facturas_semana)
 
+        # 4. Inyección de Métricas en Pantalla con formato Courier Fiscal
         pdf_lienzo.setFillColor(colors.black)
         pdf_lienzo.setFont("Helvetica-Bold", 12)
         pdf_lienzo.drawString(30, 640, "MÉTRICAS ACUMULADAS EN LA COLA DE ATENCIÓN:")
         
         pdf_lienzo.setFont("Courier-Bold", 11)
         pdf_lienzo.drawString(40, 600, f"• FACTURAS PROCESADAS EN LA SEMANA: {facturas_semana.count()} Docs")
-        pdf_lienzo.drawString(40, 580, f"• TOTAL ACUMULADO EN BOLÍVARES:     {total_bs:.2f} Bs.")
-        pdf_lienzo.drawString(40, 560, f"• TOTAL ACUMULADO EN DÓLARES:       $ {total_usd:.2f} USD")
+        pdf_lienzo.drawString(40, 580, f"• TOTAL ACUMULADO EN BOLÍVARES:     {total_bs:,.2f} Bs.")
+        pdf_lienzo.drawString(40, 560, f"• TOTAL ACUMULADO EN DÓLARES:       $ {total_usd:,.2f} USD")
 
+        # 5. Sellado y despacho del binario
         pdf_lienzo.showPage()
         pdf_lienzo.save()
         buffer_memoria.seek(0)
         
-        response = HttpResponse(buffer_memoria.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="cierre_semanal.pdf"'
-        return response
+        # Retorno eléctrico con FileResponse (Más limpio y moderno que el HttpResponse plano)
+        nombre_archivo = f"Cierre_Semanal_SotoSystem_{fecha_final}.pdf"
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_archivo, content_type='application/pdf')
+        
     except Exception as e:
+        print(f"❌ [SOTO CRITICAL WEEKLY PDF]: {str(e)}")
         return HttpResponse(f"Fallo Semanal: {str(e)}", status=500, content_type="text/plain")
 
-import io
-from django.http import FileResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from .models import TransaccionFactura
-from django.utils import timezone
-
 @csrf_exempt
-def ejecutar_cierre_pdf_api(request):
-    """
-    Recopila las ventas de las últimas 24 horas desde TransaccionFactura
-    y genera el balance fiscal en PDF usando ReportLab de forma nativa.
-    """
+def ejecutar_cierre_mensual_pdf_api(request):
     if request.method != 'POST':
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
-        
+        return HttpResponse("Método no permitido", status=405)
     try:
-        # 📊 1. Extraemos las ventas del día de hoy
-        hoy = timezone.now().date()
-        ventas_hoy = TransaccionFactura.objects.filter(fecha__date=hoy)
-        
-        # Computamos los totales matemáticos en caliente usando Python
-        total_usd = sum(float(v.total_usd) for v in ventas_hoy)
-        total_bs = sum(float(v.total_bs) for v in ventas_hoy)
-        conteo_transacciones = ventas_hoy.count()
+        # 1. Inicializamos el búfer de memoria de ReportLab
+        buffer_memoria = io.BytesIO()
+        pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
+        pdf_lienzo.setTitle("APIO SAAS - REPORTE MENSUAL")
 
-        # 🖨️ 2. Construimos el flujo binario para ReportLab
-        buffer = io.BytesIO()
-        p = canvas.Canvas(buffer, pagesize=letter)
+        # 2. Cabecera Bronce/Dorado Corporativa Mensual Premium
+        pdf_lienzo.setFillColor(colors.HexColor("#7c2d12"))
+        pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
         
-        # Encabezado Estético del Reporte SOTO SYSTEM 2026
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(100, 750, "SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
-        p.setFont("Helvetica", 10)
-        p.drawString(100, 730, f"Fecha de Emisión: {hoy} | Estado: COMPILADO CLOUD")
-        p.drawString(100, 715, "-------------------------------------------------------------------------")
+        pdf_lienzo.setFillColor(colors.white)
+        pdf_lienzo.setFont("Helvetica-Bold", 16)
+        pdf_lienzo.drawString(30, 740, "APIO ERPS SOFTWARE - BALANCE CONSOLIDADO MENSUAL")
+        pdf_lienzo.setFont("Helvetica", 10)
         
-        # Cuerpo del Balance Contable
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(100, 680, f"Transacciones Procesadas: {conteo_transacciones}")
-        p.drawString(100, 660, f"Total Facturado (USD): ${total_usd:,.2f}")
-        p.drawString(100, 640, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
-        
-        # Desglose de canales solicitado por la contadora
-        p.setFont("Helvetica", 11)
-        y_position = 600
-        p.drawString(100, y_position, "Desglose de Operaciones en Caja:")
-        y_position -= 20
-        
-        for v in ventas_hoy:
-            if y_position < 100:  # Control de salto de página básico
-                p.showPage()
-                y_position = 750
-            p.drawString(100, y_position, f"• Doc: {v.numero_factura} | RIF: {v.cliente_identificacion} | Pago: {v.metodo_pago} | Total: ${v.total_usd}")
-            y_position -= 15
+        # Rango mensual dinámico calculado con datetime para el mercado de Lara
+        fecha_final = datetime.date.today()
+        # Filtro de los últimos 30 días operacionales
+        hace_un_mes_date = fecha_final - datetime.timedelta(days=30)
+        pdf_lienzo.drawString(30, 720, f"Rango Auditoría Mensual: {hace_un_mes_date} hasta {fecha_final} | Últimos 30 Días")
 
-        # Cierre y sellado del archivo binario
-        p.showPage()
-        p.save()
-        buffer.seek(0)
-        
-        # 🚀 Retornamos el archivo PDF directamente como un flujo de bytes nativo
-        return FileResponse(buffer, as_attachment=True, filename=f"Cierre_Diario_{hoy}.pdf", content_type='application/pdf')
+        # 3. 📉 CÓMPUTO MENSUAL DESDE LA TABLA FACTURA REAL UNIFICADA
+        hace_un_mes_dt = timezone.now() - datetime.timedelta(days=30)
+        facturas_mes = Factura.objects.filter(fecha__gte=hace_un_mes_dt)
 
+        # Mapeo matemático e inyección limpia convirtiendo los campos Decimal a float
+        total_bs = sum(float(f.total_bs or 0.00) for f in facturas_mes)
+        total_usd = sum(float(f.total_usd or 0.00) for f in facturas_mes)
+
+        # 4. Inyección de Métricas en Pantalla con formato Courier Fiscal
+        pdf_lienzo.setFillColor(colors.black)
+        pdf_lienzo.setFont("Helvetica-Bold", 12)
+        pdf_lienzo.drawString(30, 640, "MÉTRICAS ACUMULADAS EN EL CIERRE DE MES:")
+        
+        pdf_lienzo.setFont("Courier-Bold", 11)
+        pdf_lienzo.drawString(40, 600, f"• TOTAL FACTURAS PROCESADAS EN EL MES: {facturas_mes.count()} Docs")
+        pdf_lienzo.drawString(40, 580, f"• TOTAL ACUMULADO FACTURADO EN BS:     {total_bs:,.2f} Bs.")
+        pdf_lienzo.drawString(40, 560, f"• TOTAL ACUMULADO FACTURADO EN USD:    $ {total_usd:,.2f} USD")
+
+        # 5. Sellado y despacho del binario
+        pdf_lienzo.showPage()
+        pdf_lienzo.save()
+        buffer_memoria.seek(0)
+        
+        nombre_archivo = f"Cierre_Mensual_SotoSystem_{fecha_final.strftime('%Y-%m')}.pdf"
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_archivo, content_type='application/pdf')
+        
     except Exception as e:
-        print(f"❌ [SOTO CRITICAL PDF]: Fallo al compilar ReportLab: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        print(f"❌ [SOTO CRITICAL MONTHLY PDF]: {str(e)}")
+        return HttpResponse(f"Fallo Mensual: {str(e)}", status=500, content_type="text/plain")
 
 # =====================================================================
-# 📱 COMPUERTAS HÍBRIDAS: PAGO MÓVIL RESTRUCTURADO (NÚCLEO ADAPTADO LARA)
+# 📱 NÚCLEO EXCLUSIVO PAGO MÓVIL V2.0 - PROVIDENCIA SENIAT 2026
+# Ubicación: Módulo unificado para validación asíncrona de Lara
 # =====================================================================
 
 @csrf_exempt
 def pago_movil_cliente(request):
     """
-    Renderiza la interfaz informativa para el cliente si fuera necesario.
+    Renderiza la interfaz informativa de contingencia si fuera necesario.
     """
     return JsonResponse({
         'status': 'active',
@@ -672,16 +656,17 @@ def pago_movil_cliente(request):
 @csrf_exempt
 def verificar_pago_movil_api(request, tx_id):
     """
-    API de consulta cíclica a la que Electron interroga si hace falta.
-    Busca en tu tabla real 'TransaccionFactura' usando la columna 'numero_factura'.
+    API de consulta cíclica a la que la pasarela de Electron interroga.
+    Busca de forma blindada en tu tabla real unificada 'Factura'.
     """
     try:
-        from .models import TransaccionFactura
+        from .models import Factura  # 🎯 CONEXIÓN DIRECTA CON TU MODELO REAL UNIFICADO
         
-        # Buscamos si la factura ya fue asentada por la cajera
-        existe = TransaccionFactura.objects.filter(numero_factura=tx_id).exists()
+        # Interrogamos a PostgreSQL si la factura con esa referencia ya fue asentada por la cajera
+        existe = Factura.objects.filter(numero_factura=tx_id).exists()
         
         if existe:
+            print(f"🟢 [SOTO CLOUD]: Petición de pago móvil verificada con éxito para la Factura: {tx_id}")
             return JsonResponse({
                 'status': 'success',
                 'pago_verificado': True,
@@ -691,28 +676,11 @@ def verificar_pago_movil_api(request, tx_id):
         return JsonResponse({
             'status': 'pending',
             'pago_verificado': False,
-            'message': 'Esperando confirmación de datos en el mostrador.'
+            'message': 'Esperando confirmación de datos y validación de referencia en el mostrador.'
         }, status=200)
         
     except Exception as e:
+        print(f"❌ [SOTO CRITICAL VERIFY ERROR]: Fallo en la verificación cíclica: {str(e)}")
         return JsonResponse({'status': 'error', 'message': f"Fallo en verificación: {str(e)}"}, status=500)
 
-# =========================================================================
-# 3. 🔄 API: ARCHIVO HISTÓRICO DE CONSULTA CONTABLE ESTÁTICA
-# =========================================================================
-@csrf_exempt
-def verificar_pago_movil_api(request, tx_id):
-    """
-    Endpoint histórico simplificado. 
-    Retorna un estado plano ya que la verificación asíncrona se mudó al ERP.
-    """
-    if request.method != 'GET':
-        return JsonResponse({'error': 'Método no permitido.'}, status=405)
-        
-    return JsonResponse({
-        'capture_recibido': True,
-        'mensaje': 'Módulo de pasarela en caliente offline activo. Gestión por ERP.',
-        'tx_id': tx_id
-    })
 
-        
