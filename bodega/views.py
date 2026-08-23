@@ -1,11 +1,19 @@
+import io
 import json
+import datetime
 import unicodedata # 🚀 ANTENA NATIVA: Para destruir tildes y acentos en milisegundos
+from datetime import timedelta
+from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse # 🎯 Agregamos FileResponse para los PDF
 from django.views.decorators.csrf import csrf_exempt
-from django.db import transaction
-from django.db import models 
+from django.db import transaction, models 
 from .models import Producto, Factura, DetalleFactura, TasaCambio, Cliente
+
+# 🖨️ DEPENDENCIAS CRÍTICAS DE REPORTLAB PARA ADAPTACIÓN SENIAT 2026
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
 
 
 # =====================================================================
