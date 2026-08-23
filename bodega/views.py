@@ -363,12 +363,12 @@ def procesar_transaccion(request):
         # Cálculos matemáticos precisos con el IVA del 16% de ley venezolano
         total_bs_calculado = (subtotal_usd * tasa_oficial) * 1.16
         
-        # Extraemos y compactamos la lista de harinas, pastas o medicinas
+        # Extraemos y compactamos la lista de harinas, pastas o ropa
         articulos_lista = datos.get('articulos', [])
         string_productos = ", ".join([f"{item.get('nombre', 'Víveres').strip()} (x{item.get('cantidad', 1)})" for item in articulos_lista])
 
-        # 🚀 3. EL ASENTAMIENTO ATÓMICO: Escribimos directamente en tu tabla real de PostgreSQL
-        nueva_venta = TransaccionFactura.objects.create(
+        # 🚀 3. EL ASENTAMIENTO ATÓMICO: Escribimos directamente en tu tabla Factura actualizada
+        nueva_venta = Factura.objects.create(
             numero_factura=nro_factura,
             cliente_identificacion=cliente_id,
             productos_despachados=string_productos[:250] if string_productos else "Mercancía General",
@@ -379,7 +379,7 @@ def procesar_transaccion(request):
             articulos_json=json.dumps(articulos_lista)
         )
 
-        print(f"🟢 [SOTO CLOUD SUCCESS]: Venta {nro_factura} asentada con éxito en Postgres Railway.")
+        print(f"🟢 [SOTO CLOUD SUCCESS]: Venta {nro_factura} asentada con éxito en la tabla Factura en Railway.")
 
         return JsonResponse({
             'status': 'success',
@@ -472,78 +472,60 @@ def ejecutar_cierre_pdf_api(request):
                 if y_posicion < 50:
                     break
         else:
-              # =========================================================================
-            # 🏛️ REPARACIÓN FISCAL REMOTA: CONSULTA REAL SOBRE LA BASE DE DATOS LOCAL
-            # Ubicación: Bloque de Fallback real en bodega/views.py
-            # =========================================================================
+             # 💾 PLAN DE CONTINGENCIA CLOUD: Si el frontend no pasa datos, consulta PostgreSQL Railway
             from django.utils import timezone
-            import datetime
+            from .models import Factura  # 🎯 Conectamos directo con tu tabla real unificada Factura
 
-            # 📋 PASO A: Capturamos la fecha real de hoy en el huso horario de Venezuela
-            hoy_local = timezone.localtime(timezone.now()).date()
-            print(f"📊 [SOTO ENGINE]: Buscando transacciones reales en la DB para: {hoy_local.strftime('%d-%m-%Y')}")
+            hoy = timezone.now().date()
+            # Filtramos todas las facturas procesadas de la jornada de hoy
+            ventas_db = Factura.objects.filter(fecha__date=hoy)
 
-            # 📋 PASO B: Jalamos todas las facturas reales del disco duro ordenadas por la última emitida
-            # Cambia 'Factura' por el nombre exacto de tu modelo si importaste otra clase
-            todas_las_facturas = Factura.objects.all().order_by('-id')
-            facturas_db = []
+            if ventas_db.exists():
+                for venta in ventas_db:
+                    ref = venta.numero_factura or 'TR-N/A'
+                    cedula = venta.cliente_identificacion or 'V-99999999'
+                    metodo = venta.metodo_pago or 'BIOPAGO'
+                    monto_bs = float(venta.total_bs or 0.00)
+                    productos = venta.productos_despachados or 'Mercancía General'
 
-            # 📋 PASO C: Filtramos de forma segura en Python para evitar el desplome del ORM
-            for f in todas_las_facturas:
-                # Intentamos extraer la fecha real del registro de forma elástica
-                fecha_registro = getattr(f, 'fecha_hora', getattr(f, 'fecha', None))
-                
-                if fecha_registro:
-                    # Si es un objeto datetime con zona horaria, lo pasamos a fecha local
-                    if hasattr(fecha_registro, 'date'):
-                        if datetime.datetime.isinstance(fecha_registro, datetime.datetime):
-                            fecha_comparar = timezone.localtime(fecha_registro).date()
-                        else:
-                            fecha_comparar = fecha_registro
-                    else:
-                        fecha_comparar = fecha_registro
-                    
-                    # Si la factura real se emitió el día de hoy, entra directo al reporte del turno
-                    if fecha_comparar == hoy_local:
-                        facturas_db.append(f)
+                    if len(productos) > 35:
+                        productos = productos[:32] + "..."
 
-            # 📋 PASO D: Dibujamos los datos reales y auditados en el lienzo de ReportLab
-            if not facturas_db:
-                pdf_lienzo.setFillColor(colors.HexColor("#475569"))
-                pdf_lienzo.setFont("Helvetica-Bold", 10)
-                pdf_lienzo.drawString(30, y_posicion, "🔒 BALANCE FISCAL EN CERO: No se registran movimientos comerciales reales el día de hoy.")
-            else:
-                pdf_lienzo.setFillColor(colors.black)
-                pdf_lienzo.setFont("Courier", 9)
-                
-                for fac in facturas_db[:30]: # Límite seguro de 30 facturas reales por página
-                    # Capturamos las propiedades reales de tu tabla de forma indestructible
-                    ref = getattr(fac, 'numero_factura', getattr(fac, 'referencia', f"REF-{fac.id}"))
-                    cedula = getattr(fac, 'cliente_identificacion', getattr(fac, 'cedula', "V-ANÓNIMO"))
-                    metodo = getattr(fac, 'metodo_pago', "EFECTIVO").upper()
-                    total = float(getattr(fac, 'total_bs', getattr(fac, 'monto_pagado', 0.00)))
-                    
-                    texto_linea = f"REF: {ref.ljust(10)} | CÉDULA: {cedula.ljust(12)} | MÉTODO: {metodo.ljust(10)} | TOTAL: {total:10.2f} Bs."
+                    texto_linea = f"REF: {ref.ljust(10)} | CÉDULA: {cedula.ljust(12)} | MÉTODO: {metodo.ljust(10)} | TOTAL: {monto_bs:10.2f} Bs."
                     pdf_lienzo.drawString(30, y_posicion, texto_linea)
-                    y_posicion -= 18
-                    
+
+                    # Sublínea estética con el detalle de los víveres o ropa despachada
+                    pdf_lienzo.setFillColor(colors.HexColor("#475569"))
+                    pdf_lienzo.drawString(45, y_posicion - 10, f"📦 DETALLE: {productos}")
+                    pdf_lienzo.setFillColor(colors.black)
+
+                    y_posicion -= 28
                     if y_posicion < 50:
                         break
+            else:
+                # Si la base de datos está totalmente vacía en la jornada actual
+                pdf_lienzo.setFont("Helvetica-Oblique", 10)
+                pdf_lienzo.setFillColor(colors.HexColor("#ef4444"))
+                pdf_lienzo.drawString(30, y_posicion, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
+                pdf_lienzo.setFillColor(colors.black)
 
-        # 5. Guardamos el lienzo contable de ReportLab
+        # 5. 🖨️ CIERRE Y EMISIÓN BINARIA DEL REPORTE FISCAL
         pdf_lienzo.showPage()
         pdf_lienzo.save()
-
-        # 6. Despachamos los bytes limpios hacia el navegador de Electron
-        buffer_memoria.seek(0)
-        response = HttpResponse(buffer_memoria.getvalue(), content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="cierre_caja.pdf"'
         
-        return response
+        # Seteamos el puntero del búfer al inicio para que Django lea los bytes desde el byte 0
+        buffer_memoria.seek(0)
+        
+        # 🎯 SOTO CORE ENCIENDE: Usamos el objeto 'datetime' para extraer la fecha e iluminar la importación
+        fecha_actual_sistema = datetime.date.today().strftime("%Y-%m-%d")
+        nombre_reporte = f"Cierre_Diario_ERP_{fecha_actual_sistema}.pdf"
+        
+        # 🚀 RETORNO ELÉCTRICO NATIVO: Transmitimos el PDF directo a la RAM de tu script de Electron
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
 
     except Exception as e:
-        print(f"❌ ERROR EN EL MOTOR DE REPORTLAB: {str(e)}")
-        return HttpResponse(f"Fallo en la compilación del reporte PDF real: {str(e)}", status=500, content_type="text/plain")
+        print(f"❌ [SOTO CRITICAL PDF]: Fallo catastrófico al compilar ReportLab: {str(e)}")
+        return HttpResponse(f"Error interno del motor PDF: {str(e)}", status=500)
 
 # =========================================================================
 # 📈 CONTROLADORES FISCALES DE CIERRE DE CORTO Y LARGO PLAZO (BUILD 2026)
@@ -672,60 +654,48 @@ def ejecutar_cierre_pdf_api(request):
         print(f"❌ [SOTO CRITICAL PDF]: Fallo al compilar ReportLab: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
-# =========================================================================
-# 1. 📱 INTERFAZ PREMIUM WEB PARA EL CONTROL DE CAPTURES EN EL ERP
-# =========================================================================
-def pago_movil_cliente(request):
-    
-    """
-    Renderiza la plantilla web optimizada.
-    Recibe el identificador único por parámetro GET (?tx=123456)
-    """
-    tx_id = request.GET.get('tx', '')
-    contexto = {
-        'tx_id': tx_id,
-        'banco': 'Mercantil (0105)',
-        'telefono': '0412-5386285',
-        'rif': 'V-27966675'  # Usamos tu cédula en el campo de identificación
-    }
-    return render(request, 'bodega/pago_movil_formulario.html', contexto)
+# =====================================================================
+# 📱 COMPUERTAS HÍBRIDAS: PAGO MÓVIL RESTRUCTURADO (NÚCLEO ADAPTADO LARA)
+# =====================================================================
 
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-# 🎯 CORRECCIÓN QUIRÚRGICA DE IMPORTACIÓN
-from .models import TransaccionFactura
+@csrf_exempt
+def pago_movil_cliente(request):
+    """
+    Renderiza la interfaz informativa para el cliente si fuera necesario.
+    """
+    return JsonResponse({
+        'status': 'active',
+        'message': 'Soto System Gateway: Formulario de auditoría en caja activo.'
+    }, status=200)
 
 
 @csrf_exempt
-def subir_capture_api(request, tx_id):
-    if request.method == 'POST' and request.FILES.get('capture_file'):
-        try:
-            image_file = request.FILES['capture_file']
-            
-            # 🔍 1. Buscamos la transacción en tu tabla real usando tu columna 'numero_factura'
-            # (Si no existe por un parpadeo de red, la crea sobre la marcha para no tumbar el ERP)
-            transaccion, created = TransaccionFactura.objects.get_or_create(numero_factura=tx_id)
-            
-            # 📸 2. Guardamos la cadena masiva o el archivo físico en el campo multimedia
-            # Nota: Si agregas un campo FileField/ImageField llamado 'comprobante_pago' en el futuro lo usará,
-            # por ahora, si usas la variable 'articulos_json' o similar, la dejamos lista.
-            # Aquí asumimos que tienes el campo listo o lo manejas por storage:
-            # transaccion.comprobante_pago = image_file 
-            
-            transaccion.save()
-            
-            print(f"🟢 [SOTO BACKEND]: Capture asociado con éxito en Postgres para la Factura N°: {tx_id}")
-            
+def verificar_pago_movil_api(request, tx_id):
+    """
+    API de consulta cíclica a la que Electron interroga si hace falta.
+    Busca en tu tabla real 'TransaccionFactura' usando la columna 'numero_factura'.
+    """
+    try:
+        from .models import TransaccionFactura
+        
+        # Buscamos si la factura ya fue asentada por la cajera
+        existe = TransaccionFactura.objects.filter(numero_factura=tx_id).exists()
+        
+        if existe:
             return JsonResponse({
                 'status': 'success',
-                'message': 'Comprobante guardado correctamente en la base de datos multimedia.'
-            })
+                'pago_verificado': True,
+                'message': 'Transacción contable asentada con éxito en PostgreSQL Railway.'
+            }, status=200)
             
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': f"Fallo al guardar: {str(e)}"})
-            
-    return JsonResponse({'status': 'error', 'message': 'Petición inválida o sin archivo.'})
-
+        return JsonResponse({
+            'status': 'pending',
+            'pago_verificado': False,
+            'message': 'Esperando confirmación de datos en el mostrador.'
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f"Fallo en verificación: {str(e)}"}, status=500)
 
 # =========================================================================
 # 3. 🔄 API: ARCHIVO HISTÓRICO DE CONSULTA CONTABLE ESTÁTICA
@@ -744,3 +714,5 @@ def verificar_pago_movil_api(request, tx_id):
         'mensaje': 'Módulo de pasarela en caliente offline activo. Gestión por ERP.',
         'tx_id': tx_id
     })
+
+        

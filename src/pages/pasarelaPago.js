@@ -2,7 +2,6 @@
 // BLOQUE 0: CONFIGURACIÓN INTEGRAL DEL ENTORNO DE PASARELA (APIO CORE)
 // =========================================================================
 import { Home } from './home.js';
-import * as QRCode from 'qrcode'; 
 
 const PasarelaPago = {
     // Propiedad mutable global para tu calculadora manual o API del BCV
@@ -339,65 +338,115 @@ PasarelaPago.conmutarMetodoPagoPorIA = function(metodoKey) {
             boxCaja.style.display = 'block';
             
             setTimeout(() => {
-                // =========================================================================
-                // 📱 CASO 4: PAGO MÓVIL AUTOMATIZADO (QR BANCARIO OFFLINE - LAB GABRIEL)
+                                // =========================================================================
+                // 📱 CASO 4: FORMULARIO DE AUDITORÍA DE PAGO MÓVIL (PROVIDENCIA SENIAT 2026)
                 // =========================================================================
                 if (claveDatos === "PAGO_MOVIL_QR") {
                     
-                    // 🚀 LIBERACIÓN DE TAQUILLA: El cajero puede despachar la factura al instante
+                    // 🔒 PROTECCIÓN DE TAQUILLA: El botón de despachar se bloquea hasta validar el comprobante
                     if (botonDespachar) {
-                        botonDespachar.disabled = false;
-                        botonDespachar.style.opacity = '1';
-                        botonDespachar.style.cursor = 'pointer';
-                        botonDespachar.innerText = "🚀 Procesar y Despachar Factura";
+                        botonDespachar.disabled = true;
+                        botonDespachar.style.opacity = '0.4';
+                        botonDespachar.style.cursor = 'not-allowed';
+                        botonDespachar.innerText = "⚠️ Valide los Datos del Pago Móvil Abajo";
                     }
 
-                    // 🧱 ESTRUCTURA BAJO ESTÁNDAR BANCARIO VENEZOLANO CON TUS DATOS REALES
-                    const datosQRBancario = "PAGOMOVIL|0105|V|27966675|04125386285|;";
-
-                    // Inyectamos la estructura visual premium dejando el lienzo <canvas> listo abajo de los botones
+                    // 🧱 INYECCIÓN DE LA INTERFAZ FISCAL CON TUS DATOS DE COMERCIO (GABRIEL V-27966675)
                     contenidoDinamico.innerHTML = `
-                        <div style="display: flex; align-items: center; gap: 20px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-                            <!-- Bloque del QR Nativo por Canvas -->
-                            <div style="background-color: #ffffff; padding: 10px; border-radius: 12px; display: flex; align-items: center; justify-content: center; width: 140px; height: 140px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); box-sizing: border-box; flex-shrink: 0;">
-                                <canvas id="soto-dynamic-desktop-qr" style="width: 120px !important; height: 120px !important; display: block;"></canvas>
+                        <div style="font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box; padding: 10px; background: #111; border-radius: 8px; border: 1px solid #333;">
+                            
+                            <!-- Encabezado de la cuenta del comercio -->
+                            <div style="margin-bottom: 12px; padding: 8px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 4px;">
+                                <span style="font-size: 11px; color: #10b981; font-weight: bold; display: block; text-transform: uppercase;">Cuenta del Comercio:</span>
+                                <span style="font-size: 12px; color: #fff;">Mercantil | 0412-5386285 | V-27.966.675</span>
                             </div>
-                            <!-- Datos de Pago Móvil de Gabriel para validación visual -->
-                            <div style="flex: 1; font-size: 13px; line-height: 1.6; color: #ffffff;">
-                                <strong style="color: #10b981; text-transform: uppercase; display: block; margin-bottom: 4px;">Pago Móvil Interbancario:</strong>
-                                <ul style="margin: 0; padding-left: 16px; list-style-type: square; color: #cbd5e1;">
-                                    <li><strong>Banco:</strong> Mercantil (0105)</li>
-                                    <li><strong>Teléfono:</strong> 0412-5386285</li>
-                                    <li><strong>Cédula:</strong> V-27.966.675</li>
-                                    <li style="color: #eab308; font-weight: bold; margin-top: 6px; list-style-type: none; margin-left: -16px;">• Pídale al cliente que escanee el código QR con su app bancaria para autocompletar los datos de transferencia.</li>
-                                </ul>
+
+                            <p style="font-size: 11px; color: #888; margin: 0 0 12px 0;">Ingrese los datos del comprobante dictado por el cliente:</p>
+
+                            <!-- Formulario de 5 Campos Esenciales -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                                <div>
+                                    <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Banco Emisor:</label>
+                                    <select id="pm-banco" style="width: 100%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;">
+                                        <option value="0105">Mercantil (0105)</option>
+                                        <option value="0102">Venezuela (0102)</option>
+                                        <option value="0108">Provincial (0108)</option>
+                                        <option value="0134">Banesco (0134)</option>
+                                        <option value="OTHER">Otro Banco</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Cédula / RIF Emisor:</label>
+                                    <input type="text" id="pm-cedula" placeholder="Ej: V-12345678" style="width: 90%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Teléfono Celular:</label>
+                                    <input type="text" id="pm-telefono" placeholder="Ej: 0412-5555555" style="width: 90%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Monto Pagado (Bs):</label>
+                                    <input type="number" id="pm-monto" step="0.01" placeholder="0.00" style="width: 90%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px;">
+                                </div>
                             </div>
+
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 3px;">Últimos 4 Dígitos de Referencia Bancaria:</label>
+                                <input type="text" id="pm-referencia" maxlength="4" placeholder="Ej: 4321" style="width: 95%; padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 12px; font-weight: bold; letter-spacing: 2px;">
+                            </div>
+
+                            <!-- 💾 BOTÓN DE CONFIRMACIÓN LOCAL -->
+                            <button type="button" id="btn-confirmar-pm" style="width: 100%; padding: 8px; background: #10b981; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; transition: background 0.2s;">
+                                💾 Confirmar y Validar Datos
+                            </button>
                         </div>
                     `;
 
-                    // 🎛️ INYECCIÓN NATIVA DE PUNTOS BINARIOS (Respiro de 400ms para asegurar el DOM)
+                    // 🎛️ ACCIÓN DEL BOTÓN DE CONFIRMACIÓN (Acople en la RAM de Electron)
                     setTimeout(() => {
-                        try {
-                            const canvasQR = document.getElementById('soto-dynamic-desktop-qr');
-                            if (canvasQR && typeof QRCode !== 'undefined') {
-                                QRCode.toCanvas(canvasQR, datosQRBancario, {
-                                    width: 120,
-                                    margin: 0,
-                                    color: { dark: '#030712', light: '#FFFFFF' },
-                                    errorCorrectionLevel: 'M'
-                                }, function (error) {
-                                    if (error) console.error("❌ [SOTO QR ERROR]:", error);
-                                });
-                                console.log("📡 [SOTO NET]: QR Bancario estático inyectado con éxito en el canvas.");
-                            } else {
-                                console.warn("⚠️ [SOTO NET]: Esperando que el Canvas o la librería QRCode se acoplen en RAM.");
+                        const btnConfirmar = document.getElementById('btn-confirmar-pm');
+                        btnConfirmar.addEventListener('click', () => {
+                            const pmBanco = document.getElementById('pm-banco')?.value;
+                            const pmCedula = document.getElementById('pm-cedula')?.value.trim();
+                            const pmTelefono = document.getElementById('pm-telefono')?.value.trim();
+                            const pmMonto = document.getElementById('pm-monto')?.value;
+                            const pmRef = document.getElementById('pm-referencia')?.value.trim();
+
+                            // Validación básica express para evitar que dejen campos vacíos
+                            if (!pmCedula || !pmTelefono || !pmMonto || pmRef.length < 4) {
+                                alert("⚠️ Alerta de Auditoría: Por favor, complete todos los campos del comprobante y asegure los 4 dígitos de la referencia.");
+                                return;
                             }
-                        } catch (err) {
-                            console.error("❌ [SOTO CRITICAL]: Fallo en la inyección de tinta del QR:", err.message);
-                        }
-                    }, 400);
+
+                            console.log("🟢 [SOTO AUDIT]: Datos del Pago Móvil validados temporalmente en la caché.");
+                            
+                            // Guardamos las variables en el estado temporal de la transacción para el payload final hacia Railway
+                            if (this.estadoTransaccion) {
+                                this.estadoTransaccion.soportePagoMovil = {
+                                    banco: pmBanco,
+                                    cedula: pmCedula,
+                                    telefono: pmTelefono,
+                                    monto: pmMonto,
+                                    referencia: pmRef
+                                };
+                            }
+
+                            // 🔓 LIBERACIÓN TOTAL: Encendemos el botón maestro de despacho
+                            if (botonDespachar) {
+                                botonDespachar.disabled = false;
+                                botonDespachar.style.opacity = '1';
+                                botonDespachar.style.cursor = 'pointer';
+                                botonDespachar.style.background = '#00ffcc';
+                                botonDespachar.style.color = '#000';
+                                botonDespachar.innerText = "🚀 Procesar y Despachar Factura";
+                                btnConfirmar.innerText = "✅ Datos Confirmados Exitosamente";
+                                btnConfirmar.style.background = "#047857";
+                                btnConfirmar.disabled = true;
+                            }
+                        });
+                    }, 200);
 
                 } else {
+
                     // =========================================================================
                     // 💳 RESTO DE MÉTODOS DE PAGO (PUNTO, CASHEA, BIOPAGO)
                     // =========================================================================

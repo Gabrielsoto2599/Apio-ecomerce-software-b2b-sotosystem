@@ -41,6 +41,9 @@ class Producto(models.Model):
         }
 
 
+import uuid
+from django.db import models
+
 class Factura(models.Model):
     """🧾 Encabezado fiscal del mostrador administrado por el motor dual."""
     ESTADOS = [
@@ -53,15 +56,26 @@ class Factura(models.Model):
         ('PUNTO', 'Punto de Venta'),
         ('BIOPAGO', 'Biopago BDV'),
         ('CASHEA', 'Cashea'),
-        ('PAGO_MOVIL_QR', 'Pago Móvil Mayorista QR'),  # 🎯 4to Método Premium
+        ('PAGO_MOVIL', 'Pago Móvil Real'),  # 🎯 Modificado para el formulario contable
     ]
 
+    # Campos Estándar Originales (Mantenidos para no romper compatibilidad)
     codigo_transaccion = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     fecha = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=15, choices=ESTADOS, default='PENDIENTE')
-    metodo_pago = models.CharField(max_length=20, choices=METODOS_PAGO, default='PUNTO') # 💳 Control de caja
+    metodo_pago = models.CharField(max_length=50, choices=METODOS_PAGO, default='PUNTO') # 💳 Aumentado a 50
     total_usd = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     operador = models.CharField(max_length=100, default='Cajero_Generico')
+
+    # 🚀 EXCLUSIVO PROVIDENCIA SENIAT 2026 & REQUERIMIENTOS DE LARA
+    numero_factura = models.CharField(max_length=50, blank=True, null=True, db_index=True)
+    cliente_identificacion = models.CharField(max_length=50, default="V-99999999 (Consumidor Final)")
+    productos_despachados = models.TextField(blank=True, null=True) # Para las harinas, pastas o ropa
+    tasa_bcv = models.DecimalField(max_digits=12, decimal_places=4, default=0.0000)
+    total_bs = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    
+    # 📱 AUDITORÍA MULTIMONEDA: Aquí se guardan los 5 campos del Pago Móvil en formato de texto
+    articulos_json = models.TextField(blank=True, null=True) 
 
     # =========================================================================
     # 📸 BÚNKER DE CAPTURES MAYORISTAS - STORAGE SEGURO (POSTGRESQL CLOUD)
