@@ -1480,13 +1480,15 @@ PasarelaPago.procesarCompraYDespachar = function() {
     // Formateamos la lista compacta de las harinas, pastas o mayonesas que se quedaron en la orden
     const stringProductos = carritoActual.map(item => `${item.nombre ? item.nombre.trim() : 'Víveres'} (x${parseInt(item.cantidad) || 1})`).join(', ');
 
-    const payloadFactura = {
-        operador: "Gabriel - Administrador Central",
-        cliente_identificacion: refCedula,
-        tasa_bcv: tasaDolar,
-        total_usd: subtotalUSD,
-        articulos: carritoActual
-    };
+    // Asegúrate de que el JSON que sale de Electron tenga esta estructura exacta:
+const payloadFactura = {
+    numero_factura: `FAC-${Math.floor(10000 + Math.random() * 90000)}`,
+    cliente_identificacion: document.getElementById('pm-cedula')?.value || "V-99999999",
+    metodo_pago: this.estadoTransaccion?.metodoSeleccionado || "BIOPAGO",
+    tasa_bcv: parseFloat(document.getElementById('tasa-bcv-input')?.value || 0.00),
+    total_usd: parseFloat(this.estadoTransaccion?.totalUsd || 0.00),
+    articulos: this.estadoTransaccion?.carrito || [] // Lista de harinas, ropa, etc.
+};
 
     // 🚀 BYPASS PURIFICADO SOTO SYSTEM (CORREGIDO): Forzamos el origen correcto en el iframe
     const iframeLimpio = document.createElement('iframe');
