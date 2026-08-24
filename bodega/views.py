@@ -424,118 +424,87 @@ from reportlab.lib import colors
 
 @csrf_exempt
 def ejecutar_cierre_pdf_api(request):
+    """
+    Recopila las ventas de las últimas 24 horas desde el modelo unificado Factura
+    y genera el balance fiscal premium en PDF usando ReportLab.
+    """
     if request.method != 'POST':
-        return HttpResponse("Método no permitido", status=405)
-
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        
     try:
-        # 1. 📡 TRAGAMOS LOS DATOS EN VIVO ENVIADOS DESDE LA CONSOLA DEL ERP
-        datos_front = {}
-        movimientos_jornada = []
-        try:
-            datos_front = json.loads(request.body)
-            movimientos_jornada = datos_front.get('movimientos_jornada', [])
-        except Exception:
-            pass
+        # 📊 1. Rango de tiempo absoluto compatible con PostgreSQL Railway
+        from django.utils import timezone
+        import io
+        
+        inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        # Filtramos de forma inmutable en tu tabla real unificada
+        ventas_hoy = Factura.objects.filter(fecha__range=(inicio_dia, fin_dia))
+        
+        # Computamos los totales en caliente usando Python
+        total_usd = sum(float(v.total_usd or 0.00) for v in ventas_hoy)
+        total_bs = sum(float(v.total_bs or 0.00) for v in ventas_hoy)
+        conteo_transacciones = ventas_hoy.count()
 
-        # 2. Inicializamos el búfer de memoria de ReportLab
+        # 🖨️ 2. Construimos el flujo binario para ReportLab
         buffer_memoria = io.BytesIO()
-        pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
-        pdf_lienzo.setTitle("APIO SAAS 2026 - REPORTE DE CIERRE DE CAJA")
-
-        # 3. 🎨 Dibujamos la cabecera institucional premium
-        pdf_lienzo.setFillColor(colors.HexColor("#0b0f19"))
-        pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
+        p = canvas.Canvas(buffer_memoria, pagesize=letter)
+        p.setTitle("SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
         
-        pdf_lienzo.setFillColor(colors.white)
-        pdf_lienzo.setFont("Helvetica-Bold", 16)
-        pdf_lienzo.drawString(30, 740, "APIO E-COMMERCE SOFTWARE - REPORTE DE CIERRE")
-        pdf_lienzo.setFont("Helvetica", 10)
-        pdf_lienzo.drawString(30, 720, "Auditoría General de Movimientos Diarios y Flujo de Caja Comercial")
-
-        # 4. 📈 DETALLE FISCAL: Titulado del Histórico
-        pdf_lienzo.setFillColor(colors.black)
-        pdf_lienzo.setFont("Helvetica-Bold", 12)
-        pdf_lienzo.drawString(30, 650, "HISTORIAL DE TRANSACCIONES AUDITADAS EN EL TURNO:")
-        pdf_lienzo.setStrokeColor(colors.HexColor("#1e293b"))
-        pdf_lienzo.line(30, 640, 580, 640)
-
-        y_posicion = 610
-        pdf_lienzo.setFont("Courier", 8) # Letra Courier limpia tipo impresora fiscal
-
-        # 🎯 ORQUESTADOR DE RENDIMIENTO DUAL
-        if movimientos_jornada and len(movimientos_jornada) > 0:
-            for mov in movimientos_jornada:
-                ref = mov.get('ref', 'TR-N/A')
-                cedula = mov.get('cedula', 'V-99999999')
-                metodo = mov.get('metodo', 'BIOPAGO')
-                monto_bs = float(mov.get('montoBs', 0.00))
-                productos = mov.get('productos', 'Mercancía General')
+        # Encabezado Estético Institucional Premium Dark
+        p.setFillColor(colors.HexColor("#0b0f19"))
+        p.rect(0, 700, 612, 100, fill=True, stroke=False)
+        
+        p.setFillColor(colors.white)
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(30, 750, "APIO E-COMMERCE SOFTWARE - REPORTE DE CIERRE")
+        p.setFont("Helvetica", 10)
+        p.drawString(30, 730, f"Fecha de Emisión: {timezone.now().date()} | Balance Compilado Cloud")
+        p.drawString(30, 715, "-------------------------------------------------------------------------")
+        
+        # Cuerpo del Balance Contable
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 670, f"Transacciones Procesadas hoy: {conteo_transacciones}")
+        p.drawString(30, 650, f"Total Facturado (USD): ${total_usd:,.2f}")
+        p.drawString(30, 630, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
+        p.line(30, 615, 580, 615)
+        
+        # Desglose de canales tipo Impresora Fiscal
+        p.setFont("Courier", 8)
+        y_position = 590
+        
+        if ventas_hoy.exists():
+            for v in ventas_hoy:
+                if y_position < 50:  # Salto de página básico
+                    p.showPage()
+                    y_position = 750
                 
-                if len(productos) > 35:
-                    productos = productos[:32] + "..."
-
-                texto_linea = f"REF: {ref.ljust(10)} | CÉDULA: {cedula.ljust(12)} | MÉTODO: {metodo.ljust(10)} | TOTAL: {monto_bs:10.2f} Bs."
-                pdf_lienzo.drawString(30, y_posicion, texto_linea)
+                ref = (v.numero_factura or 'TR-N/A').ljust(10)
+                cedula = (v.cliente_identificacion or 'V-99999999').ljust(12)
+                metodo = (v.metodo_pago or 'BIOPAGO').ljust(10)
+                monto = f"${float(v.total_usd or 0.00):.2f}"
                 
-                pdf_lienzo.setFillColor(colors.HexColor("#475569"))
-                pdf_lienzo.drawString(45, y_posicion - 10, f"📦 DETALLE: {productos}")
-                pdf_lienzo.setFillColor(colors.black)
-                
-                y_posicion -= 28
-                if y_posicion < 50:
-                    break
+                p.drawString(30, y_position, f"DOC: {ref} | RIF: {cedula} | PAGO: {metodo} | TOTAL: {monto}")
+                y_position -= 15
         else:
-            # 💾 PLAN DE CONTINGENCIA CLOUD: Rango de tiempo absoluto compatible con PostgreSQL Railway
-            from django.utils import timezone
-            from .models import Factura
+            p.setFont("Helvetica-Oblique", 10)
+            p.setFillColor(colors.HexColor("#ef4444"))
+            p.drawString(30, y_position, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
 
-            inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-            
-            ventas_db = Factura.objects.filter(fecha__range=(inicio_dia, fin_dia))
-
-            if ventas_db.exists():
-                for venta in ventas_db:
-                    ref = venta.numero_factura or 'TR-N/A'
-                    cedula = venta.cliente_identificacion or 'V-99999999'
-                    metodo = venta.metodo_pago or 'BIOPAGO'
-                    monto_bs = float(venta.total_bs or 0.00)
-                    productos = venta.productos_despachados or 'Mercancía General'
-
-                    if len(productos) > 35:
-                        productos = productos[:32] + "..."
-
-                    texto_linea = f"REF: {ref.ljust(10)} | CÉDULA: {cedula.ljust(12)} | MÉTODO: {metodo.ljust(10)} | TOTAL: {monto_bs:10.2f} Bs."
-                    pdf_lienzo.drawString(30, y_posicion, texto_linea)
-
-                    pdf_lienzo.setFillColor(colors.HexColor("#475569"))
-                    pdf_lienzo.drawString(45, y_posicion - 10, f"📦 DETALLE: {productos}")
-                    pdf_lienzo.setFillColor(colors.black)
-
-                    y_posicion -= 28
-                    if y_posicion < 50:
-                        break
-            else:
-                pdf_lienzo.setFont("Helvetica-Oblique", 10)
-                pdf_lienzo.setFillColor(colors.HexColor("#ef4444"))
-                pdf_lienzo.drawString(30, y_posicion, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
-                pdf_lienzo.setFillColor(colors.black)
-
-        # 5. 🖨️ CIERRE Y EMISIÓN BINARIA DEL REPORTE FISCAL
-        pdf_lienzo.showPage()
-        pdf_lienzo.save()
-        
+        # Cierre y sellado del archivo binario
+        p.showPage()
+        p.save()
         buffer_memoria.seek(0)
         
-        fecha_actual_sistema = datetime.date.today().strftime("%Y-%m-%d")
-        nombre_reporte = f"Cierre_Diario_ERP_{fecha_actual_sistema}.pdf"
-        
+        # 🚀 Retornamos el archivo PDF directamente como un flujo de bytes nativo
+        nombre_reporte = f"Cierre_Diario_SotoSystem_{timezone.now().date()}.pdf"
         return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
 
     except Exception as e:
-        print(f"❌ [SOTO CRITICAL PDF]: Fallo catastrófico al compilar ReportLab: {str(e)}")
-        return HttpResponse(f"Error interno del motor PDF: {str(e)}", status=500)
-
+        print(f"❌ [SOTO CRITICAL PDF]: Fallo al compilar ReportLab: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @csrf_exempt
 def ejecutar_cierre_semanal_pdf_api(request):
