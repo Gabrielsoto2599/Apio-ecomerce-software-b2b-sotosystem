@@ -455,7 +455,7 @@ def ejecutar_cierre_pdf_api(request):
         y_posicion = 610
         pdf_lienzo.setFont("Courier", 8) # Letra Courier limpia tipo impresora fiscal
 
-        # 🎯 ORQUESTADOR DE RENDIMIENTO DUAL: Si el frontend manda datos en caliente, los prioriza
+        # 🎯 ORQUESTADOR DE RENDIMIENTO DUAL
         if movimientos_jornada and len(movimientos_jornada) > 0:
             for mov in movimientos_jornada:
                 ref = mov.get('ref', 'TR-N/A')
@@ -464,14 +464,12 @@ def ejecutar_cierre_pdf_api(request):
                 monto_bs = float(mov.get('montoBs', 0.00))
                 productos = mov.get('productos', 'Mercancía General')
                 
-                # Recortamos el string de productos si es muy largo para que no se desborde del papel
                 if len(productos) > 35:
                     productos = productos[:32] + "..."
 
                 texto_linea = f"REF: {ref.ljust(10)} | CÉDULA: {cedula.ljust(12)} | MÉTODO: {metodo.ljust(10)} | TOTAL: {monto_bs:10.2f} Bs."
                 pdf_lienzo.drawString(30, y_posicion, texto_linea)
                 
-                # Segunda sublínea pequeña con el inventario despachado
                 pdf_lienzo.setFillColor(colors.HexColor("#475569"))
                 pdf_lienzo.drawString(45, y_posicion - 10, f"📦 DETALLE: {productos}")
                 pdf_lienzo.setFillColor(colors.black)
@@ -480,15 +478,13 @@ def ejecutar_cierre_pdf_api(request):
                 if y_posicion < 50:
                     break
         else:
-             # 💾 PLAN DE CONTINGENCIA CLOUD: Rango de tiempo absoluto compatible con PostgreSQL Railway
+            # 💾 PLAN DE CONTINGENCIA CLOUD: Rango de tiempo absoluto compatible con PostgreSQL Railway
             from django.utils import timezone
             from .models import Factura
 
-            # Calculamos el inicio y fin del día actual con zona horaria consciente
             inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
             fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
             
-            # Filtramos de forma inmutable usando el rango de la jornada
             ventas_db = Factura.objects.filter(fecha__range=(inicio_dia, fin_dia))
 
             if ventas_db.exists():
@@ -522,19 +518,17 @@ def ejecutar_cierre_pdf_api(request):
         pdf_lienzo.showPage()
         pdf_lienzo.save()
         
-        # Seteamos el puntero del búfer al inicio para que Django lea los bytes desde el byte 0
         buffer_memoria.seek(0)
         
-        # 🎯 SOTO CORE ENCIENDE: Usamos el objeto 'datetime' para extraer la fecha e iluminar la importación
         fecha_actual_sistema = datetime.date.today().strftime("%Y-%m-%d")
         nombre_reporte = f"Cierre_Diario_ERP_{fecha_actual_sistema}.pdf"
         
-        # 🚀 RETORNO ELÉCTRICO NATIVO: Transmitimos el PDF directo a la RAM de tu script de Electron
         return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
 
     except Exception as e:
         print(f"❌ [SOTO CRITICAL PDF]: Fallo catastrófico al compilar ReportLab: {str(e)}")
         return HttpResponse(f"Error interno del motor PDF: {str(e)}", status=500)
+
 
 @csrf_exempt
 def ejecutar_cierre_semanal_pdf_api(request):
