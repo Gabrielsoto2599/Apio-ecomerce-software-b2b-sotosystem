@@ -196,28 +196,7 @@ const ErpModulo = {
         `).join('');
     },
 
-    // 🔒 LA FÓRMULA DE GABRIEL: Cierre de Caja con Descarga Asíncrona de PDF
-    ejecutarCierreYGenerarPdf() {
-        console.log("🔒 [Apio ERP Core]: Evaluando registros para inicio de auditoría final...");
-        const movimientos = this.state.movimientosDiarios || [];
-
-        // REGLA DE NEGOCIO CRÍTICA: Impedimos cierres con la caja en blanco
-        if (movimientos.length === 0) {
-            alert("⚠️ Operación Denegada: No se puede ejecutar el Cierre de Caja debido a que el Historial de Movimientos se encuentra vacío.");
-            return;
-        }
-
-        // 📐 Recuperamos la tasa viva de la PC para estampar el reporte real
-        const tasaDolarActual = parseFloat(window.TasaCambioModulo?.state?.precio_bcv || 755.00);
-
-        
-    },
-     
-// =========================================================================
-// 🟪 EXTENSIÓN MAESTRA: COMPILADOR DE BALANCE DIARIO (REPORTLAB)
-// Ubicación: Justo arriba del Cierre Semanal en tus scripts core
-// =========================================================================
-ejecutarCierreYGenerarPdf() {
+       ejecutarCierreYGenerarPdf() {
     console.log("🟪 [SOTO ENGINE]: Generando balance contable de las últimas 24 horas...");
     const iframeDiario = document.createElement('iframe');
     iframeDiario.style.display = 'none';
