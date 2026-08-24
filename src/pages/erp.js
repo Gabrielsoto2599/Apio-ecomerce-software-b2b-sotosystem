@@ -230,16 +230,19 @@ ejecutarCierreYGenerarPdf() {
 
     // Damos un respiro de 50ms para que el iframe asimile el origen en la memoria RAM
     setTimeout(() => {
-        const fetchDiario = iframeDiario.contentWindow.fetch || window.fetch;
-
-        fetchDiario('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
+        // 🎯 CORE REPAIR: Usamos directamente el fetch nativo de la ventana de Electron para saltar bloqueos CORS locales
+        window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/pdf'
+            },
+            body: JSON.stringify({ "origen": "Electron Desktop ERP Master" }) // Mandamos un cuerpo válido para satisfacer a Django
         })
         .then(res => {
             if (!res.ok) {
                 if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
-                throw new Error("Rebote fiscal en el motor diario de Django");
+                throw new Error("Rebote fiscal en el motor diario de Django (Status: " + res.status + ")");
             }
             return res.blob();
         })
@@ -266,7 +269,6 @@ ejecutarCierreYGenerarPdf() {
         });
     }, 50);
 }, // 🎯 CANDADO: Mantén esta coma exacta para que el Cierre Semanal de abajo siga corriendo fino colega
-
 
     // =========================================================================
     // 📅 EXTENSIÓN A: COMPILADOR DE CONSOLIDADO SEMANAL (REPORTLAB)
