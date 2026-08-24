@@ -196,7 +196,88 @@ const ErpModulo = {
         `).join('');
     },
 
-       ejecutarCierreYGenerarPdf() {
+       // 🔒 LA FÓRMULA DE GABRIEL BLINDADA: Cierre de Caja con Descarga Asíncrona de PDF
+    ejecutarCierreYGenerarPdf() {
+        console.log("🔒 [Apio ERP Core]: Evaluando registros para inicio de auditoría final...");
+        
+        // 1. Extraemos el historial vivo de ventas de la RAM de Electron
+        const movimientos = this.state.movimientosDiarios || [];
+
+        // REGLA DE NEGOCIO CRÍTICA: Impedimos cierres con la caja en blanco
+        if (movimientos.length === 0) {
+            alert("⚠️ Operación Denegada: No se puede ejecutar el Cierre de Caja debido a que el Historial de Movimientos se encuentra vacío.");
+            return;
+        }
+
+        // 📐 Recuperamos la tasa viva de la PC para estampar el reporte real
+        const tasaDolarActual = parseFloat(window.TasaCambioModulo?.state?.precio_bcv || 40.00);
+
+        console.log(`📡 [SOTO ENGINE]: Despachando ${movimientos.length} transacciones vivas al motor ReportLab a tasa ${tasaDolarActual} Bs.`);
+
+        // 2. Mapeamos las variables de tu RAM local al formato estricto que exige Python en views.py
+        const movimientosMapeados = movimientos.map(mov => ({
+            ref: mov.ref || mov.numero_factura || 'TR-N/A',
+            cedula: mov.cedula || mov.cliente_identificacion || 'V-99999999',
+            metodo: mov.metodo || mov.metodo_pago || 'BIOPAGO',
+            montoBs: parseFloat(mov.montoBs || mov.total_bs || 0.00),
+            productos: mov.productos || mov.productos_despachados || 'Mercancía General'
+        }));
+
+        // 3. Creamos el iframe fantasma para el manejo del DOM
+        const iframeDiario = document.createElement('iframe');
+        iframeDiario.style.display = 'none';
+        document.body.appendChild(iframeDiario);
+
+        // 4. Disparamos la ráfaga de red nativa usando el window.fetch global de Electron
+        setTimeout(() => {
+            window.fetch('https://railway.app', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/pdf'
+                },
+                body: JSON.stringify({ 
+                    "origen": "Electron Desktop ERP Master",
+                    "tasa_bcv": tasaDolarActual,
+                    "movimientos_jornada": movimientosMapeados // 👈 AQUÍ SE INYECTA EL HISTORIAL REAL EN VIVO
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
+                    throw new Error("Rebote fiscal en el motor diario de Django (Status: " + res.status + ")");
+                }
+                return res.blob();
+            })
+            .then(blob => {
+                // Transformamos los bytes de ReportLab en un enlace de descarga física nativo
+                const urlDescarga = window.URL.createObjectURL(blob);
+                const enlaceDescarga = document.createElement('a');
+                
+                enlaceDescarga.href = urlDescarga;
+                enlaceDescarga.download = `Cierre_Diario_ERP_${new Date().toISOString().split('T')[0]}.pdf`;
+                
+                document.body.appendChild(enlaceDescarga);
+                enlaceDescarga.click();
+                
+                // Limpiamos los nodos de la RAM para evitar fugas de memoria
+                document.body.removeChild(enlaceDescarga);
+                if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
+                console.log("✅ [SOTO ERP]: Cierre Diario PDF descargado con éxito con datos REALES.");
+            })
+            .catch(error => {
+                if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
+                console.error("❌ Error de comunicación en Apio ERP Engine:", error.message);
+            });
+        }, 50);
+    }, // 🎯 CANDADO MÁSTER: Cierre estructural de la función contable
+
+    
+// =========================================================================
+// 🟪 EXTENSIÓN MAESTRA: COMPILADOR DE BALANCE DIARIO (REPORTLAB)
+// Ubicación: Justo arriba del Cierre Semanal en tus scripts core
+// =========================================================================
+ejecutarCierreYGenerarPdf() {
     console.log("🟪 [SOTO ENGINE]: Generando balance contable de las últimas 24 horas...");
     const iframeDiario = document.createElement('iframe');
     iframeDiario.style.display = 'none';
