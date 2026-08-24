@@ -20,8 +20,9 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS("=== Iniciando Carga de Catálogo en soto_system_db ==="))
         
-        # Sembramos la tasa inicial de forma segura
-        TasaCambio.objects.get_or_create(id=1, defaults={'precio_bcv': 45.00})
+        # 📈 RESPETO MULTIMONEDA: Solo garantizamos el registro en la tabla, pero dejamos el precio en 0.00
+        # de modo que si ya existe en PostgreSQL, Django no machacará la tasa manual del comerciante.
+        TasaCambio.objects.get_or_create(id=1, defaults={'precio_bcv': 0.00})
         
         for item in items:
             # Insertar Categorías dinámicamente y sin duplicados
@@ -36,11 +37,12 @@ class Command(BaseCommand):
                     'nombre': item['nombre'].strip(),
                     'precio_usd': item['precio_usd'],
                     'stock': item['stock'],
-                    'categoria': categoria_obj
+                    'categoria': categoria_obj,
+                    'tipo_negocio': 'BODEGA'  # 🎯 SEPARACIÓN DE BODEGA PRESERVADA
                 }
             )
             
             estado = "Registrado" if creado else "Actualizado"
             self.stdout.write(f"[{estado}] {producto_obj.sku} - {producto_obj.nombre}")
 
-        self.stdout.write(self.style.SUCCESS("\n¡Éxito! Tus 53 productos están listos en PostgreSQL."))
+        self.stdout.write(self.style.SUCCESS("\n¡Éxito! Tus 53 productos están listos en PostgreSQL y la tasa se mantiene manual."))

@@ -250,13 +250,17 @@ const CatalogoB2B = {
 // 📡 ANTENA DE ESCUCHA GLOBAL MULTIPERFIL - SOTO SYSTEM (SOLUCIÓN CATÁLOGO FIJO)
 // Ubicación: Módulo de Enlace de Entrada (home.js / App.js)
 // =========================================================================
+
+// 🎯 INTERRUPTOR MAESTRO: Cámbialo a "ROPA" para la Boutique o "BODEGA" para los víveres
+const MODALIDAD_TIENDA_ACTIVA = "ROPA"; 
+
 window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
     const barraInput = document.querySelector('.search-core-input');
     
     // Saneamos la cadena de texto cruda recibida
     const terminoLimpio = textoVoz ? textoVoz.trim() : "";
     
-    console.log(`📡 [SOTO CORE INTERRUPTOR]: Procesando término elástico -> "${terminoLimpio}"`);
+    console.log(`📡 [SOTO CORE INTERRUPTOR]: Procesando término elástico -> "${terminoLimpio}" en modalidad [${MODALIDAD_TIENDA_ACTIVA}]`);
 
     if (barraInput) {
         barraInput.value = terminoLimpio;
@@ -270,10 +274,10 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
     window.App.state.ultimoTerminoBuscado = terminoLimpio;
 
     // 2. ⏱️ GATILLO DE ACCESO ULTRA-RÁPIDO DIRECTO A LA RED DE DJANGO
-    // Reutilizamos el endpoint local corregido libre del prefijo mocho 404
-    let backendBase = 'https://apio-ecomerce-sotfware-b2b-sotosystem-production.up.railway.app'
+    // 🎯 REPARACIÓN DE SUBDOMINIO: Corregido 'software' con la ortografía real de internet
+    let backendBase = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app';
 
-    // Si el campo cae a un silencio total o borrado de letras, restauramos los 53 productos
+    // Si el campo cae a un silencio total o borrado de letras, restauramos los productos
     if (terminoLimpio.length === 0) {
         window.App.state.productosFiltrados = null;
         window.App.state.ultimoTerminoBuscado = "";
@@ -287,10 +291,13 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
         return;
     }
 
+    // 🎯 REPARACIÓN DE ENDPOINT: Apunta milimétricamente a tu views.py e inyecta la MODALIDAD activa
+    const urlFinalBuscador = `${backendBase}/api/v1/buscador-productos-api/?q=${encodeURIComponent(terminoLimpio)}&modalidad=${MODALIDAD_TIENDA_ACTIVA}`;
+
     // Si trae texto (sea tecleado o por voz), disparamos la ráfaga telemétrica nativa
-    window.fetch(`${backendBase}/api/v1/buscador/?q=${encodeURIComponent(terminoLimpio)}`)
+    window.fetch(urlFinalBuscador)
         .then(response => {
-            if (!response.ok) throw new Error("Rebote de red en Django");
+            if (!response.ok) throw new Error("Rebote de red en Django Status: " + response.status);
             return response.json();
         })
         .then(data => {
@@ -298,7 +305,6 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
             window.App.state.productosFiltrados = data.productos || [];
 
             // 🎯 ¡LA VICTORIA ATÓMICA REACCIONARIA!
-            // Si la función global de recalculo del catálogo está viva en la RAM, la ejecuta en milisegundos
             if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
                 window.recalcularGrillaCatalogoB2BEnCaliente();
                 
@@ -309,7 +315,6 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
                     inputRecargado.setSelectionRange(terminoLimpio.length, terminoLimpio.length);
                 }
             } else if (typeof window.App.render === 'function') {
-                // Fallback seguro si la SPA exige el renderizado general del cascarón
                 window.App.render();
             }
         })
