@@ -1627,10 +1627,11 @@ window.addEventListener('keydown', (evento) => {
             bufferEscaneo = ""; // Vaciamos el cargador
         }
     } else {
-        // Vamos acumulando los caracteres que va escupiendo la pistola
-        if (evento.key.length === 1) {
+            // 🛡️ SOTO SHIELD: Validamos que el evento y la propiedad key existan antes de medir su longitud
+        if (evento && evento.key && evento.key.length === 1) {
             bufferEscaneo += evento.key;
         }
+
     }
 });
 
