@@ -100,14 +100,21 @@ def buscador_productos_api(request):
 # 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
 # =====================================================================
 
+@csrf_exempt
 def lista_productos_api(request):
     """
-    Retorna el catálogo completo de los 53 productos en formato JSON.
-    Ideal para que Daniela sincronice el inventario en memoria al arrancar.
+    Retorna el catálogo filtrado por modalidad (BODEGA o ROPA) en formato JSON.
+    Evita la mezcla de harinas con pantalones en el mostrador.
     """
-    productos = Producto.objects.all()
+    # 🔍 Leemos qué tipo de tienda pide ver Electron (por defecto BODEGA)
+    modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
+    
+    # Filtramos de forma blindada en PostgreSQL usando tu nueva columna
+    productos = Producto.objects.filter(tipo_negocio=modalidad, activo=True)
+    
+    # Serializamos usando tu método to_dict() nativo
     data = [p.to_dict() for p in productos]
-    return JsonResponse({"productos": data}, safe=False, status=200)
+    return JsonResponse({"status": "success", "productos": data}, safe=False, status=200)
 
 
 def buscador_productos_api(request):
@@ -172,8 +179,8 @@ def detalle_producto_api(request, id_qr):
         return JsonResponse({"error": "Falta registrar la tasa BCV en la base de datos."}, status=400)
     except Exception:
         return JsonResponse({"error": "Código QR no reconocido en el sistema Apio."}, status=404)
-
-
+    
+    
 # =========================================================================
 # 📊 CONTROLADOR INTEGRAL DE ONBOARDING DE CLIENTES POSTGRESQL (BUILD 2026)
 # Ubicación: Al final de tu bodega/views.py

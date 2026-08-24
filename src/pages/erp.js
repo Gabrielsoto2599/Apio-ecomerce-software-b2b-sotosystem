@@ -388,10 +388,28 @@ ejecutarCierreYGenerarPdf() {
         if (window.CatalogoB2B) window.CatalogoB2B.productos = inventarioVivo;
         if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
             window.recalcularGrillaCatalogoB2BEnCaliente();
+
         }
 
         document.getElementById('form-ingreso-inventario-nuevo').reset();
         alert(`🏆 ¡Inventario Actualizado!\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
+
+        function abrirValidadorOficialSeniat() {
+    const rifValor = document.getElementById('cfg-rif-comercio').value.trim();
+    if (!rifValor) {
+        alert("⚠️ Por favor, ingrese un número de RIF para realizar la consulta.");
+        return;
+    }
+    // Limpiamos guiones para la URL oficial del SENIAT
+    const rifLimpio = rifValor.replace(/-/g, "").toUpperCase();
+    const urlValidador = `https://seniat.gob.ve{rifLimpio}`;
+    
+    // Al estar en Electron, abrimos una ventana externa del navegador de Windows
+    const { shell } = require('electron');
+    shell.openExternal(urlValidador);
+    console.log(`📡 [SOTO LINK]: Abriendo validador síncronizado para el RIF: ${rifLimpio}`);
+}
+
     } // 🎯 LLAVE LIMPIA SIN COMA: Al ser la última propiedad del objeto, NO lleva coma de descarte.
 }; // 🎯 CANDADO MÁSTER SOTO SYSTEM: Cierre definitivo del objeto principal ErpModulo
 

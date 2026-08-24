@@ -16,6 +16,9 @@ class Categoria(models.Model):
 
 
 class Producto(models.Model):
+    # ... tus campos actuales (nombre, precio, etc) ...
+    tipo_negocio = models.CharField(max_length=20, default="BODEGA", choices=[("BODEGA", "Bodega"), ("ROPA", "Tienda de Ropa")])
+
     """📦 Inventario mayorista sincronizado en vivo con el instalador de Windows."""
     # db_index=True en campos clave acelera las consultas de la IA exponencialmente
     id_qr = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)

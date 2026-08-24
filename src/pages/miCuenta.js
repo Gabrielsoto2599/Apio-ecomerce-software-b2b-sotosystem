@@ -91,6 +91,40 @@ const MiCuentaModulo = {
                     Inicializar Ecosistema del Negocio
                 </button>
             </div>
+
+            <!-- 🏢 PANEL DE CONFIGURACIÓN FISCAL DEL COMERCIO (PROVIDENCIA DIGITAL 2026) -->
+<div style="font-family: 'Inter', sans-serif; padding: 20px; background: #0b0f19; border-radius: 8px; border: 1px solid #1e293b; color: #fff;">
+    <h3 style="color: #00ffcc; margin-top: 0; font-size: 16px;">🏛️ Credenciales y Documentación Legal de la Empresa</h3>
+    <p style="font-size: 12px; color: #94a3b8;">Registre el RIF v2.0 y cargue los documentos laborales solicitados para la validación unificada.</p>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <!-- Campo RIF con enlace directo al Validador SENIAT -->
+        <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 5px; color: #cbd5e1;">Número de RIF Digital:</label>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="cfg-rif-comercio" placeholder="Ej: J-400000000" style="flex: 1; padding: 8px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 4px; font-weight: bold;">
+                
+                <!-- Botón de anclaje de búsqueda en vivo -->
+                <button type="button" onclick="abrirValidadorOficialSeniat()" style="padding: 8px 12px; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;" title="Consultar RIF en vivo en el portal del SENIAT">
+                    🔍 Verificar SENIAT
+                </button>
+            </div>
+        </div>
+
+        <!-- Carga Digital del Comprobante -->
+        <div>
+            <label style="display: block; font-size: 12px; margin-bottom: 5px; color: #cbd5e1;">Copia Digital del RIF (PDF/Imagen):</label>
+            <input type="file" id="cfg-rif-file" accept="image/*,application/pdf" style="width: 100%; padding: 5px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 4px; font-size: 11px;">
+        </div>
+    </div>
+
+    <!-- Sección de Documentos Laborales -->
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #1e293b;">
+        <label style="display: block; font-size: 12px; margin-bottom: 5px; color: #cbd5e1;">📁 Expediente y Documentos Laborales Consolidados:</label>
+        <input type="file" id="cfg-laboral-files" multiple style="width: 100%; padding: 5px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 4px; font-size: 11px;">
+    </div>
+</div>
+
         `;
         section.appendChild(oficinaPanel);
 
