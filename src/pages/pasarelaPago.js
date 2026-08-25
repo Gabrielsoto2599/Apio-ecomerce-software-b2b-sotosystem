@@ -3,6 +3,36 @@
 // =========================================================================
 import { Home } from './home.js';
 
+// =========================================================================
+// 💰 ENGINE DE CAJA MASTER: LIQUIDADOR DE VUELTO MULTIMONEDA GLOBAL SOTO POS
+// =========================================================================
+window.calcularVueltoEnCaliente = function(totalVentaUsd, tasaBcv) {
+    // Si los parámetros no llegan dinámicos, los pescamos directamente del DOM del formulario
+    const totalRealUsd = totalVentaUsd || parseFloat(window.App?.state?.montoTotal || 0.00);
+    const tasaRealBcv = tasaBcv || parseFloat(window.TasaCambioModulo?.state?.precio_bcv || 780.00); // 🎯 Toma tu tasa actual de la captura
+
+    const montoRecibidoInput = document.getElementById('pm-pago-cliente');
+    const montoRecibido = montoRecibidoInput ? parseFloat(montoRecibidoInput.value) : 0.00;
+    
+    const cuadroUsd = document.getElementById('vuelto-usd');
+    const cuadroVes = document.getElementById('vuelto-ves');
+
+    // Si la casilla está vacía o el monto recibido es menor al total de la compra, limpiamos la pizarra
+    if (!montoRecibido || montoRecibido <= totalRealUsd) {
+        if (cuadroUsd) cuadroUsd.innerHTML = "$0.00";
+        if (cuadroVes) cuadroVes.innerHTML = "0.00 Bs.";
+        return;
+    }
+
+    // Algoritmo matemático exacto de desglose de vuelto
+    const vueltoUsd = montoRecibido - totalRealUsd;
+    const vueltoVes = vueltoUsd * tasaRealBcv;
+
+    // Inyectamos con formato limpio en las tarjetas neón de tu pasarela
+    if (cuadroUsd) cuadroUsd.innerHTML = `$${vueltoUsd.toFixed(2)}`;
+    if (cuadroVes) cuadroVes.innerHTML = `${vueltoVes.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+};
+
 const PasarelaPago = {
     // Propiedad mutable global para tu calculadora manual o API del BCV
     tasaActivaBCV: 0.00, 
