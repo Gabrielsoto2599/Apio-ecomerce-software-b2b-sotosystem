@@ -1054,16 +1054,8 @@ moduloFacturacion.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: baseline;">
                         <h2 id="factura-total-bs" style="margin: 0; font-size: 26px; font-weight: 900; color: #00D2FF; text-shadow: 0 0 10px rgba(0, 210, 255, 0.3); font-family: monospace;">${totalBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</h2>
                         <span id="factura-total-usd-ref" style="font-size: 13px; font-weight: 800; color: #10b981; font-family: monospace;">Ref: $${subtotalUSD_Base.toFixed(2)}</span>
-       <!-- 🚀 CABLEADO MAESTRO SOTO SYSTEM: Unificamos el namespace al objeto real PasarelaPago -->
-                        <button type="button" id="btn-submit-order" 
-                            onclick="window.PasarelaPago.procesarCompraYDespachar()"
-                            style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #FFFFFF; border: none; padding: 14px 20px; border-radius: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-                            🚀 Confirmar y Despachar Venta
-                        </button>
-                    </div>
-                </div>
-            </div>
-`;
+        `;
+        contenedorInterno.appendChild(moduloFacturacion);
 
 
         // =========================================================================
