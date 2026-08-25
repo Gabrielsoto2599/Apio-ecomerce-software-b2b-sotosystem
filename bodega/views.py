@@ -99,6 +99,7 @@ def buscador_productos_api(request):
 # =====================================================================
 # 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
 # =====================================================================
+from django.db.models import Count, Q
 
 @csrf_exempt
 def lista_productos_api(request):
@@ -106,54 +107,47 @@ def lista_productos_api(request):
     Retorna el catálogo filtrado por modalidad (BODEGA o ROPA) en formato JSON.
     Evita la mezcla de harinas con pantalones en el mostrador.
     """
-    # 🔍 Leemos qué tipo de tienda pide ver Electron (por defecto BODEGA)
     modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
-    
-    # Filtramos de forma blindada en PostgreSQL usando tu nueva columna
     productos = Producto.objects.filter(tipo_negocio=modalidad, activo=True)
-    
-    # Serializamos usando tu método to_dict() nativo
     data = [p.to_dict() for p in productos]
     return JsonResponse({"status": "success", "productos": data}, safe=False, status=200)
 
 
+@csrf_exempt
 def buscador_productos_api(request):
     """
     [CEREBRO DE BÚSQUEDA FLEXIBLE - ENFOQUE MINORISTA SOTO SYSTEM]
-    Busca entre los 53 productos detallistas por nombre, SKU o categoría.
-    Aplica filtros de coincidencia parcial y mapea el contexto B2B.
+    Busca productos por nombre o SKU restringidos estrictamente a la modalidad activa.
     """
     termino = request.GET.get('q', '').strip().lower()
     tipo_catalogo = request.GET.get('catalogo', '').strip().lower()
+    modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
 
     if not termino:
         return JsonResponse({"productos": []}, status=200)
 
-    # 1. Filtro de texto inteligente para las coincidencias parciales
+    # 1. Filtro elástico de coincidencia parcial
     filtros = (
-        models.Q(nombre__icontains=termino) | 
-        models.Q(sku__icontains=termino) |
-        models.Q(categoria__nombre__icontains=termino)
+        Q(nombre__icontains=termino) | 
+        Q(sku__icontains=termino) |
+        Q(categoria__nombre__icontains=termino)
     )
 
-    # 2. Ejecución optimizada de la consulta perezosa en Postgres
-    query_productos = Producto.objects.filter(filtros).distinct()
+    # 2. 🛡️ CANDADO DE ENTORNO: Obligamos a Postgres a buscar solo en el pasillo activo (BODEGA o ROPA)
+    query_productos = Producto.objects.filter(filtros, tipo_negocio=modalidad, activo=True).distinct()
 
-    # 3. Serialización a diccionarios puros para JSON
     data = [p.to_dict() for p in query_productos]
-    
-    # 4. Estructuración del modo operativo para el Frontend y Daniela IA
     es_b2b = (tipo_catalogo == 'b2b')
     
-    # 5. RETORNO ÚNICO AL FINAL DE LA FUNCIÓN
     return JsonResponse({
         "productos": data, 
         "conteo": len(data),
         "contexto_busqueda": "B2B_MINORISTA" if es_b2b else "B2C_DETALLISTA",
-        "sugerencia_empaque": "Sugerir venta por bulto/docena de la misma existencia" if es_b2b else "Venta individual"
+        "sugerencia_empaque": "Sugerir venta por bulto/docena" if es_b2b else "Venta individual"
     }, status=200)
 
 
+@csrf_exempt
 def detalle_producto_api(request, id_qr):
     """
     Busca un producto por su UUID de QR escaneado.
@@ -163,7 +157,6 @@ def detalle_producto_api(request, id_qr):
         producto = get_object_or_404(Producto, id_qr=id_qr)
         tasa = TasaCambio.objects.latest('fecha_actualizacion')
         
-        # Usamos el valor real fijado manualmente en Postgres
         precio_ves = round(float(producto.precio_usd) * float(tasa.precio_bcv), 2)
         guion_vocal = f"Es {producto.nombre}. Tiene un costo de {producto.precio_usd} dólares, que equivalen a {precio_ves} bolívares."
         
@@ -179,7 +172,62 @@ def detalle_producto_api(request, id_qr):
         return JsonResponse({"error": "Falta registrar la tasa BCV en la base de datos."}, status=400)
     except Exception:
         return JsonResponse({"error": "Código QR no reconocido en el sistema Apio."}, status=404)
+
+
+@csrf_exempt
+def metricas_analitica_api(request):
+    """
+    📊 DISPARADOR DE ANALÍTICA GERENCIAL:
+    Calcula el producto estrella más vendido del mes moliendo los JSON de la tabla Factura.
+    """
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
     
+    try:
+        from .models import Factura
+        import datetime
+        
+        hoy = datetime.date.today()
+        # Filtramos las facturas del mes en curso
+        facturas_mes = Factura.objects.filter(fecha__year=hoy.year, fecha__month=hoy.month)
+        
+        conteo_skus = {}
+        
+        # Molienda de datos: recorremos las facturas y extraemos los artículos
+        for fac in facturas_mes:
+            # Si guardas los productos como string/JSON en la columna unificada, los parseamos
+            try:
+                # Modifica según cómo guardes el string de productos (si es lista u objeto)
+                articulos = json.loads(fac.productos_despachados) if isinstance(fac.productos_despachados, str) else fac.productos_despachados
+                if isinstance(articulos, list):
+                    for art in articulos:
+                        sku = art.get('sku', 'Desconocido')
+                        nombre = art.get('nombre', 'Mercancía General')
+                        cantidad = int(art.get('cantidad', 1))
+                        
+                        if sku not in conteo_skus:
+                            conteo_skus[sku] = {"nombre": nombre, "total_unidades": 0}
+                        conteo_skus[sku]["total_unidades"] += cantidad
+            except Exception:
+                # Salvaguarda si la factura tiene formato de texto plano
+                pass
+
+        # Encontramos el líder de la tabla
+        if conteo_skus:
+            producto_estrella_sku = max(conteo_skus, key=lambda k: conteo_skus[k]["total_unidades"])
+            producto_estrella = {
+                "sku": producto_estrella_sku,
+                "nombre": conteo_skus[producto_estrella_sku]["nombre"],
+                "unidades": conteo_skus[producto_estrella_sku]["total_unidades"]
+            }
+        else:
+            producto_estrella = {"sku": "N/A", "nombre": "Sin transacciones este mes", "unidades": 0}
+            
+        return JsonResponse({"status": "success", "producto_mas_vendido": producto_estrella})
+        
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
     
 # =========================================================================
 # 📊 CONTROLADOR INTEGRAL DE ONBOARDING DE CLIENTES POSTGRESQL (BUILD 2026)
