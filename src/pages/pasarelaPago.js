@@ -935,115 +935,135 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
         contenedorInterno.appendChild(moduloCarritoGrid);
 
 
-        // =========================================================================
+
+                // =========================================================================
 // BLOQUE 4-A: MAQUETACIÓN FÍSICA DE LA CONSOLA DE CHECKOUT (CERO ABSOLUTO PURE 2026)
 // Ubicación: pasarelaPago.js
 // =========================================================================
-        const moduloFacturacion = document.createElement('section');
-        moduloFacturacion.id = "step-billing-console";
-        moduloFacturacion.className = "glass-card rounded-2xl relative overflow-hidden transition-all duration-300";
-        moduloFacturacion.setAttribute('style', 'background-color: #0b0f19; padding: 24px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #10b981; position: relative; overflow: hidden; width: 100%; box-sizing: border-box; margin-bottom: 24px;');
+const moduloFacturacion = document.createElement('section');
+moduloFacturacion.id = "step-billing-console";
+moduloFacturacion.className = "glass-card rounded-2xl relative overflow-hidden transition-all duration-300";
+moduloFacturacion.setAttribute('style', 'background-color: #0b0f19; padding: 24px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #10b981; position: relative; overflow: hidden; width: 100%; box-sizing: border-box; margin-bottom: 24px;');
 
-        // 🎯 CORE REPAIR SOTO SYSTEM: Sincronizamos con el monto real acumulado en tu Carrito Global de la SPA
-        const subtotalUSD_Base = parseFloat(window.App?.state?.montoTotal || this.estadoTransaccion.montoTotal || 0.00);
+// 🎯 CORE REPAIR SOTO SYSTEM: Sincronizamos con el monto real acumulado en tu Carrito Global de la SPA
+const subtotalUSD_Base = parseFloat(window.App?.state?.montoTotal || this.estadoTransaccion?.montoTotal || 0.00);
+
+// 📡 ANCLAJE FISCAL REACCIONA CERO: Extraemos la tasa viva de la RAM
+let tasaBCV_Base = 0.00; // Nace estrictamente en cero absoluto
+
+if (window.TasaCambioModulo && window.TasaCambioModulo.state && window.TasaCambioModulo.state.precio_bcv) {
+    tasaBCV_Base = parseFloat(window.TasaCambioModulo.state.precio_bcv);
+} else if (window.App && window.App.state && window.App.state.tasaDelDia) {
+    tasaBCV_Base = parseFloat(window.App.state.tasaDelDia);
+} else {
+    // Rescate persistente del almacenamiento local
+    const tasaPersistida = localStorage.getItem('APIO_TASA_ACTUAL_BS');
+    tasaBCV_Base = tasaPersistida ? parseFloat(tasaPersistida) : 0.00; // 🎯 ELIMINADO EL 755 FIJO: Inicializa en 0.00
+}
+
+// 🚨 EL CANDADO DE PATRIMONIO SOTO SYSTEM: Si la tasa sigue en cero, no inventa números quemados
+if (tasaBCV_Base <= 0) {
+    console.warn("⚠️ [APIO B2B]: Tasa cambiaria en cero latente. Esperando recalibración manual o IA.");
+    tasaBCV_Base = 0.00;
+}
+
+// RECALCULO FISCAL SEGURO (Base imponible en Bs + Adición del 16% del IVA de ley)
+const baseImponibleBs_Base = subtotalUSD_Base * tasaBCV_Base;
+const ivaBs_Base = baseImponibleBs_Base * 0.16;
+const totalBs_Base = baseImponibleBs_Base + ivaBs_Base;
+
+// Sincronizamos las variables fiscales en la RAM de forma inmediata para el recibo neón
+if (this.estadoTransaccion) {
+    this.estadoTransaccion.montoBs = totalBs_Base;
+    this.estadoTransaccion.totalUsd = subtotalUSD_Base;
+}
+this.tasaActivaBCV = tasaBCV_Base;
+
+// 🖨️ INYECCIÓN INTEGRAL DEL INNERHTML SANEADO LIBRE DE COMENTARIOS INTERNOS CRUZADOS
+moduloFacturacion.innerHTML = `
+    <!-- Encabezado de la Sección -->
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background-color: #10b981; display: flex; align-items: center; justify-content: center; font-weight: 900; font-family: 'Inter', sans-serif; color: #FFFFFF; font-size: 13px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.65);">4</span>
+        <h3 style="font-weight: 800; font-size: 16px; color: #FFFFFF; margin: 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">Consola de Facturación Legal y Despacho</h3>
+    </div>
+
+    <!-- Distribución Adaptativa del Checkout de la Bodega -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; width: 100%; box-sizing: border-box;">
         
-        // 📡 ANCLAJE FISCAL REACCIONA CERO: Extraemos la tasa viva de la RAM
-        let tasaBCV_Base = 0.00; // Nace estrictamente en cero absoluto
-        
-        if (window.TasaCambioModulo && window.TasaCambioModulo.state && window.TasaCambioModulo.state.precio_bcv) {
-            tasaBCV_Base = parseFloat(window.TasaCambioModulo.state.precio_bcv);
-        } else if (window.App && window.App.state && window.App.state.tasaDelDia) {
-            tasaBCV_Base = parseFloat(window.App.state.tasaDelDia);
-        } else {
-            // Rescate persistente del almacenamiento local
-            const tasaPersistida = localStorage.getItem('APIO_TASA_ACTUAL_BS');
-            tasaBCV_Base = tasaPersistida ? parseFloat(tasaPersistida) : 0.00; // 🎯 ELIMINADO EL 755 FIJO: Inicializa en 0.00
-        }
+        <!-- Columna Izquierda: Panel de Animación Contextual de Hardware -->
+        <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+            <div id="panel-animacion-hardware" style="background-color: #030712; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; font-family: monospace;">
+                <!-- Inyectado dinámicamente por la capa de control de tu IA -->
+            </div>
+        </div>
 
-        // 🚨 EL CANDADO DE PATRIMONIO SOTO SYSTEM: Si la tasa sigue en cero, no inventa números quemados
-        if (tasaBCV_Base <= 0) {
-            console.warn("⚠️ [APIO B2B]: Tasa cambiaria en cero latente. Esperando recalibración manual o IA.");
-            tasaBCV_Base = 0.00;
-        }
-        
-        // RECALCULO FISCAL SEGURO (Base imponible en Bs + Adición del 16% del IVA de ley)
-        const baseImponibleBs_Base = subtotalUSD_Base * tasaBCV_Base;
-        const ivaBs_Base = baseImponibleBs_Base * 0.16;
-        const totalBs_Base = baseImponibleBs_Base + ivaBs_Base;
-
-        // Sincronizamos las variables fiscales en la RAM de forma inmediata para el recibo neón
-        this.estadoTransaccion.montoBs = totalBs_Base;
-        this.tasaActivaBCV = tasaBCV_Base; 
-
-        moduloFacturacion.innerHTML = `
-            <!-- Encabezado de la Sección -->
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                <!-- EL NUMERO 4 TOTALMENTE VISIBLE Y CON BRILLO GLOW VERDE NEÓN -->
-                <span style="width: 24px; height: 24px; border-radius: 50%; background-color: #10b981; display: flex; align-items: center; justify-content: center; font-weight: 900; font-family: 'Inter', sans-serif; color: #FFFFFF; font-size: 13px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.65);">4</span>
-                <h3 style="font-weight: 800; font-size: 16px; color: #FFFFFF; margin: 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">Consola de Facturación Legal y Despacho</h3>
+        <!-- Columna Derecha: Sumario de Cierre Fiscal Estricto (Bs. / USD) -->
+        <div style="background-color: #030712; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+            <div>
+                <h4 style="font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin: 0 0 12px 0; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+                    Desglose Fiscal (Tasa Oficial BCV)
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Subtotal Base (USD):</span>
+                        <span id="factura-subtotal-usd" style="font-weight: 700; color: #FFFFFF;">$${subtotalUSD_Base.toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Base Imponible (Bs.):</span>
+                        <span id="factura-base-bs" style="font-weight: 600; color: #cbd5e1; font-family: monospace;">${baseImponibleBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">IVA de Ley (16% Bs.):</span>
+                        <span id="factura-iva-bs" style="font-weight: 600; color: #ef4444; font-family: monospace;">${ivaBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Distribución Adaptativa del Checkout de la Bodega -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 24px; width: 100%; box-sizing: border-box;">
+            <!-- 💵 LIQUIDADOR DE VUELTO AUTOMÁTICO (SOTO CASH ENGINE) -->
+            <div style="margin-top: 15px; padding: 12px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; font-family: 'Inter', sans-serif;">
+                <span style="font-size: 11px; color: #ff9900; font-weight: bold; display: block; text-transform: uppercase; margin-bottom: 8px;">💰 Control de Caja y Vuelto:</span>
                 
-                <!-- Columna Izquierda: Panel de Animación Contextual de Hardware (📋 GUÍA DE FLUJO OPERACIONAL DE TAQUILLA) -->
-                <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
-                    <!-- Mantenemos el ID intacto de tu panel para inyección de logs estilo consola -->
-                    <div id="panel-animacion-hardware" style="background-color: #030712; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; min-height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; font-family: monospace;">
-                        <!-- Inyectado dinámicamente por la capa de control de tu IA -->
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 11px; color: #8b949e; margin-bottom: 3px;">Monto Recibido ($):</label>
+                        <input type="number" id="pm-pago-cliente" placeholder="0.00" oninput="window.calcularVueltoEnCaliente(${subtotalUSD_Base}, ${tasaBCV_Base})" style="width: 100%; padding: 6px; background: #0d1117; border: 1px solid #30363d; color: #fff; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 11px; color: #8b949e; margin-bottom: 3px;">Tasa BCV:</label>
+                        <input type="number" id="pm-tasa-vuelto" value="${tasaBCV_Base.toFixed(2)}" disabled style="width: 100%; padding: 6px; background: #21262d; border: 1px solid #30363d; color: #8b949e; border-radius: 4px; font-size: 12px; font-weight: bold; text-align: center;">
                     </div>
                 </div>
 
-                <!-- Columna Derecha: Sumario de Cierre Fiscal Estricto (Bs. / USD) -->
-                <div style="background-color: #030712; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; font-family: 'Inter', sans-serif;">
-                    <div>
-                        <h4 style="font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; margin: 0 0 12px 0; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
-                            Desglose Fiscal (Tasa Oficial BCV)
-                        </h4>
-                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #64748b;">Subtotal Base (USD):</span>
-                                <span id="factura-subtotal-usd" style="font-weight: 700; color: #FFFFFF;">$${subtotalUSD_Base.toFixed(2)}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #64748b;">Base Imponible (Bs.):</span>
-                                <span id="factura-base-bs" style="font-weight: 600; color: #cbd5e1; font-family: monospace;">${baseImponibleBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #64748b;">IVA de Ley (16% Bs.):</span>
-                                <span id="factura-iva-bs" style="font-weight: 600; color: #ef4444; font-family: monospace;">${ivaBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</span>
-                            </div>
-                        </div>
+                <!-- Pizarra de Resultados de Vuelto -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #30363d;">
+                    <div style="background: #0d1117; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #238636;">
+                        <span style="display: block; font-size: 10px; color: #58a6ff;">VUELTO EN USD</span>
+                        <strong id="vuelto-usd" style="font-size: 14px; color: #2ea44f;">$0.00</strong>
                     </div>
+                    <div style="background: #0d1117; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #238636;">
+                        <span style="display: block; font-size: 10px; color: #58a6ff;">VUELTO EN VES</span>
+                        <strong id="vuelto-ves" style="font-size: 14px; color: #2ea44f;">0.00 Bs.</strong>
+                    </div>
+                </div>
+            </div>
 
-
-                    // =========================================================================
-// ZONA DE IMPACTO TOTALIZADOR Y DISPARO TRANSACCIONAL (AUDITADO Y BLINDADO)
-// Ubicación: pasarelaPago.js -> Cierre de la maquetación del innerHTML
-// =========================================================================
-                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #1e293b;">
-                        <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px;">
-                            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Neto a Pagar:</span>
-                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                                <!-- ENCIENDE EN CYAN ELÉCTRICO BRILLANTE CON SOMBRA DE TEXTO PRESET GLOW -->
-                                <h2 id="factura-total-bs" style="margin: 0; font-size: 26px; font-weight: 900; color: #00D2FF; text-shadow: 0 0 10px rgba(0, 210, 255, 0.3); font-family: monospace;">${totalBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</h2>
-                                <span id="factura-total-usd-ref" style="font-size: 13px; font-weight: 800; color: #10b981; font-family: monospace;">Ref: $${subtotalUSD_Base.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        
-                        <!-- 🚀 CABLEADO MAESTRO SOTO SYSTEM: Unificamos el namespace al objeto real PasarelaPago -->
+            <!-- ZONA DE IMPACTO TOTALIZADOR Y DISPARO TRANSACCIONAL (AUDITADO Y BLINDADO) -->
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed #1e293b;">
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px;">
+                    <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Neto a Pagar:</span>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <h2 id="factura-total-bs" style="margin: 0; font-size: 26px; font-weight: 900; color: #00D2FF; text-shadow: 0 0 10px rgba(0, 210, 255, 0.3); font-family: monospace;">${totalBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</h2>
+                        <span id="factura-total-usd-ref" style="font-size: 13px; font-weight: 800; color: #10b981; font-family: monospace;">Ref: $${subtotalUSD_Base.toFixed(2)}</span>
+       <!-- 🚀 CABLEADO MAESTRO SOTO SYSTEM: Unificamos el namespace al objeto real PasarelaPago -->
                         <button type="button" id="btn-submit-order" 
                             onclick="window.PasarelaPago.procesarCompraYDespachar()"
-                            style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #FFFFFF; border: none; padding: 14px 20px; border-radius: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 1; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);"
-                            onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(16, 185, 129, 0.6)';"
-                            onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px rgba(16, 185, 129, 0.4)';">
-                            📋 Procesar Compra y Despachar
+                            style="width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #FFFFFF; border: none; padding: 14px 20px; border-radius: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; letter-spacing: 0.05em; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                            🚀 Confirmar y Despachar Venta
                         </button>
                     </div>
                 </div>
             </div>
-        `;
-        contenedorInterno.appendChild(moduloFacturacion);
+`;
 
 
         // =========================================================================
@@ -1132,6 +1152,31 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
             labelTotalBs.style.textShadow = "0 0 10px rgba(0, 210, 255, 0.3)";
         }
         if (labelTotalUsdRef) labelTotalUsdRef.innerText = `Ref: $${subtotalUSD.toFixed(2)}`;
+
+    function calcularVueltoEnCaliente() {
+    // Tomamos el total real de la venta desde el estado de tu RAM
+    const totalVentaUsd = parseFloat(window.PasarelaPago?.estadoTransaccion?.totalUsd || 0.00);
+    const montoRecibido = parseFloat(document.getElementById('pm-pago-cliente').value || 0.00);
+    
+    // Capturamos la tasa del BCV configurada en el ERP
+    const tasaBcvInput = document.getElementById('tasa-bcv-input') || document.getElementById('pm-tasa-vuelto');
+    const tasaBcv = parseFloat(tasaBcvInput?.value || 45.00);
+
+    if (montoRecibido <= totalVentaUsd) {
+        document.getElementById('vuelto-usd').innerText = "$0.00";
+        document.getElementById('vuelto-ves').innerText = "0.00 Bs.";
+        return;
+    }
+
+    // Algoritmo de desglose dual
+    const vueltoUsd = montoRecibido - totalVentaUsd;
+    const vueltoVes = vueltoUsd * tasaBcv;
+
+    // Inyectamos los resultados formateados en la pizarra neón
+    document.getElementById('vuelto-usd').innerText = `$${vueltoUsd.toFixed(2)}`;
+    document.getElementById('vuelto-ves').innerText = `${vueltoVes.toFixed(2)} Bs.`;
+}
+
 
         // =========================================================================
         // INYECCIÓN DE VIDA EN LA CONSOLA DE DANIELA IA IZQUIERDA (MODO LATENTE)
