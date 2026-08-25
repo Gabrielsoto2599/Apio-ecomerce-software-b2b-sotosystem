@@ -405,37 +405,6 @@ const ErpModulo = {
     } // 🎯 Cierre estructural perfecto de ingresarMercanciaNuevaManual
 }; // 🎯 CANDADO MÁSTER SOTO SYSTEM: Cierre definitivo del objeto principal ErpModulo
 
-// =========================================================================
-// 🏛️ ANCLAJE TELEMÉTRICO OFICIAL PORTAL FISCAL SENIAT DIGITAL v2.0
-// Ubicación: Espacio Global (Fuera de la clase ErpModulo para evitar bloqueos)
-// =========================================================================
-window.abrirValidadorOficialSeniat = function() {
-    const inputRif = document.getElementById('cfg-rif-comercio');
-    const rifValor = inputRif ? inputRif.value.trim() : "";
-    
-    if (!rifValor) {
-        alert("⚠️ Por favor, ingrese un número de RIF para realizar la consulta oficial.");
-        return;
-    }
-    
-    // Saneamos el RIF destruyendo guiones para la compatibilidad del Portal del SENIAT
-    const rifLimpio = rifValor.replace(/-/g, "").toUpperCase();
-    
-    // URL síncronizada oficial del portal de validación masiva del SENIAT
-    const urlValidador = `https://pda.seniat.gob.ve/validadorRif?rif=${rifLimpio}`;
-   
-    try {
-        // Ejecución nativa a través del puente shell de Electron directo a Windows
-        const { shell } = require('electron');
-        shell.openExternal(urlValidador);
-        console.log(`📡 [SOTO LINK SUCCESS]: Abriendo portal oficial del SENIAT para RIF: ${rifLimpio}`);
-    } catch (err) {
-        // Fallback seguro por si se prueba fuera del contenedor ejecutable
-        window.open(urlValidador, '_blank');
-        console.warn("⚠️ [SOTO LINK FALLBACK]: Abriendo validador vía navegador web clásico.");
-    }
-};
-
 // Vinculamos al entorno global window para evitar bloqueos en el ruteador de App.js
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
