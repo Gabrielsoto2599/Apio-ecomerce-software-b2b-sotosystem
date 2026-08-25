@@ -273,7 +273,7 @@ const ErpModulo = {
         }, 50);
     }, // 🎯 CANDADO MÁSTER: Cierre estructural de la función contable
 
-    // =========================================================================
+        // =========================================================================
     // 📅 EXTENSIÓN A: COMPILADOR DE CONSOLIDADO SEMANAL (REPORTLAB)
     // =========================================================================
     ejecutarCierreSemanalPdf() {
@@ -281,16 +281,20 @@ const ErpModulo = {
         const iframeSemanal = document.createElement('iframe');
         iframeSemanal.style.display = 'none';
         document.body.appendChild(iframeSemanal);
-        const fetchSemanal = iframeSemanal.contentWindow.fetch;
 
-        fetchSemanal('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-semanal/', {
+        // 🎯 CORE REPAIR: Usamos directamente el fetch nativo global para saltar bloqueos CORS locales de Electron
+        window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-semanal/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/pdf'
+            },
+            body: JSON.stringify({ "origen": "Electron Desktop ERP Master Semanal" })
         })
         .then(res => {
             if (!res.ok) {
-                document.body.removeChild(iframeSemanal);
-                throw new Error("Rebote fiscal en el motor semanal de Django");
+                if (document.body.contains(iframeSemanal)) document.body.removeChild(iframeSemanal);
+                throw new Error("Rebote fiscal en el motor semanal de Django (Status: " + res.status + ")");
             }
             return res.blob();
         })
@@ -302,56 +306,16 @@ const ErpModulo = {
             document.body.appendChild(enlace);
             enlace.click();
             enlace.remove();
-            document.body.removeChild(iframeSemanal);
+            if (document.body.contains(iframeSemanal)) document.body.removeChild(iframeSemanal);
 
             alert("📅 [BALANCE SEMANAL COMPLETADO]\n\n• Reporte emitido en PDF.");
         })
         .catch(err => {
             console.error("❌ Falla Semanal:", err.message);
             if (document.body.contains(iframeSemanal)) document.body.removeChild(iframeSemanal);
-            alert("⚠️ Alerta: Servidor de Django fuera de línea.");
+            alert("⚠️ Alerta: Error de comunicación con el motor semanal.");
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque A y le da paso en limpio al Bloque B
-
-    // =========================================================================
-    // 🏛️ EXTENSIÓN B: REPORTE DE MES FISCAL - DECLARACIÓN IVA 16% (SENIAT)
-    // =========================================================================
-    ejecutarCierreMensualPdf() {
-        console.log("📡 [SOTO CLOUD]: Compilando libro de ventas del mes...");
-        const iframeMensual = document.createElement('iframe');
-        iframeMensual.style.display = 'none';
-        document.body.appendChild(iframeMensual);
-        const fetchMensual = iframeMensual.contentWindow.fetch;
-
-        fetchMensual('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-mensual/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(res => {
-            if (!res.ok) {
-                document.body.removeChild(iframeMensual);
-                throw new Error("Rebote impositivo en Django");
-            }
-            return res.blob();
-        })
-        .then(blobPdf => {
-            const urlDescarga = window.URL.createObjectURL(blobPdf);
-            const enlace = document.createElement('a');
-            enlace.href = urlDescarga;
-            enlace.download = `REPORTE_MENSUAL_FISCAL_${new Date().toISOString().split('T')[0]}.pdf`;
-            document.body.appendChild(enlace);
-            enlace.click();
-            enlace.remove();
-            document.body.removeChild(iframeMensual);
-
-            alert("🏛️ [REPORTE FISCAL MENSUAL EMITIDO - SENIAT VENEZUELA]");
-        })
-        .catch(err => {
-            console.error("❌ Falla Mensual:", err.message);
-            if (document.body.contains(iframeMensual)) document.body.removeChild(iframeMensual);
-            alert("⚠️ Alerta: Servidor fuera de línea.");
-        });
-    }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque B y le da paso en limpio al Bloque C
 
         // =========================================================================
     // 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE (PROVEEDORES POLAR/TUNAL)
@@ -397,13 +361,18 @@ const ErpModulo = {
             window.recalcularGrillaCatalogoB2BEnCaliente();
         }
 
-        // Reseteamos el formulario de forma segura si el nodo existe
+                // Reseteamos el formulario de forma segura si el nodo existe
         const formularioIngreso = document.getElementById('form-ingreso-inventario-nuevo');
         if (formularioIngreso) formularioIngreso.reset();
         
         alert(`🏆 ¡Inventario Actualizado!\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
-    } // 🎯 Cierre estructural perfecto de ingresarMercanciaNuevaManual
-}; // 🎯 CANDADO MÁSTER SOTO SYSTEM: Cierre definitivo del objeto principal ErpModulo
+    }, // 🎯 REPARADO SOTO SYSTEM: Una coma para cerrar la propiedad y mantener abierto el objeto ErpModulo.
+
+    // =========================================================================
+    // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
+    // =========================================================================
+    
+}; // 🎯 EL VERDADERO CANDADO MÁSTER AL PURO FINAL DE TODO TU ARCHIVO ERP.JS
 
 // Vinculamos al entorno global window para evitar bloqueos en el ruteador de App.js
 window.ErpModulo = ErpModulo;
