@@ -64,6 +64,7 @@ const ErpModulo = {
                 </button>
             </div>
 
+
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
                 <h4 style="margin: 0 0 15px 0; font-size: 12px; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">📦 Recepción de Mercancía Nueva (Carga Inventario Fijo)</h4>
@@ -230,7 +231,7 @@ const ErpModulo = {
 
         // 4. Disparamos la ráfaga de red nativa usando el window.fetch global de Electron
         setTimeout(() => {
-            window.fetch('https://railway.app', {
+            window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -271,64 +272,6 @@ const ErpModulo = {
             });
         }, 50);
     }, // 🎯 CANDADO MÁSTER: Cierre estructural de la función contable
-
-    
-// =========================================================================
-// 🟪 EXTENSIÓN MAESTRA: COMPILADOR DE BALANCE DIARIO (REPORTLAB)
-// Ubicación: Justo arriba del Cierre Semanal en tus scripts core
-// =========================================================================
-ejecutarCierreYGenerarPdf() {
-    console.log("🟪 [SOTO ENGINE]: Generando balance contable de las últimas 24 horas...");
-    const iframeDiario = document.createElement('iframe');
-    iframeDiario.style.display = 'none';
-    
-    // 🎯 SOTO CORE BLINDAJE: Le inyectamos el origen local a la raíz del iframe antes de insertarlo en el DOM
-    // Esto destruye el origen 'about:blank' y lo alinea con los permisos CORS de tu Django
-    iframeDiario.src = window.location.origin;
-    
-    document.body.appendChild(iframeDiario);
-
-    // Damos un respiro de 50ms para que el iframe asimile el origen en la memoria RAM
-    setTimeout(() => {
-        // 🎯 CORE REPAIR: Usamos directamente el fetch nativo de la ventana de Electron para saltar bloqueos CORS locales
-        window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-pdf/', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/pdf'
-            },
-            body: JSON.stringify({ "origen": "Electron Desktop ERP Master" }) // Mandamos un cuerpo válido para satisfacer a Django
-        })
-        .then(res => {
-            if (!res.ok) {
-                if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
-                throw new Error("Rebote fiscal en el motor diario de Django (Status: " + res.status + ")");
-            }
-            return res.blob();
-        })
-        .then(blob => {
-            // Transformamos los bytes de ReportLab en un enlace de descarga física nativo
-            const urlDescarga = window.URL.createObjectURL(blob);
-            const enlaceDescarga = document.createElement('a');
-            
-            // 🎯 CORE REPAIR: Variable limpia que lee los bytes
-            enlaceDescarga.href = urlDescarga;
-            enlaceDescarga.download = `Cierre_Diario_ERP_${new Date().toISOString().split('T')[0]}.pdf`;
-            
-            document.body.appendChild(enlaceDescarga);
-            enlaceDescarga.click();
-            
-            // Limpiamos los nodos de la RAM para evitar fugas de memoria
-            document.body.removeChild(enlaceDescarga);
-            if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
-            console.log("✅ [SOTO ERP]: Cierre Diario PDF descargado con éxito en Windows.");
-        })
-        .catch(error => {
-            if (document.body.contains(iframeDiario)) document.body.removeChild(iframeDiario);
-            console.error("❌ Error de comunicación en Apio ERP Engine:", error.message);
-        });
-    }, 50);
-}, // 🎯 CANDADO: Mantén esta coma exacta para que el Cierre Semanal de abajo siga corriendo fino colega
 
     // =========================================================================
     // 📅 EXTENSIÓN A: COMPILADOR DE CONSOLIDADO SEMANAL (REPORTLAB)
