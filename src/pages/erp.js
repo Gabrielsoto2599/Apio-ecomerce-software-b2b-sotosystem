@@ -114,6 +114,28 @@ const ErpModulo = {
 
     </div>
 </div>
+
+<!-- 👤 EXTENSIÓN F: MÁNAGER OPERACIONAL DE VENDEDORES Y CAJEROS ACTIVOS -->
+<div id="vendedores-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    <div style="background: linear-gradient(135deg, #0f1526 0%, #030a16 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #8b5cf6; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+        
+        <div>
+            <span style="font-size: 10px; color: #a78bfa; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">👤 Control y Auditoría de Personal</span>
+            <h4 style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 700;">Asignación de Operador en Taquilla</h4>
+        </div>
+
+        <!-- Selector Estilizado Neón Violeta -->
+        <div style="min-width: 220px;">
+            <select id="erp-vendedor-activo" onchange="window.ErpModulo.registrarCambioVendedorTurno()" style="width: 100%; padding: 8px 12px; background: #030712; border: 1px solid #334155; color: #a78bfa; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; outline: none; box-shadow: 0 0 10px rgba(139, 92, 246, 0.05);">
+                <option value="Cajera Principal">👤 Cajera Turno Mañana (Taquilla A)</option>
+                <option value="Gabriel Soto">👑 Administrador Central (Gabriel Soto)</option>
+                <option value="Taquilla Auxiliar">👤 Operador de Relevo (Fin de Semana)</option>
+            </select>
+        </div>
+
+    </div>
+</div>
+
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
                 <h4 style="margin: 0 0 15px 0; font-size: 12px; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">📦 Recepción de Mercancía Nueva (Carga Inventario Fijo)</h4>
@@ -495,6 +517,25 @@ const ErpModulo = {
         if (txtBio) txtBio.innerText = `${acumuladoBiopago.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
         if (txtEfe) txtEfe.innerText = `$${acumuladoEfectivoUsd.toFixed(2)}`;
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque E y le abre paso limpio a la Extensión F
+
+        // =========================================================================
+    // 👤 EXTENSIÓN F: MÁNAGER DE VENDEDORES Y OPERADORES DE TAQUILLA
+    // =========================================================================
+    registrarCambioVendedorTurno() {
+        const selectorVendedor = document.getElementById('erp-vendedor-activo');
+        if (!selectorVendedor) return;
+
+        const vendedorSeleccionado = selectorVendedor.value;
+        
+        // Persistimos el nombre del cajero para que la pasarela lo adose a cada factura
+        localStorage.setItem('APIO_CAJERO_ACTIVO', vendedorSeleccionado);
+        console.log(`👤 [SOTO AUDIT]: Operador de caja actualizado -> "${vendedorSeleccionado}"`);
+        
+        // Sincronizamos con el estado global de tu SPA por seguridad
+        if (!window.App) window.App = {};
+        if (!window.App.state) window.App.state = {};
+        window.App.state.cajeroTurnoActual = vendedorSeleccionado;
+    }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque F y le abre paso limpio a la Extensión G (Gastos)
 
     // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
