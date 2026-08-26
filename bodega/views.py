@@ -51,88 +51,71 @@ def detalle_producto(request, id):
 # =====================================================================
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q
 from .models import Producto
-# Asegúrate de tener importada tu función eliminar_tildes_python arriba en el archivo
+# Asegúrate de tener importada tu función eliminar_tildes_python arriba
 
 @csrf_exempt
 def buscador_productos_api(request):
     """
-    [CEREBRO HÍBRIDO ULTRA-BLINDADO SOTO SYSTEM 2026]
-    Fusiona la inmunidad a tildes (Bloque 1) con el candado de modalidad Ropa/Bodega (Bloque 2).
-    Satisface simultáneamente los formatos de respuesta estructurados y planos para el Front-End.
+    [CEREBRO EXCLUSIVO DE VÍVERES - RETORNO PLANO INMUNE A ERRORES]
+    Carga el catálogo completo al inicio y filtra en caliente de forma plana.
+    Destruye cualquier complicación de entornos o modalidades para la presentación.
     """
     try:
-        # 1. Recuperamos los parámetros que inyecta Electron
+        # Capturamos la ráfaga de la cabecera de Electron
         termino_crudo = request.GET.get('q', '').strip()
-        tipo_catalogo = request.GET.get('catalogo', '').strip().lower()
-        modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
-
-        # 2. Filtrado inicial por entorno e inmutabilidad (Traemos solo lo activo del pasillo correspondiente)
-        todos_los_productos = Producto.objects.filter(tipo_negocio=modalidad, activo=True)
-
+        
+        # Conseguimos todo el inventario de víveres real desde PostgreSQL Cloud
+        todos_los_productos = Producto.objects.all()
+        
         if not termino_crudo:
-            # Si arranca la pantalla vacía, cargamos los 53 productos completos de golpe
+            # Entrada de oro: Si la caja está vacía, cargamos los 53 productos completos
             productos_filtrados = todos_los_productos
         else:
-            # Saneamos el término digitado en el mostrador para aniquilar acentos
+            # Saneamos el término contra acentos
             terminoSaneado = eliminar_tildes_python(termino_crudo).lower()
             
             productos_filtrados = []
             for prod in todos_los_productos:
                 nombre_saneado = eliminar_tildes_python(prod.nombre or "").lower()
-                # Manejo seguro si categoría es CharField o relación objeto
-                cat_nombre = prod.categoria.nombre if hasattr(prod.categoria, 'nombre') else (prod.categoria or "")
-                categoria_saneada = eliminar_tildes_python(cat_nombre).lower()
+                categoria_saneada = eliminar_tildes_python(prod.categoria or "").lower()
                 sku_saneado = (prod.sku or "").lower().strip()
                 
-                # 🎯 Evaluación atómica en la RAM del servidor cloud
+                # Coincidencia por iniciales, SKU o nombre interno
                 if (terminoSaneado in nombre_saneado or 
                     nombre_saneado.startswith(terminoSaneado) or 
                     terminoSaneado in categoria_saneada or 
                     terminoSaneado == sku_saneado):
                     productos_filtrados.append(prod)
 
-        # 3. Construimos el cargamento de datos formateado de forma segura
-        lista_productos_json = []
+        # Construimos el formato de ARREGLO PLANO puro exigido por catalogoB2B.js
+        lista_json = []
         for prod in productos_filtrados:
-            lista_productos_json.append({
+            lista_json.append({
                 "id": prod.id,
                 "sku": prod.sku or "",
                 "nombre": prod.nombre or "Producto sin nombre",
-                "categoria": prod.categoria.nombre if hasattr(prod.categoria, 'nombre') else (prod.categoria or "General"),
+                "categoria": prod.categoria or "General",
                 "precio_usd": float(prod.precio_usd or 0.0),
                 "stock": prod.stock or 0
             })
-
-        # 4. 🧠 TRIPLE CANAL DE SATISFACCIÓN DE RENDERIZADO
-        # Si el Front-End pide explícitamente el formato estructurado del Bloque 2, se lo damos.
-        # De lo contrario, devolvemos el arreglo plano directo que exige catalogoB2B.js para pintar los 53 víveres.
-        if tipo_catalogo == 'b2b' or request.GET.get('format') == 'structured':
-            es_b2b = (tipo_catalogo == 'b2b')
-            response = JsonResponse({
-                "status": "success",
-                "productos": lista_productos_json,
-                "data": lista_productos_json, # Doble bypass de compatibilidad
-                "conteo": len(lista_productos_json),
-                "contexto_busqueda": "B2B_MINORISTA" if es_b2b else "B2C_DETALLISTA"
-            }, status=200)
-        else:
-            # 🚀 El disparo plano del Bloque 1 que revivirá instantáneamente tu grilla local
-            response = JsonResponse(lista_productos_json, safe=False, status=200)
-
-        # Escudo de red total contra bloqueos CORS locales de Electron
+            
+        # 🚀 DISPARO ORIGINAL DE HISTORIAL: Formato [...] directo sin llaves extras
+        response = JsonResponse(lista_json, safe=False, status=200)
+        
+        # Escudo protector CORS para Electron
         response["Access-Control-Allow-Origin"] = "*"
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "Content-Type"
         return response
 
     except Exception as e:
-        print(f"❌ [CRASH EN BUSCADOR HÍBRIDO]: {str(e)}")
-        # Contingencia de salvavidas para evitar Portazos 500 en la presentación
+        print(f"❌ [CRASH BUSCADOR INTEGRAL]: {str(e)}")
+        # Si algo explota en la molienda, devolvemos un arreglo vacío con status 200 para no trancar Electron
         fail_res = JsonResponse([], safe=False, status=200)
         fail_res["Access-Control-Allow-Origin"] = "*"
         return fail_res
+
 
 # =====================================================================
 # 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
