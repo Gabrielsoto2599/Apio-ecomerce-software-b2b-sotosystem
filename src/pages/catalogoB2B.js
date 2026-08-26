@@ -291,18 +291,31 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
         return;
     }
 
-    // 🎯 REPARACIÓN DE ENDPOINT: Apunta milimétricamente a tu views.py e inyecta la MODALIDAD activa
-    const urlFinalBuscador = `${backendBase}/api/v1/buscador-productos-api/?q=${encodeURIComponent(terminoLimpio)}&modalidad=${MODALIDAD_TIENDA_ACTIVA}`;
-
-    // Si trae texto (sea tecleado o por voz), disparamos la ráfaga telemétrica nativa
+        // Si trae texto (sea tecleado o por voz), disparamos la ráfaga telemétrica nativa
     window.fetch(urlFinalBuscador)
         .then(response => {
             if (!response.ok) throw new Error("Rebote de red en Django Status: " + response.status);
             return response.json();
         })
         .then(data => {
-            // Guardamos el arreglo filtrado en la memoria global de la suite
-            window.App.state.productosFiltrados = data.productos || [];
+            let arregloExtraido = [];
+
+            // 🎯 ESCUDO ELÁSTICO DE PROCESAMIENTO MULTIFORMATO
+            if (Array.isArray(data)) {
+                // Formato Plano Definitivo (El de tu views actual): [ ... ]
+                arregloExtraido = data;
+            } else if (data && Array.isArray(data.productos)) {
+                // Formato Estructurado: { "productos": [...] }
+                arregloExtraido = data.productos;
+            } else if (data && Array.isArray(data.data)) {
+                // Fallback de contingencia: { "data": [...] }
+                arregloExtraido = data.data;
+            }
+
+            console.log(`📊 [SOTO FRONT REPAIR]: Lote asimilado. Elementos en RAM -> ${arregloExtraido.length}`);
+
+            // Guardamos el arreglo real extraído en la memoria global de la suite
+            window.App.state.productosFiltrados = arregloExtraido;
 
             // 🎯 ¡LA VICTORIA ATÓMICA REACCIONARIA!
             if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
@@ -312,7 +325,10 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
                 const inputRecargado = document.querySelector('.search-core-input');
                 if (inputRecargado) {
                     inputRecargado.focus();
-                    inputRecargado.setSelectionRange(terminoLimpio.length, terminoLimpio.length);
+                    // Colocamos un Try/Catch por si el elemento se re-renderiza rápido en el DOM
+                    try {
+                        inputRecargado.setSelectionRange(terminoLimpio.length, terminoLimpio.length);
+                    } catch(e) {}
                 }
             } else if (typeof window.App.render === 'function') {
                 window.App.render();
