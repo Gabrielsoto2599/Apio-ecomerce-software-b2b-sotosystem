@@ -684,7 +684,7 @@ const ErpModulo = {
             alert("⚠️ Error: No se pudo conectar con el compilador contable cloud.");
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
-    
+
 // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
     // =========================================================================
@@ -696,6 +696,43 @@ const ErpModulo = {
     }
 }; // 👑 EL VERDADERO CANDADO MÁSTER CONTABLE: Cierre absoluto del objeto principal ErpModulo
 
-// 🚀 ENLACE DE HERENCIA REACCIONAL SOTO SYSTEM (EL SECRETO DEL FOOTER GLOBAL)
+// Vinculamos de forma segura al entorno global window para el ruteador de la SPA
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
+
+// =========================================================================
+// 🖨️ INYECCIÓN ISOLATED DEL FOOTER ORIGINAL DEL SISTEMA APIO (VINCULACIÓN HOME)
+// =========================================================================
+window.inyectarFooterCorporativoErpManual = function() {
+    // Pescamos el contenedor de la tabla del historial para soldar el footer abajo de él
+    const contenedorRaizErp = document.getElementById('historial-card-container') || document.getElementById('gastos-card-container');
+    
+    // 🛡️ EL ESCUDO ANTI-CAOS: Si ya existe en el DOM, aborta para no duplicar ni generar colisiones
+    if (!contenedorRaizErp || document.getElementById('apio-corporate-footer-manual')) return;
+
+    const footerOficialclon = document.createElement('div');
+    footerOficialclon.id = "apio-corporate-footer-manual";
+    
+    // 🎨 REPLICACIÓN CLONADA EXACTA: Centrado absoluto, fuentes tipográficas y colores del Home
+    footerOficialclon.setAttribute('style', 'margin-top: 40px; padding: 20px 0; border-top: 1px solid #1e293b; text-align: center; font-family: "Inter", sans-serif; width: 100%; box-sizing: border-box;');
+    
+    footerOficialclon.innerHTML = `
+        <!-- Código de Versión en Naranja Neón y Azul Celeste con Formato Idéntico -->
+        <p style="margin: 0; font-size: 11px; font-weight: 800; color: #ff9900; letter-spacing: 0.05em; text-transform: uppercase;">
+            APIO E-COMMERCE SOFTWARE <span style="color: #38bdf8; font-weight: 600; font-family: sans-serif;">v1.0.0-SaaS</span>
+        </p>
+        <p style="margin: 4px 0 0 0; color: #475569; font-size: 10px; font-weight: 700; text-transform: none;">
+            Fase de Desarrollo Comercial - Bodega Digital
+        </p>
+        <p style="margin: 6px 0 0 0; color: #64748b; font-size: 10px; font-weight: 600; font-family: monospace;">
+            © 2026 All Rights Reserved.
+        </p>
+        <p style="margin: 4px 0 0 0; color: #475569; font-size: 10px; font-weight: bold; text-transform: none;">
+            Desarrollado por <span style="color: #cbd5e1; font-weight: 800;">Soto System Digital Solutions VE</span>
+        </p>
+    `;
+    
+    // Acoplamos de forma controlada al final de la vista del ERP
+    contenedorRaizErp.parentNode.insertBefore(footerOficialclon, contenedorRaizErp.nextSibling);
+    console.log("🏆 [SOTO SYSTEM]: Footer manual homologado inyectado sin colisiones de SPA.");
+};
