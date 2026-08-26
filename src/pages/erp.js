@@ -138,6 +138,24 @@ const ErpModulo = {
     </div>
 </div>
 
+<!-- 💸 EXTENSIÓN G: PANEL DE REGISTRO DE GASTOS EXPRESS DEL MES (SOTO EGRESOS ENGINE) -->
+<div id="gastos-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    <div style="background: linear-gradient(135deg, #1a0f1a 0%, #0a030a 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
+        
+        <span style="font-size: 10px; color: #f87171; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 12px; letter-spacing: 0.08em;">💸 Registro de Gastos Express del Mes (Egresos de Turno)</span>
+        
+        <!-- Formulario Inline Adaptativo de Alta Rotación -->
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
+            <input type="text" id="gasto-descripcion" placeholder="Ej: Pago de Luz CORPOELEC" style="flex: 2; min-width: 200px; padding: 10px; background: #030712; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; font-family: 'Inter', sans-serif; outline: none;">
+            <input type="number" id="gasto-monto" placeholder="Monto $" style="flex: 1; min-width: 100px; padding: 10px; background: #030712; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; font-weight: bold; font-family: monospace; text-align: center; outline: none;">
+            <button onclick="window.ErpModulo.registrarGastoMensualExpress()" style="flex: 1; min-width: 150px; padding: 10px 16px; background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', sans-serif; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); transition: all 0.2s;">
+                📉 Aplicar Egreso
+            </button>
+        </div>
+
+    </div>
+</div>
+
 
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
@@ -539,6 +557,44 @@ const ErpModulo = {
         if (!window.App.state) window.App.state = {};
         window.App.state.cajeroTurnoActual = vendedorSeleccionado;
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque F y le abre paso limpio a la Extensión G (Gastos)
+
+        // =========================================================================
+    // 💸 EXTENSIÓN G: REGISTRO DE GASTOS EXPRESS Y CONTROL DE EGRESOS
+    // =========================================================================
+    registrarGastoMensualExpress() {
+        const descInput = document.getElementById('gasto-descripcion');
+        const montoInput = document.getElementById('gasto-monto');
+        
+        if (!descInput || !montoInput || !descInput.value.trim() || !montoInput.value) {
+            alert("⚠️ Campos Incompletos: Por favor, ingrese la descripción y el monto en dólares del egreso contable.");
+            return;
+        }
+        
+        const descripcionLimpia = descInput.value.trim();
+        const montoEgreso = parseFloat(montoInput.value) || 0.00;
+
+        // Pescamos el histórico del local para acumular la auditoría
+        const gastosPersistidos = JSON.parse(localStorage.getItem('APIO_GASTOS_MES')) || [];
+        
+        gastosPersistidos.push({
+            descripcion: descripcionLimpia,
+            monto: montoEgreso,
+            fecha: new Date().toISOString().split('T')[0]
+        });
+        
+        localStorage.setItem('APIO_GASTOS_MES', JSON.stringify(gastosPersistidos));
+        
+        // Sincronizamos en el estado de la SPA por seguridad
+        if (!window.App) window.App = {};
+        if (!window.App.state) window.App.state = {};
+        window.App.state.ultimoGastoRegistrado = montoEgreso;
+        
+        alert(`📉 ¡Egreso Aplicado de Forma Inmutable!\n\n• Concepto: ${descripcionLimpia}\n• Impacto en Caja: -$${montoEgreso.toFixed(2)} USD.`);
+        
+        // Limpiamos los campos listos para la siguiente carga
+        descInput.value = "";
+        montoInput.value = "";
+    }, // 🎯 COMA DE CIERRE PERFECTA: Cierra el Bloque G y da paso al cierre final del objeto
 
     // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
