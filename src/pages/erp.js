@@ -650,7 +650,7 @@ const ErpModulo = {
         document.body.appendChild(iframeGastos);
 
         // Disparamos la petición nativa segura de Electron hacia tu Django
-        window.fetch('https://railway.app', {
+        window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/descargar-gastos-pdf/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
