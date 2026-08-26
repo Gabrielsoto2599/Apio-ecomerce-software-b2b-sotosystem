@@ -22,8 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bodega', 
-    'corsheaders', 
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # 🛡️ Filtra y aprueba las cabeceras de red antes de procesar la lógica
