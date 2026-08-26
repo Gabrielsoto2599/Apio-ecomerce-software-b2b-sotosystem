@@ -115,24 +115,29 @@ const ErpModulo = {
     </div>
 </div>
 
-<!-- 👤 EXTENSIÓN F: MÁNAGER OPERACIONAL DE VENDEDORES Y CAJEROS ACTIVOS -->
+<!-- 👤 EXTENSIÓN F: MÁNAGER OPERACIONAL DE VENDEDORES Y CAJEROS ACTIVOS (REPARACIÓN GRID DETALLISTA) -->
 <div id="vendedores-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-    <div style="background: linear-gradient(135deg, #0f1526 0%, #030a16 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #8b5cf6; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+    <div style="background: linear-gradient(135deg, #0f1526 0%, #030a16 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #8b5cf6; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: center; width: 100%; box-sizing: border-box;">
         
-        <div>
+        <!-- Bloque de Texto Saneado -->
+        <div style="width: 100%;">
             <span style="font-size: 10px; color: #a78bfa; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">👤 Control y Auditoría de Personal</span>
-            <h4 style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 700;">Asignación de Operador en Taquilla</h4>
+            <h4 style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: -0.01em;">Asignación de Operador en Taquilla</h4>
         </div>
 
-                <!-- Selector Estilizado Neón Violeta - Versión Comercial Genérica -->
-        <div style="min-width: 220px;">
-            <select id="erp-vendedor-activo" onchange="window.ErpModulo.registrarCambioVendedorTurno()" style="width: 100%; padding: 8px 12px; background: #030712; border: 1px solid #334155; color: #a78bfa; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; outline: none; box-shadow: 0 0 10px rgba(139, 92, 246, 0.05);">
+        <!-- Selector Estilizado Comercial Genérico -->
+        <div style="width: 100%;">
+            <select id="erp-vendedor-activo" onchange="window.ErpModulo.registrarCambioVendedorTurno()" style="width: 100%; padding: 10px 12px; background: #030712; border: 1px solid #334155; color: #a78bfa; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; outline: none; box-shadow: 0 0 10px rgba(139, 92, 246, 0.05); font-family: 'Inter', sans-serif; box-sizing: border-box;">
                 <option value="Cajera Turno Mañana">👤 Cajera Turno Mañana (Taquilla A)</option>
                 <option value="Cajera Turno Tarde">👤 Cajera Turno Tarde (Taquilla B)</option>
                 <option value="Supervisor General">👑 Supervisor / Administrador Central</option>
                 <option value="Taquilla Auxiliar">👤 Operador de Relevo (Fin de Semana)</option>
             </select>
         </div>
+
+    </div>
+</div>
+
 
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
