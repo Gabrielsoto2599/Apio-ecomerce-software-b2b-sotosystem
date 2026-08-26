@@ -685,7 +685,7 @@ const ErpModulo = {
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
 
-// =========================================================================
+    // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
     // =========================================================================
     inicializarModulosGerenciales() {
@@ -693,10 +693,16 @@ const ErpModulo = {
         if (typeof this.renderizarHistorialGastosLocal === 'function') {
             this.renderizarHistorialGastosLocal();
         }
+        
+        // 🚀 DISPARADOR EN CALIENTE: Obligamos al footer a nacer al final de la carga de la RAM
+        setTimeout(() => {
+            if (typeof window.inyectarFooterCorporativoErpManual === 'function') {
+                window.inyectarFooterCorporativoErpManual();
+            }
+        }, 100);
     }
-}; // 👑 EL VERDADERO CANDADO MÁSTER CONTABLE: Cierre absoluto del objeto principal ErpModulo
+}; // 👑 Cierre absoluto del objeto principal ErpModulo
 
-// Vinculamos de forma segura al entorno global window para el ruteador de la SPA
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
 
@@ -704,17 +710,17 @@ export { ErpModulo };
 // 🖨️ INYECCIÓN ISOLATED DEL FOOTER ORIGINAL DEL SISTEMA APIO (VINCULACIÓN HOME)
 // =========================================================================
 window.inyectarFooterCorporativoErpManual = function() {
-    // Pescamos el contenedor de la tabla del historial para soldar el footer abajo de él
-    const contenedorRaizErp = document.getElementById('historial-card-container') || document.getElementById('gastos-card-container');
+    // 🎯 REPARACIÓN DE ANCLAJE: Buscamos el contenedor padre real de todo el ERP para colgar el footer al puro final del scroll
+    const layoutPrincipalErp = document.getElementById('step-billing-console') || document.querySelector('section.glass-card') || document.body;
     
-    // 🛡️ EL ESCUDO ANTI-CAOS: Si ya existe en el DOM, aborta para no duplicar ni generar colisiones
-    if (!contenedorRaizErp || document.getElementById('apio-corporate-footer-manual')) return;
+    // 🛡️ EL ESCUDO ANTI-CAOS: Si ya existe en el DOM, aborta para no duplicar
+    if (!layoutPrincipalErp || document.getElementById('apio-corporate-footer-manual')) return;
 
     const footerOficialclon = document.createElement('div');
     footerOficialclon.id = "apio-corporate-footer-manual";
     
     // 🎨 REPLICACIÓN CLONADA EXACTA: Centrado absoluto, fuentes tipográficas y colores del Home
-    footerOficialclon.setAttribute('style', 'margin-top: 40px; padding: 20px 0; border-top: 1px solid #1e293b; text-align: center; font-family: "Inter", sans-serif; width: 100%; box-sizing: border-box;');
+    footerOficialclon.setAttribute('style', 'margin-top: 40px; padding: 20px 0; border-top: 1px solid #1e293b; text-align: center; font-family: "Inter", sans-serif; width: 100%; box-sizing: border-box; clear: both; display: block;');
     
     footerOficialclon.innerHTML = `
         <!-- Código de Versión en Naranja Neón y Azul Celeste con Formato Idéntico -->
@@ -732,7 +738,7 @@ window.inyectarFooterCorporativoErpManual = function() {
         </p>
     `;
     
-    // Acoplamos de forma controlada al final de la vista del ERP
-    contenedorRaizErp.parentNode.insertBefore(footerOficialclon, contenedorRaizErp.nextSibling);
-    console.log("🏆 [SOTO SYSTEM]: Footer manual homologado inyectado sin colisiones de SPA.");
+    // Lo soldamos como el último hijo del layout para obligarlo a renderizarse abajo del historial
+    layoutPrincipalErp.appendChild(footerOficialclon);
+    console.log("🏆 [SOTO SYSTEM]: Footer manual homologado inyectado al fondo del contenedor ERP.");
 };
