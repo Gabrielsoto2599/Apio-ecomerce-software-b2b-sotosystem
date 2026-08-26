@@ -1,8 +1,8 @@
 // ====================================================================
-// SOTO SYSTEM WINDOWS CHASSIS - RUNTIME DE ESCRITORIO (BUILD 2026)
+// SOTO SYSTEM WINDOWS CHASSIS - RUNTIME DE ESCRITORIO (BUILD DE GALA 2026)
 // Ubicación: Ecomerce_B2B_Apio/main.cjs
 // ====================================================================
-const { app, BrowserWindow, ipcMain } = require('electron'); 
+const { app, BrowserWindow, ipcMain, shell } = require('electron'); // 🎯 SOLUCIONADO: Se inyecta 'shell' para pulverizar el ReferenceError
 const path = require('path');
 const { exec } = require('child_process'); // ⚙️ Módulo de Node para levantar ejecutables de Windows
 
@@ -23,35 +23,38 @@ function crearVentanaApio() {
   if (app.isPackaged) {
     ventana.loadFile(path.join(__dirname, 'dist/index.html'));
   } else {
-    ventana.loadURL('http://localhost:5173');
+    ventana.loadURL('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/');
   }
 }
 
 // 🧠 ESCUCHA EL CANAL IPC DESDE LA PASARELA DE LA PANTALLA (home.js)
-ipcMain.on('abrir-app-cobro', (_, metodo) => { // 🎯 Usamos "_" para indicar que el evento se ignora
+ipcMain.on('abrir-app-cobro', (_, metodo) => { 
     console.log(`[Apio OS Bridge]: Recibida orden para ejecutar pasarela: ${metodo}`);
 
     if (metodo === 'cashea') {
-        // 🌐 CASHEA WEB MERCHANT: Abre la plataforma oficial en el navegador predeterminado de la PC
-        shell.openExternal('https://merchants.cashea.app/');
-        console.log(`[Apio OS Bridge]: Desplegando portal web de Cashea Merchant.`);
+        try {
+            // 🌐 CASHEA MERCHANT PORTAL: Abre de forma nativa y segura en el navegador predeterminado de Windows
+            shell.openExternal('https://merchants.cashea.app/');
+            console.log(`[Apio OS Bridge]: Desplegando portal web de Cashea Merchant con éxito.`);
+        } catch (err) {
+            console.error(`[Apio OS Bridge]: Error al abrir el portal externo de Cashea:`, err.message);
+        }
         
-            } else if (metodo === 'biopago') {
+    } else if (metodo === 'biopago') {
         console.log(`[Apio OS Bridge]: Invocando Biopago fijando el directorio raíz...`);
         
         // 🎯 Forzamos a PowerShell a iniciar el proceso de forma aislada e independiente de Electron
         const comandoPowerShell = "powershell -Command \"Start-Process 'C:\\BiopagoBDV\\Biopago.exe' -Verb RunAs\"";
         
-        // 🛡️ El secreto de ingeniería: Forzamos a Node.js a pararse DENTRO de la carpeta del banco
+        // 🛡️ El secreto de ingeniería de Gabriel: Forzamos a Node.js a pararse DENTRO de la carpeta del banco
         exec(comandoPowerShell, { cwd: 'C:\\BiopagoBDV' }, (error) => {
             if (error) {
-                console.error(`[Apio OS Bridge]: Error al lanzar el proceso elevado:`, error);
+                console.error(`[Apio OS Bridge]: Error al lanzar el proceso elevado del BDV:`, error);
             } else {
                 console.log(`[Apio OS Bridge]: Orden de ejecución despachada correctamente.`);
             }
         });
     }
-
 });
 
 app.whenReady().then(() => {

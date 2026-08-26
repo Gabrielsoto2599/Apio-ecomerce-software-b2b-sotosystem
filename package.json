@@ -29,7 +29,7 @@
     "tailwindcss": "^4.0.0",
     "vite": "^5.4.0"
   },
-  "build": {
+    "build": {
     "appId": "com.sotosystem.apioerp",
     "productName": "Apio System Contable",
     "directories": {
@@ -37,9 +37,15 @@
     },
     "files": [
       "dist/**/*",
-      "main.js",
+      "main.cjs",
+      "preload.cjs",
       "public/**/*",
-      "app/server/**/*"
-    ]
+      "app/server/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   }
 }
+
