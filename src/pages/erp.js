@@ -684,24 +684,7 @@ const ErpModulo = {
             alert("⚠️ Error: No se pudo conectar con el compilador contable cloud.");
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
-
-    // =========================================================================
-    // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
-    // =========================================================================
-    inicializarModulosGerenciales() {
-        console.log("📊 [SOTO CENTRAL]: Cabina de analítica y control contable inicializada con éxito.");
-        if (typeof this.renderizarHistorialGastosLocal === 'function') {
-            this.renderizarHistorialGastosLocal();
-        }
-        
-        // 🚀 DISPARADOR EN CALIENTE: Obligamos al footer a nacer al final de la carga de la RAM
-        setTimeout(() => {
-            if (typeof window.inyectarFooterCorporativoErpManual === 'function') {
-                window.inyectarFooterCorporativoErpManual();
-            }
-        }, 100);
-    }
-}; // 👑 Cierre absoluto del objeto principal ErpModulo
+}; 
 
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
