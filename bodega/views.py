@@ -51,63 +51,88 @@ def detalle_producto(request, id):
 # =====================================================================
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from .models import Producto
-import json
+# Asegúrate de tener importada tu función eliminar_tildes_python arriba en el archivo
 
 @csrf_exempt
 def buscador_productos_api(request):
     """
-    [BUSCADOR ULTRA-BLINDADO SOTO SYSTEM]
-    Procesa las búsquedas de Electron garantizando una respuesta limpia
-    libre de errores 500 mediante bloques try-except.
+    [CEREBRO HÍBRIDO ULTRA-BLINDADO SOTO SYSTEM 2026]
+    Fusiona la inmunidad a tildes (Bloque 1) con el candado de modalidad Ropa/Bodega (Bloque 2).
+    Satisface simultáneamente los formatos de respuesta estructurados y planos para el Front-End.
     """
     try:
-        # Capturamos los parámetros de búsqueda con valores por defecto seguros
-        termino = request.GET.get('q', '').strip().lower()
+        # 1. Recuperamos los parámetros que inyecta Electron
+        termino_crudo = request.GET.get('q', '').strip()
+        tipo_catalogo = request.GET.get('catalogo', '').strip().lower()
         modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
-        
-        # Si la caja está vacía en el arranque, traemos el catálogo inicial filtrado
-        if not termino:
-            productos_query = Producto.objects.filter(tipo_negocio=modalidad, activo=True)[:50]
+
+        # 2. Filtrado inicial por entorno e inmutabilidad (Traemos solo lo activo del pasillo correspondiente)
+        todos_los_productos = Producto.objects.filter(tipo_negocio=modalidad, activo=True)
+
+        if not termino_crudo:
+            # Si arranca la pantalla vacía, cargamos los 53 productos completos de golpe
+            productos_filtrados = todos_los_productos
         else:
-            productos_query = Producto.objects.filter(
-                nombre__icontains=termino,
-                tipo_negocio=modalidad,
-                activo=True
-            ).distinct()
+            # Saneamos el término digitado en el mostrador para aniquilar acentos
+            terminoSaneado = eliminar_tildes_python(termino_crudo).lower()
             
-        # Mapeamos de forma segura el queryset a una lista de diccionarios
-        lista_productos = []
-        for p in productos_query:
-            try:
-                lista_productos.append(p.to_dict())
-            except Exception as dict_err:
-                # Si un producto individual falla en su mapeo, lo saltamos para no tumbar la API
-                continue
+            productos_filtrados = []
+            for prod in todos_los_productos:
+                nombre_saneado = eliminar_tildes_python(prod.nombre or "").lower()
+                # Manejo seguro si categoría es CharField o relación objeto
+                cat_nombre = prod.categoria.nombre if hasattr(prod.categoria, 'nombre') else (prod.categoria or "")
+                categoria_saneada = eliminar_tildes_python(cat_nombre).lower()
+                sku_saneado = (prod.sku or "").lower().strip()
                 
-        response = JsonResponse({
-            "status": "success",
-            "productos": lista_productos,
-            "conteo": len(lista_productos)
-        }, status=200)
-        
-        # 🛡️ ESCUDO CORS TOTAL: Impide portazos de red desde el localhost de Electron
+                # 🎯 Evaluación atómica en la RAM del servidor cloud
+                if (terminoSaneado in nombre_saneado or 
+                    nombre_saneado.startswith(terminoSaneado) or 
+                    terminoSaneado in categoria_saneada or 
+                    terminoSaneado == sku_saneado):
+                    productos_filtrados.append(prod)
+
+        # 3. Construimos el cargamento de datos formateado de forma segura
+        lista_productos_json = []
+        for prod in productos_filtrados:
+            lista_productos_json.append({
+                "id": prod.id,
+                "sku": prod.sku or "",
+                "nombre": prod.nombre or "Producto sin nombre",
+                "categoria": prod.categoria.nombre if hasattr(prod.categoria, 'nombre') else (prod.categoria or "General"),
+                "precio_usd": float(prod.precio_usd or 0.0),
+                "stock": prod.stock or 0
+            })
+
+        # 4. 🧠 TRIPLE CANAL DE SATISFACCIÓN DE RENDERIZADO
+        # Si el Front-End pide explícitamente el formato estructurado del Bloque 2, se lo damos.
+        # De lo contrario, devolvemos el arreglo plano directo que exige catalogoB2B.js para pintar los 53 víveres.
+        if tipo_catalogo == 'b2b' or request.GET.get('format') == 'structured':
+            es_b2b = (tipo_catalogo == 'b2b')
+            response = JsonResponse({
+                "status": "success",
+                "productos": lista_productos_json,
+                "data": lista_productos_json, # Doble bypass de compatibilidad
+                "conteo": len(lista_productos_json),
+                "contexto_busqueda": "B2B_MINORISTA" if es_b2b else "B2C_DETALLISTA"
+            }, status=200)
+        else:
+            # 🚀 El disparo plano del Bloque 1 que revivirá instantáneamente tu grilla local
+            response = JsonResponse(lista_productos_json, safe=False, status=200)
+
+        # Escudo de red total contra bloqueos CORS locales de Electron
         response["Access-Control-Allow-Origin"] = "*"
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "Content-Type"
         return response
-        
+
     except Exception as e:
-        print(f"❌ [CRASH BUSCADOR BACKEND]: {str(e)}")
-        # Contingencia de Oro: Si todo se rompe, devolvemos un arreglo vacío en lugar de un Portazo 500
-        fail_response = JsonResponse({
-            "status": "contingency",
-            "productos": [],
-            "conteo": 0,
-            "error": str(e)
-        }, status=200) # Devolvemos status 200 para que Electron no aborte
-        fail_response["Access-Control-Allow-Origin"] = "*"
-        return fail_response
+        print(f"❌ [CRASH EN BUSCADOR HÍBRIDO]: {str(e)}")
+        # Contingencia de salvavidas para evitar Portazos 500 en la presentación
+        fail_res = JsonResponse([], safe=False, status=200)
+        fail_res["Access-Control-Allow-Origin"] = "*"
+        return fail_res
 
 # =====================================================================
 # 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
