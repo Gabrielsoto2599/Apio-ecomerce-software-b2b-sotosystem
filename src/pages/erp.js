@@ -83,9 +83,37 @@ const ErpModulo = {
     </div>
 </div>
 
+<!-- 💳 EXTENSIÓN E: PANEL DE RECAUDACIÓN Y CONCILIACIÓN DE COBRANZAS (SOTO FINANCIAL ENGINE) -->
+<div id="cobranzas-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    <div style="background: linear-gradient(135deg, #0b1329 0%, #020c1b 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);">
+        
+        <span style="font-size: 10px; color: #10b981; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 12px; letter-spacing: 0.08em;">📋 Canales de Recaudación y Cobranzas (Turno Activo)</span>
+        
+        <!-- Rejilla Triple de Métodos de Pago con Estilo Fiscal Fino -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            
+            <!-- Canal A: Pago Móvil -->
+            <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
+                <span style="display: block; font-size: 9px; color: #a3e635; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">📱 PAGO MÓVIL</span>
+                <strong id="cobranza-pago-movil" style="font-size: 14px; color: #ffffff; font-family: monospace;">0.00 Bs.</strong>
+            </div>
 
+            <!-- Canal B: Biopago / Tarjeta -->
+            <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
+                <span style="display: block; font-size: 9px; color: #38bdf8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚡ BIOPAGO / REF</span>
+                <strong id="cobranza-biopago" style="font-size: 14px; color: #ffffff; font-family: monospace;">0.00 Bs.</strong>
+            </div>
 
+            <!-- Canal C: Efectivo -->
+            <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
+                <span style="display: block; font-size: 9px; color: #fbbf24; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">💵 EFECTIVO (USD)</span>
+                <strong id="cobranza-efectivo" style="font-size: 14px; color: #ffffff; font-family: monospace;">$0.00</strong>
+            </div>
 
+        </div>
+
+    </div>
+</div>
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
                 <h4 style="margin: 0 0 15px 0; font-size: 12px; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">📦 Recepción de Mercancía Nueva (Carga Inventario Fijo)</h4>
@@ -429,6 +457,44 @@ const ErpModulo = {
         
         alert(`🏆 ¡Inventario Actualizado!\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
     }, // 🎯 CANDADO DE CONTINUIDAD: Cierre limpio con coma para dar paso al bloque por bloque.
+
+        // =========================================================================
+    // 💳 EXTENSIÓN E: CONCILIADOR DE RECAUDACIÓN EN CALIENTE (SOTO FINANCIAL ENGINE)
+    // =========================================================================
+    calcularConciliacionCobranzasTurno() {
+        console.log("📡 [SOTO FINANCIAL]: Ejecutando auditoría de flujos en caja...");
+        
+        // Pescamos el historial de facturas vivas desde el estado local de tu RAM
+        const movimientos = this.state?.movimientosDiarios || [];
+
+        let acumuladoPagoMovil = 0.00;
+        let acumuladoBiopago = 0.00;
+        let acumuladoEfectivoUsd = 0.00;
+
+        // Recorremos las ventas hechas en el mostrador para desglosar canales
+        movimientos.forEach(mov => {
+            const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
+            const montoBs = parseFloat(mov.montoBs || mov.total_bs || 0.00);
+            const montoUsd = parseFloat(mov.montoUsd || mov.total_usd || 0.00);
+
+            if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGOMOVIL")) {
+                acumuladoPagoMovil += montoBs;
+            } else if (metodo.includes("BIOPAGO") || metodo.includes("TARJETA")) {
+                acumuladoBiopago += montoBs;
+            } else if (metodo.includes("EFECTIVO")) {
+                acumuladoEfectivoUsd += montoUsd;
+            }
+        });
+
+        // Inyectamos las sumas matemáticas formateadas directo en la pizarra fiscal
+        const txtPM = document.getElementById('cobranza-pago-movil');
+        const txtBio = document.getElementById('cobranza-biopago');
+        const txtEfe = document.getElementById('cobranza-efectivo');
+
+        if (txtPM) txtPM.innerText = `${acumuladoPagoMovil.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+        if (txtBio) txtBio.innerText = `${acumuladoBiopago.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
+        if (txtEfe) txtEfe.innerText = `$${acumuladoEfectivoUsd.toFixed(2)}`;
+    }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque E y le abre paso limpio a la Extensión F
 
     // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
