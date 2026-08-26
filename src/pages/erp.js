@@ -317,7 +317,7 @@ const ErpModulo = {
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque A y le da paso en limpio al Bloque B
 
-        // =========================================================================
+            // =========================================================================
     // 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE (PROVEEDORES POLAR/TUNAL)
     // =========================================================================
     ingresarMercanciaNuevaManual() {
@@ -361,18 +361,21 @@ const ErpModulo = {
             window.recalcularGrillaCatalogoB2BEnCaliente();
         }
 
-                // Reseteamos el formulario de forma segura si el nodo existe
+        // Reseteamos el formulario de forma segura si el nodo existe
         const formularioIngreso = document.getElementById('form-ingreso-inventario-nuevo');
         if (formularioIngreso) formularioIngreso.reset();
         
         alert(`🏆 ¡Inventario Actualizado!\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
-    }, // 🎯 REPARADO SOTO SYSTEM: Una coma para cerrar la propiedad y mantener abierto el objeto ErpModulo.
+    }, // 🎯 Cierre limpio de la propiedad ingresarMercanciaNuevaManual
 
     // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
     // =========================================================================
-    
-}; // 🎯 EL VERDADERO CANDADO MÁSTER AL PURO FINAL DE TODO TU ARCHIVO ERP.JS
+    inicializarModulosGerenciales() {
+        console.log("📊 [SOTO CENTRAL]: Cabina de analítica y control contable inicializada con éxito.");
+        // Aquí soldaremos los 5 módulos uno por uno sin romper el objeto
+    }
+}; // 🎯 CANDADO MÁSTER SOTO SYSTEM: Cierre definitivo y simétrico de ErpModulo
 
 // Vinculamos al entorno global window para evitar bloqueos en el ruteador de App.js
 window.ErpModulo = ErpModulo;
