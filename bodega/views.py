@@ -49,52 +49,65 @@ def detalle_producto(request, id):
 # =====================================================================
 # 🔍 ENDPOINT API DEL BUSCADOR REACTIVO INMUNE A TILDES (BUILD 2026)
 # =====================================================================
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Producto
+import json
+
+@csrf_exempt
 def buscador_productos_api(request):
     """
-    Filtra el catálogo completo de la bodega en la RAM del servidor.
-    Muerde concordancias por iniciales, nombres o categorías sin importar acentos.
+    [BUSCADOR ULTRA-BLINDADO SOTO SYSTEM]
+    Procesa las búsquedas de Electron garantizando una respuesta limpia
+    libre de errores 500 mediante bloques try-except.
     """
-    # Captura la ráfaga que manda el .exe (ej: ?q=cafe)
-    termino_crudo = request.GET.get('q', '').strip()
-    
-    # Conseguimos todo el inventario mayorista real desde PostgreSQL
-    todos_los_productos = Producto.objects.all()
-    
-    if not termino_crudo:
-        productos_filtrados = todos_los_productos
-    else:
-        # Saneamos el término que digitó el cajero o inyectó Daniela por voz
-        terminoSaneado = eliminar_tildes_python(termino_crudo).lower()
+    try:
+        # Capturamos los parámetros de búsqueda con valores por defecto seguros
+        termino = request.GET.get('q', '').strip().lower()
+        modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
         
-        # Filtramos en la RAM comparando ambos lados desinfectados de tildes
-        productos_filtrados = []
-        for prod in todos_los_productos:
-            # 🛡️ Blindaje contra valores None de la base de datos cloud en Railway
-            nombre_saneado = eliminar_tildes_python(prod.nombre or "").lower()
-            categoria_saneada = eliminar_tildes_python(prod.categoria or "").lower()
-            sku_saneado = (prod.sku or "").lower().strip()
+        # Si la caja está vacía en el arranque, traemos el catálogo inicial filtrado
+        if not termino:
+            productos_query = Producto.objects.filter(tipo_negocio=modalidad, activo=True)[:50]
+        else:
+            productos_query = Producto.objects.filter(
+                nombre__icontains=termino,
+                tipo_negocio=modalidad,
+                activo=True
+            ).distinct()
             
-            # 🎯 PRECISIÓN ATÓMICA: Compara por iniciales, coincidencia interna o SKU
-            if (terminoSaneado in nombre_saneado or 
-                nombre_saneado.startswith(terminoSaneado) or 
-                terminoSaneado in categoria_saneada or 
-                terminoSaneado == sku_saneado):
-                productos_filtrados.append(prod)
-
-    # Construimos el cargamento JSON limpio con las propiedades originales intactas
-    lista_json = []
-    for prod in productos_filtrados:
-        lista_json.append({
-            "id": prod.id,
-            "sku": prod.sku or "",
-            "nombre": prod.nombre or "Producto sin nombre",
-            "categoria": prod.categoria or "General",
-            "precio_usd": float(prod.precio_usd or 0.0),
-            "stock": prod.stock or 0
-        })
+        # Mapeamos de forma segura el queryset a una lista de diccionarios
+        lista_productos = []
+        for p in productos_query:
+            try:
+                lista_productos.append(p.to_dict())
+            except Exception as dict_err:
+                # Si un producto individual falla en su mapeo, lo saltamos para no tumbar la API
+                continue
+                
+        response = JsonResponse({
+            "status": "success",
+            "productos": lista_productos,
+            "conteo": len(lista_productos)
+        }, status=200)
         
-    return JsonResponse(lista_json, safe=False)
-
+        # 🛡️ ESCUDO CORS TOTAL: Impide portazos de red desde el localhost de Electron
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+        
+    except Exception as e:
+        print(f"❌ [CRASH BUSCADOR BACKEND]: {str(e)}")
+        # Contingencia de Oro: Si todo se rompe, devolvemos un arreglo vacío en lugar de un Portazo 500
+        fail_response = JsonResponse({
+            "status": "contingency",
+            "productos": [],
+            "conteo": 0,
+            "error": str(e)
+        }, status=200) # Devolvemos status 200 para que Electron no aborte
+        fail_response["Access-Control-Allow-Origin"] = "*"
+        return fail_response
 
 # =====================================================================
 # 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
@@ -111,40 +124,6 @@ def lista_productos_api(request):
     productos = Producto.objects.filter(tipo_negocio=modalidad, activo=True)
     data = [p.to_dict() for p in productos]
     return JsonResponse({"status": "success", "productos": data}, safe=False, status=200)
-
-
-@csrf_exempt
-def buscador_productos_api(request):
-    """
-    [CEREBRO DE BÚSQUEDA FLEXIBLE - ENFOQUE MINORISTA SOTO SYSTEM]
-    Busca productos por nombre o SKU restringidos estrictamente a la modalidad activa.
-    """
-    termino = request.GET.get('q', '').strip().lower()
-    tipo_catalogo = request.GET.get('catalogo', '').strip().lower()
-    modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
-
-    if not termino:
-        return JsonResponse({"productos": []}, status=200)
-
-    # 1. Filtro elástico de coincidencia parcial
-    filtros = (
-        Q(nombre__icontains=termino) | 
-        Q(sku__icontains=termino) |
-        Q(categoria__nombre__icontains=termino)
-    )
-
-    # 2. 🛡️ CANDADO DE ENTORNO: Obligamos a Postgres a buscar solo en el pasillo activo (BODEGA o ROPA)
-    query_productos = Producto.objects.filter(filtros, tipo_negocio=modalidad, activo=True).distinct()
-
-    data = [p.to_dict() for p in query_productos]
-    es_b2b = (tipo_catalogo == 'b2b')
-    
-    return JsonResponse({
-        "productos": data, 
-        "conteo": len(data),
-        "contexto_busqueda": "B2B_MINORISTA" if es_b2b else "B2C_DETALLISTA",
-        "sugerencia_empaque": "Sugerir venta por bulto/docena" if es_b2b else "Venta individual"
-    }, status=200)
 
 
 @csrf_exempt
