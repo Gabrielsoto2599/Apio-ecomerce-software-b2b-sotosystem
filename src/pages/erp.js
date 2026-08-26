@@ -36,33 +36,54 @@ const ErpModulo = {
         // 3. Abrimos la plantilla unificada continua
         erpPanel.innerHTML = `
             <!-- 👑 ENCABEZADO PREMIUM DE LA CONSOLA -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 15px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="width: 24px; height: 24px; border-radius: 50%; background-color: #a855f7; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #ffffff; font-size: 13px; box-shadow: 0 0 10px rgba(168, 85, 247, 0.65);">E</span>
-                    <div>
-                        <h3 style="font-weight: 800; font-size: 16px; color: #FFFFFF; margin: 0; letter-spacing: -0.01em; text-transform: uppercase; font-family: monospace;">Consola ERP Contable Master</h3>
-                        <p style="margin: 2px 0 0 0; color: #64748b; font-size: 11px; font-weight: 600;">Auditoría Corporativa, Control de Deudores y Cierres Fiscales</p>
-                    </div>
-                </div>
-                <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.05em; font-family: monospace;">SISTEMA MANUAL MVP</span>
-            </div>
-             <!-- 🎚️ REJILLA DE CONTROL MULTI-CIERRE CON DISPARADORES INDEPENDIENTES (REPORTLAB PDF) -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px;">
-                <!-- 🟣 Botón Cierre de Caja Diario (Original Fino) -->
-                <button onclick="window.ErpModulo.ejecutarCierreYGenerarPdf()" style="background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(124,58,237,0.3); transition: transform 0.2s;">
-                    🟣 Cierre Diario (PDF)
-                </button>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 15px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background-color: #a855f7; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #ffffff; font-size: 13px; box-shadow: 0 0 10px rgba(168, 85, 247, 0.65);">E</span>
+        <div>
+            <h3 style="font-weight: 800; font-size: 16px; color: #FFFFFF; margin: 0; letter-spacing: -0.01em; text-transform: uppercase; font-family: monospace;">Consola ERP Contable Master</h3>
+            <p style="margin: 2px 0 0 0; color: #64748b; font-size: 11px; font-weight: 600;">Auditoría Corporativa, Control de Deudores y Cierres Fiscales</p>
+        </div>
+    </div>
+    <span style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.05em; font-family: monospace;">SISTEMA MANUAL MVP</span>
+</div>
 
-                <!-- 🔵 Botón Cierre Semanal Consolidado (¡NUEVO!) -->
-                <button onclick="window.ErpModulo.ejecutarCierreSemanalPdf()" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: transform 0.2s;">
-                    🔵 Cierre Semanal (PDF)
-                </button>
+<!-- 🎚️ REJILLA DE CONTROL MULTI-CIERRE CON DISPARADORES INDEPENDIENTES (REPORTLAB PDF) -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px;">
+    <!-- 🟣 Botón Cierre de Caja Diario (Original Fino) -->
+    <button onclick="window.ErpModulo.ejecutarCierreYGenerarPdf()" style="background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(124,58,237,0.3); transition: transform 0.2s;">
+        🟣 Cierre Diario (PDF)
+    </button>
 
-                <!-- 🟢 Botón Reporte Mes Fiscal SENIAT (¡NUEVO!) -->
-                <button onclick="window.ErpModulo.ejecutarCierreMensualPdf()" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: transform 0.2s;">
-                    🟢 Reporte Mes (IVA 16% SENIAT)
-                </button>
-            </div>
+    <!-- 🔵 Botón Cierre Semanal Consolidado (¡NUEVO!) -->
+    <button onclick="window.ErpModulo.ejecutarCierreSemanalPdf()" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: transform 0.2s;">
+        🔵 Cierre Semanal (PDF)
+    </button>
+
+    <!-- 🟢 Botón Reporte Mes Fiscal SENIAT (¡NUEVO!) -->
+    <button onclick="window.ErpModulo.ejecutarCierreMensualPdf()" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: transform 0.2s;">
+        🟢 Reporte Mes (IVA 16% SENIAT)
+    </button>
+</div>
+
+<!-- 📊 EXTENSIÓN D: TARJETA ANALÍTICA PREMIUM CON COLOR GLOW (APIO INTELLIGENCE) -->
+<div id="analytics-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #020617 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #00D2FF; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+        
+        <div>
+            <span style="font-size: 10px; color: #38bdf8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">🔥 Métrica de Rotación (PostgreSQL Cloud)</span>
+            <h4 id="analytics-producto-estrella" style="margin: 0; color: #ffffff; font-size: 15px; font-weight: 800; letter-spacing: -0.01em;">Sincronizando con Railway...</h4>
+        </div>
+
+        <!-- Botón/Indicador Neón de Rendimiento Integrado -->
+        <div style="background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); padding: 8px 14px; border-radius: 6px; text-align: center; box-shadow: 0 0 10px rgba(0, 210, 255, 0.1); min-width: 110px;">
+            <span style="display: block; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Ventas Mes</span>
+            <strong id="analytics-unidades-estrella" style="font-size: 13px; color: #00D2FF; font-family: monospace; font-weight: 900;">0 Unds</strong>
+        </div>
+
+    </div>
+</div>
+
+
 
 
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
@@ -326,7 +347,7 @@ const ErpModulo = {
         iframeMensual.style.display = 'none';
         document.body.appendChild(iframeMensual);
 
-        window.fetch('https://railway.app', {
+        window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/ejecutar-cierre-mensual/', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -360,7 +381,7 @@ const ErpModulo = {
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque B y abre el espacio para los nuevos módulos
 
-            // =========================================================================
+                // =========================================================================
     // 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE (PROVEEDORES POLAR/TUNAL)
     // =========================================================================
     ingresarMercanciaNuevaManual() {
@@ -399,17 +420,15 @@ const ErpModulo = {
         
         if (window.CatalogoB2B) window.CatalogoB2B.productos = inventarioVivo;
         
-        // 🛡️ CORREGIDO: Cierre correcto y limpio del validador de grilla en caliente
         if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
             window.recalcularGrillaCatalogoB2BEnCaliente();
         }
 
-        // Reseteamos el formulario de forma segura si el nodo existe
         const formularioIngreso = document.getElementById('form-ingreso-inventario-nuevo');
         if (formularioIngreso) formularioIngreso.reset();
         
         alert(`🏆 ¡Inventario Actualizado!\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
-    }, // 🎯 Cierre limpio de la propiedad ingresarMercanciaNuevaManual
+    }, // 🎯 CANDADO DE CONTINUIDAD: Cierre limpio con coma para dar paso al bloque por bloque.
 
     // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
