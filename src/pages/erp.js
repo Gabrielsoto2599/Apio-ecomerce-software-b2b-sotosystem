@@ -124,17 +124,15 @@ const ErpModulo = {
             <h4 style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 700;">Asignación de Operador en Taquilla</h4>
         </div>
 
-        <!-- Selector Estilizado Neón Violeta -->
+                <!-- Selector Estilizado Neón Violeta - Versión Comercial Genérica -->
         <div style="min-width: 220px;">
             <select id="erp-vendedor-activo" onchange="window.ErpModulo.registrarCambioVendedorTurno()" style="width: 100%; padding: 8px 12px; background: #030712; border: 1px solid #334155; color: #a78bfa; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; outline: none; box-shadow: 0 0 10px rgba(139, 92, 246, 0.05);">
-                <option value="Cajera Principal">👤 Cajera Turno Mañana (Taquilla A)</option>
-                <option value="Gabriel Soto">👑 Administrador Central (Gabriel Soto)</option>
+                <option value="Cajera Turno Mañana">👤 Cajera Turno Mañana (Taquilla A)</option>
+                <option value="Cajera Turno Tarde">👤 Cajera Turno Tarde (Taquilla B)</option>
+                <option value="Supervisor General">👑 Supervisor / Administrador Central</option>
                 <option value="Taquilla Auxiliar">👤 Operador de Relevo (Fin de Semana)</option>
             </select>
         </div>
-
-    </div>
-</div>
 
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
