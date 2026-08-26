@@ -138,14 +138,20 @@ const ErpModulo = {
     </div>
 </div>
 
-<!-- 💸 EXTENSIÓN G: PANEL DE REGISTRO DE GASTOS EXPRESS DEL MES (SOTO EGRESOS ENGINE) -->
+<!-- 💸 EXTENSIÓN G: PANEL DE REGISTRO DE GASTOS EXPRESS CON HISTORIAL FISCAL DIGITAL -->
 <div id="gastos-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
     <div style="background: linear-gradient(135deg, #1a0f1a 0%, #0a030a 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
         
-        <span style="font-size: 10px; color: #f87171; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 12px; letter-spacing: 0.08em;">💸 Registro de Gastos Express del Mes (Egresos de Turno)</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <span style="font-size: 10px; color: #f87171; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">💸 Registro de Gastos Express y Libro de Egresos Digital</span>
+            <!-- 🖨️ Botón Fiscal para Descarga del Reporte de Gastos -->
+            <button onclick="window.ErpModulo.descargarGastosMesPdf()" style="padding: 6px 12px; background: linear-gradient(135deg, #374151 0%, #1f2937 100%); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Inter', sans-serif; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                🖨️ Reporte Gastos (PDF)
+            </button>
+        </div>
         
-        <!-- Formulario Inline Adaptativo de Alta Rotación -->
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box;">
+        <!-- Formulario Inline Adaptativo -->
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%; box-sizing: border-box; margin-bottom: 15px;">
             <input type="text" id="gasto-descripcion" placeholder="Ej: Pago de Luz CORPOELEC" style="flex: 2; min-width: 200px; padding: 10px; background: #030712; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; font-family: 'Inter', sans-serif; outline: none;">
             <input type="number" id="gasto-monto" placeholder="Monto $" style="flex: 1; min-width: 100px; padding: 10px; background: #030712; border: 1px solid #334155; color: #fff; border-radius: 6px; font-size: 12px; font-weight: bold; font-family: monospace; text-align: center; outline: none;">
             <button onclick="window.ErpModulo.registrarGastoMensualExpress()" style="flex: 1; min-width: 150px; padding: 10px 16px; background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%); color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', sans-serif; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); transition: all 0.2s;">
@@ -153,8 +159,27 @@ const ErpModulo = {
             </button>
         </div>
 
+        <!-- 📋 Pizarra del Historial de Egresos en Vivo -->
+        <div style="background: #030712; padding: 12px; border-radius: 6px; border: 1px solid #1e293b; max-height: 120px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px; font-family: 'Inter', sans-serif;">
+                <thead>
+                    <tr style="color: #64748b; border-bottom: 1px solid #1e293b; font-size: 10px; text-transform: uppercase;">
+                        <th style="padding-bottom: 6px; width: 65%;">Descripción del Egreso</th>
+                        <th style="padding-bottom: 6px; text-align: right; width: 35%;">Monto Deducido</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-gastos-cuerpo" style="color: #cbd5e1; font-family: monospace;">
+                    <!-- Inyectado dinámicamente en caliente por tu script -->
+                    <tr>
+                        <td colspan="2" style="padding: 8px 0; text-align: center; color: #475569; font-family: sans-serif; font-style: italic;">No se registran egresos operacionales en el turno actual.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
     </div>
 </div>
+
 
 
             <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
@@ -558,8 +583,8 @@ const ErpModulo = {
         window.App.state.cajeroTurnoActual = vendedorSeleccionado;
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque F y le abre paso limpio a la Extensión G (Gastos)
 
-        // =========================================================================
-    // 💸 EXTENSIÓN G: REGISTRO DE GASTOS EXPRESS Y CONTROL DE EGRESOS
+            // =========================================================================
+    // 💸 EXTENSIÓN G: REGISTRO DE GASTOS EXPRESS, HISTORIAL VIVO Y REPORTE PDF
     // =========================================================================
     registrarGastoMensualExpress() {
         const descInput = document.getElementById('gasto-descripcion');
@@ -573,28 +598,91 @@ const ErpModulo = {
         const descripcionLimpia = descInput.value.trim();
         const montoEgreso = parseFloat(montoInput.value) || 0.00;
 
-        // Pescamos el histórico del local para acumular la auditoría
         const gastosPersistidos = JSON.parse(localStorage.getItem('APIO_GASTOS_MES')) || [];
         
         gastosPersistidos.push({
             descripcion: descripcionLimpia,
             monto: montoEgreso,
-            fecha: new Date().toISOString().split('T')[0]
+            fecha: new Date().toLocaleDateString('es-VE')
         });
         
         localStorage.setItem('APIO_GASTOS_MES', JSON.stringify(gastosPersistidos));
         
-        // Sincronizamos en el estado de la SPA por seguridad
-        if (!window.App) window.App = {};
-        if (!window.App.state) window.App.state = {};
-        window.App.state.ultimoGastoRegistrado = montoEgreso;
+        // 🔄 RENDERIZADO EN CALIENTE: Refrescamos la micro-tabla de inmediato
+        this.renderizarHistorialGastosLocal();
         
-        alert(`📉 ¡Egreso Aplicado de Forma Inmutable!\n\n• Concepto: ${descripcionLimpia}\n• Impacto en Caja: -$${montoEgreso.toFixed(2)} USD.`);
+        alert(`📉 ¡Egreso Aplicado!\n\n• Concepto: ${descripcionLimpia}\n• Impacto en Caja: -$${montoEgreso.toFixed(2)} USD.`);
         
-        // Limpiamos los campos listos para la siguiente carga
         descInput.value = "";
         montoInput.value = "";
-    }, // 🎯 COMA DE CIERRE PERFECTA: Cierra el Bloque G y da paso al cierre final del objeto
+    },
+
+    renderizarHistorialGastosLocal() {
+        const cuerpoTabla = document.getElementById('lista-gastos-cuerpo');
+        if (!cuerpoTabla) return;
+
+        const gastos = JSON.parse(localStorage.getItem('APIO_GASTOS_MES')) || [];
+
+        if (gastos.length === 0) {
+            cuerpoTabla.innerHTML = `<tr><td colspan="2" style="padding: 8px 0; text-align: center; color: #475569; font-family: sans-serif; font-style: italic;">No se registran egresos operacionales en el turno actual.</td></tr>`;
+            return;
+        }
+
+        // Mapeamos el arreglo persistido a filas reales del DOM
+        cuerpoTabla.innerHTML = gastos.map(g => `
+            <tr style="border-bottom: 1px solid #111827;">
+                <td style="padding: 6px 0; font-family: sans-serif; font-weight: 600; color: #fff;">${g.descripcion} <span style="font-size: 9px; color: #475569; font-weight: normal; margin-left: 6px;">(${g.fecha})</span></td>
+                <td style="padding: 6px 0; text-align: right; color: #ef4444; font-weight: bold;">-$${g.monto.toFixed(2)}</td>
+            </tr>
+        `).join('');
+    },
+
+    descargarGastosMesPdf() {
+        const gastos = JSON.parse(localStorage.getItem('APIO_GASTOS_MES')) || [];
+        if (gastos.length === 0) {
+            alert("⚠️ Libro de Egresos Vacío: No se puede generar un PDF debido a que no existen gastos registrados en la jornada.");
+            return;
+        }
+
+        console.log("📡 [SOTO CLOUD]: Despachando balance de egresos operativos al compilador de ReportLab...");
+        const iframeGastos = document.createElement('iframe');
+        iframeGastos.style.display = 'none';
+        document.body.appendChild(iframeGastos);
+
+        // Disparamos la petición nativa segura de Electron hacia tu Django
+        window.fetch('https://railway.app', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                "origen": "Electron Desktop ERP Master Gastos",
+                "tipo_reporte": "EGRESOS_OPERATIVOS",
+                "libro_gastos": gastos 
+            })
+        })
+        .then(res => {
+            if (!res.ok) {
+                if (document.body.contains(iframeGastos)) document.body.removeChild(iframeGastos);
+                throw new Error("Rebote fiscal en el motor de egresos de Django");
+            }
+            return res.blob();
+        })
+        .then(blobPdf => {
+            const urlDescarga = window.URL.createObjectURL(blobPdf);
+            const enlace = document.createElement('a');
+            enlace.href = urlDescarga;
+            enlace.download = `LIBRO_DE_GASTOS_MERCANTIL_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(enlace);
+            enlace.click();
+            enlace.remove();
+            if (document.body.contains(iframeGastos)) document.body.removeChild(iframeGastos);
+            console.log("✅ [SOTO ERP]: Libro de Gastos Digital descargado con éxito en Windows.");
+        })
+        .catch(err => {
+            console.error("❌ Falla Gastos PDF:", err.message);
+            if (document.body.contains(iframeGastos)) document.body.removeChild(iframeGastos);
+            alert("⚠️ Error: No se pudo conectar con el compilador contable cloud.");
+        });
+    }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
 
     // =========================================================================
     // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
