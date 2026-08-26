@@ -8,9 +8,10 @@ import django
 # =========================================================================
 
 # 🎯 ENLACE ATÓMICO CLOUD: Conexión forzada externa a PostgreSQL Railway
+# 🎯 ENLACE ATÓMICO EXTERNO CORPORATIVO SOTO SYSTEM (ALINEADO CON TU PANEL)
 CLAVE_MAESTRA = "gkfDbFUktFKmVUVIDxgujQVjlDtaJVbP"
-HOST_PUBLICO = "monorail.proxy.rlwy.net"  # 👈 Host externo público de tu panel de Railway
-PUERTO_PUBLICO = "5432"                   # 👈 El puerto de conexión confirmado por ti
+HOST_PUBLICO = "thomas.proxy.rlwy.net"  # 👈 CORREGIDO: Tu host externo real
+PUERTO_PUBLICO = "18806"                # 👈 CORREGIDO: Tu puerto asignado de 5 dígitos
 
 # Si corres el script localmente en tu laptop, le inyectamos la cañería pública de red
 if not os.environ.get('DATABASE_URL'):
