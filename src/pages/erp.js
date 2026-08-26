@@ -685,13 +685,6 @@ const ErpModulo = {
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
 
-    // =========================================================================
-    // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
-    // =========================================================================
-    inicializarModulosGerenciales() {
-        console.log("📊 [SOTO CENTRAL]: Cabina de analítica y control contable inicializada con éxito.");
-        // Aquí soldaremos los 5 módulos uno por uno sin romper el objeto
-    }
 }; // 🎯 CANDADO MÁSTER SOTO SYSTEM: Cierre definitivo y simétrico de ErpModulo
 
 // Vinculamos al entorno global window para evitar bloqueos en el ruteador de App.js
