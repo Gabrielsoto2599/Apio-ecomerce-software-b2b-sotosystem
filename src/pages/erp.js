@@ -684,9 +684,18 @@ const ErpModulo = {
             alert("⚠️ Error: No se pudo conectar con el compilador contable cloud.");
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
+    
+// =========================================================================
+    // 🏛️ RECEPTÁCULO PARA LOS 5 COMPONENTES GERENCIALES (A CONSTRUIR PASO A PASO)
+    // =========================================================================
+    inicializarModulosGerenciales() {
+        console.log("📊 [SOTO CENTRAL]: Cabina de analítica y control contable inicializada con éxito.");
+        if (typeof this.renderizarHistorialGastosLocal === 'function') {
+            this.renderizarHistorialGastosLocal();
+        }
+    }
+}; // 👑 EL VERDADERO CANDADO MÁSTER CONTABLE: Cierre absoluto del objeto principal ErpModulo
 
-}; // 🎯 CANDADO MÁSTER SOTO SYSTEM: Cierre definitivo y simétrico de ErpModulo
-
-// Vinculamos al entorno global window para evitar bloqueos en el ruteador de App.js
+// 🚀 ENLACE DE HERENCIA REACCIONAL SOTO SYSTEM (EL SECRETO DEL FOOTER GLOBAL)
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
