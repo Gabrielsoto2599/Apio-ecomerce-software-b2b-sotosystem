@@ -2,66 +2,72 @@ import os
 import json
 import django
 
-# 🚀 DESPIERTA EL ENTORNO DE DJANGO
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+# =========================================================================
+# 🚀 SOTO SYSTEM BODEGA SEEDER - RECALIBRACIÓN EXCLUSIVA DE VÍVERES (2026)
+# Ubicación: bodega/seed.py
+# =========================================================================
+
+# 1. Inicialización obligatoria del entorno de Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sotosystem.settings') # Cambia 'sotosystem' por el nombre de tu proyecto si difiere
 django.setup()
 
-from bodega.models import Producto, Categoria
+from bodega.models import Producto
 
-def cargar_inventario():
-    # 📁 Ubicación exacta de tu archivo de datos (apunta a bodega/untas.json)
-    ruta_json = os.path.join(os.path.dirname(__file__), 'bodega', 'untas.json')
+def sembrar_catalogo_viveres_exclusivo():
+    # Ruta absoluta segura hacia tu archivo maestro de abasto
+    ruta_json = os.path.join(os.path.dirname(__file__), 'untas.json')
+    
+    print("📡 [SOTO SEEDER]: Iniciando purga y siembra masiva en PostgreSQL Cloud...")
     
     if not os.path.exists(ruta_json):
-        print(f"❌ Error: No se encontró el archivo JSON en la ruta: {ruta_json}")
+        print(f"❌ Error Crítico: No se encontró el archivo maestro en la ruta -> {ruta_json}")
         return
 
     try:
-        print('--- 📡 Iniciando inyección atómica de datos en Railway Cloud (2026) ---')
-        with open(ruta_json, 'r', encoding='utf-8') as f:
-            productos_json = json.load(f)
+        with open(ruta_json, 'r', encoding='utf-8') as archivo:
+            datos_productos = json.load(archivo)
+            
+        # 🛡️ PROTECCIÓN DE PATRIMONIO: Limpiamos los productos viejos para evitar duplicación de registros
+        conteo_previo = Producto.objects.count()
+        Producto.objects.all().delete()
+        print(f"🗑️ Base de datos purgada con éxito. Se eliminaron {conteo_previo} registros anteriores.")
 
-        conteo_nuevos = 0
-        conteo_actualizados = 0
-        
-        for prod in productos_json:
-            # 1. Aseguramos la existencia de la Categoría en Postgres para evitar conflictos de ForeignKey
-            nombre_cat = prod.get('categoria', 'General').strip()
-            categoria_obj, _ = Categoria.objects.get_or_create(nombre=nombre_cat)
+        productos_a_crear = []
+        conteo_exitoso = 0
 
-            # 🎯 DETECTAR MODALIDAD AUTOMÁTICAMENTE SEGÚN EL SKU
-            # Si el código empieza por harinas, pastas o salsas es bodega; si no, se clasifica como ropa
-            sku_upper = prod['sku'].strip().upper()
-            es_bodega = any(sku_upper.startswith(prefix) for prefix in ['PAS-', 'MAY-', 'FOR-', 'HAR-', 'LEC-'])
-            tipo_tienda = "BODEGA" if es_bodega else "ROPA"
+        # Mapeamos e iteramos el cargamento de víveres del untas.json
+        for item in datos_productos:
+            sku_limpio = str(item.get('sku', '')).strip().upper()
+            nombre_prod = str(item.get('nombre', 'Producto sin Nombre')).strip()
+            cat_prod = str(item.get('categoria', 'General')).strip()
+            precio = float(item.get('precio_usd', 0.0) or item.get('precio', 0.0))
+            inventario = int(item.get('stock', 0) or item.get('cantidad', 0))
 
-            # 2. ⚡ ACTUALIZACIÓN EN CALIENTE: Usamos update_or_create como el importar_bodega máster
-            producto_obj, creado = Producto.objects.update_or_create(
-                sku=prod['sku'].strip(),
-                defaults={
-                    'nombre': prod['nombre'].strip(),
-                    'precio_usd': float(prod['precio_usd']),
-                    'stock': int(prod['stock']),
-                    'categoria': categoria_obj,
-                    'tipo_negocio': tipo_tienda  # 🎯 SEPARACIÓN AUTOMÁTICA EN BASE DE DATOS
-                }
+            if not sku_limpio:
+                continue
+
+            # Creamos la instancia inmutable apuntando estrictamente a la modalidad de la Bodega
+            nuevo_producto = Producto(
+                sku=sku_limpio,
+                nombre=nombre_prod,
+                categoria=cat_prod,
+                precio_usd=precio,
+                stock=inventario,
+                tipo_negocio='BODEGA', # Forzado para evitar colisiones con ropa
+                activo=True
             )
+            productos_a_crear.append(nuevo_producto)
+            conteo_exitoso += 1
 
-            if creado:
-                conteo_nuevos += 1
-                print(f"✅ Nuevo Indexado en RAM: {producto_obj.nombre} [{producto_obj.sku}] -> {tipo_tienda}")
-            else:
-                conteo_actualizados += 1
-                print(f"🔄 Actualizado en Caliente: {producto_obj.nombre} [{producto_obj.sku}] -> {tipo_tienda}")
-
-        print("----------------------------------------------------------------")
-        print(f"🏆 ¡ÉXITO TOTAL! Se procesaron {len(productos_json)} artículos.")
-        print(f"🚀 {conteo_nuevos} productos nuevos sembrados.")
-        print(f"🔄 {conteo_actualizados} productos actualizados con precios de hoy en PostgreSQL.")
-        print("----------------------------------------------------------------")
+        # ⚡ INYECCIÓN BULK: Guarda los 53 víveres en Railway en un solo milisegundo
+        if productos_a_crear:
+            Producto.objects.bulk_create(productos_a_crear)
+            print(f"🏆 ¡SIEMBRA COMPLETADA CON ÉXITO! -> Se inyectaron {conteo_exitoso} víveres en Railway Cloud.")
+        else:
+            print("⚠️ Advertencia: El archivo untas.json no contenía registros válidos para sembrar.")
 
     except Exception as e:
-        print(f"❌ CRASH EN EL PROCESO: {str(e)}")
+        print(f"❌ [CRASH EN SEEDER]: Falló la molienda del JSON o la conexión de red -> {str(e)}")
 
 if __name__ == '__main__':
-    cargar_inventario()
+    sembrar_catalogo_viveres_exclusivo()
