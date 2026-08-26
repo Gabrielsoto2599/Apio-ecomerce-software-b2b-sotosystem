@@ -172,6 +172,70 @@ class TransaccionFactura(models.Model):
     def __str__(self):
         return f"{self.numero_factura} - {self.cliente_identificacion} ({self.total_bs} Bs.)"
 
+import datetime
+from django.db import models
+from django.contrib.auth.models import User
+
+# =========================================================================
+# 💸 MODELO: EGRESOS OPERATIVOS Y GASTOS DE CAJA (SOTO SYSTEM 2026)
+# =========================================================================
+class GastoExpress(models.Model):
+    descripcion = models.CharField(max_length=255, verbose_name="Concepto del Egreso")
+    monto = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Monto en USD")
+    fecha = models.DateField(default=datetime.date.today, verbose_name="Fecha de Registro")
+    creado_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Gasto Express"
+        verbose_name_plural = "Gastos Express"
+        ordering = ['-fecha', '-creado_at']
+
+    def __str__(self):
+        return f"{self.descripcion} (-${self.monto})"
+
+
+# =========================================================================
+# 🚨 MODELO: CONTROL DE MOROSIDAD Y CUENTAS POR COBRAR (CLIENTES FIAR)
+# =========================================================================
+class CuentaPorCobrar(models.Model):
+    ESTADOS = (
+        ('PENDIENTE', 'Pendiente / Fiar Activo'),
+        ('MOROSO', 'Moroso / Alerta de Retraso'),
+        ('PAGADO', 'Liquidado / Solvente'),
+    )
+    
+    # Vinculamos al cliente que tienes en tu tabla original
+    cliente_nombre = models.CharField(max_length=255, verbose_name="Vecino / Comprador")
+    cedula_rif = models.CharField(max_length=20, verbose_name="Cédula o RIF")
+    nro_factura_origen = models.CharField(max_length=50, verbose_name="Factura Origen")
+    monto_deuda = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Saldo Deudor ($)")
+    fecha_fiado = models.DateField(default=datetime.date.today)
+    fecha_limite = models.DateField(verbose_name="Fecha Límite de Pago")
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
+    
+    class Meta:
+        verbose_name = "Cuenta Por Cobrar"
+        verbose_name_plural = "Cuentas Por Cobrar"
+        ordering = ['fecha_limite']
+
+    @property
+    def dias_retraso(self):
+        """Calcula dinámicamente los días de morosidad si superó la fecha límite"""
+        if self.estado != 'PAGADO' and datetime.date.today() > self.fecha_limite:
+            return (datetime.date.today() - self.fecha_limite).days
+        return 0
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "cliente": self.cliente_nombre,
+            "cedula": self.cedula_rif,
+            "factura": self.nro_factura_origen,
+            "deuda": float(self.monto_deuda),
+            "retraso": self.dias_retraso,
+            "estado": self.estado,
+            "fecha_limite": self.fecha_limite.strftime('%Y-%m-%d')
+        }
 
 
 
