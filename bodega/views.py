@@ -809,22 +809,31 @@ def descargar_gastos_pdf_api(request):
         y = alto - 150
         total_egresado = 0.00
         
+                # 📐 CORRECCIÓN QUIRÚRGICA ANTI-ERROR 500 (SOTO SYSTEM 2026)
         canvas_pdf.setFont("Helvetica", 10)
         for g in libro_gastos:
             if y < 60:
                 canvas_pdf.showPage()
                 y = alto - 60
+                canvas_pdf.setFont("Helvetica", 10)
                 
             desc_gasto = g.get("descripcion", "Egreso General").strip()
             monto_gasto = float(g.get("monto", 0.00))
-            fecha_gasto = g.get("fecha", "N/A")
             
+            # Escudo protector: si la fecha llega como lista desde JS, extraemos el primer elemento
+            fecha_cruda = g.get("fecha", "N/A")
+            if isinstance(fecha_cruda, list) and len(fecha_cruda) > 0:
+                fecha_gasto = str(fecha_cruda[0])
+            else:
+                fecha_gasto = str(fecha_cruda)
+            
+            # Estampado plano libre de errores de tipado en ReportLab
             canvas_pdf.drawString(40, y, f"• {desc_gasto} ({fecha_gasto})")
             canvas_pdf.drawRightString(ancho - 40, y, f"-${monto_gasto:.2f}")
             
             total_egresado += monto_gasto
             y -= 22
-            
+        
         canvas_pdf.line(35, y, ancho - 35, y)
         y -= 25
         
