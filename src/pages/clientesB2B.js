@@ -139,6 +139,41 @@ const ClientesB2B = {
                     </tbody>
                 </table>
             </div>
+
+            <!-- 🚨 EXTENSIÓN H: LIBRO DE MOROSIDAD CORPORATIVA (CLIENTES FIAR VENCIDOS) -->
+<div id="morosidad-card-container" style="margin-top: 20px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    <div style="background: linear-gradient(135deg, #1c0d0d 0%, #0a0202 100%); padding: 18px; border-radius: 10px; border: 1px solid #301616; border-left: 5px solid #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <span style="font-size: 10px; color: #f87171; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">🚨 Registro Crítico de Morosidad</span>
+                <h4 style="margin: 2px 0 0 0; color: #ffffff; font-size: 14px; font-weight: 700;">Auditoría de Cuentas por Cobrar Retrasadas</h4>
+            </div>
+            <span id="morosidad-conteo-alerta" style="font-size: 10px; font-weight: 900; background: #ef444433; color: #f43f5e; padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(244, 63, 94, 0.3);">0 Alertas Críticas</span>
+        </div>
+
+        <!-- Tabla de Clientes Deudores en Vivo -->
+        <div style="background: #030712; padding: 12px; border-radius: 6px; border: 1px solid #1e293b; max-height: 180px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+                <thead>
+                    <tr style="color: #64748b; border-bottom: 1px solid #1e293b; font-size: 10px; text-transform: uppercase;">
+                        <th style="padding-bottom: 6px;">Vecino / Comprador</th>
+                        <th style="padding-bottom: 6px;">Factura Ref</th>
+                        <th style="padding-bottom: 6px;">Días Retraso</th>
+                        <th style="padding-bottom: 6px; text-align: right;">Saldo Pendiente</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-morosos-cuerpo" style="color: #cbd5e1; font-family: monospace;">
+                    <tr>
+                        <td colspan="4" style="padding: 12px 0; text-align: center; color: #475569; font-family: sans-serif; font-style: italic;">Sincronizando deudores con PostgreSQL Cloud...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
         `;
         
         pageBodyContent.appendChild(carteraPanel);
@@ -162,12 +197,13 @@ const ClientesB2B = {
         return section;
     }, // <--- Cierre impecable y balanceado del método render() del Módulo de Clientes
 
+    
     // =========================================================================
 // 🚀 BLOQUE 2 (PARTE A): PROCESADORES LÓGICOS DE SIEMBRA MULTIPERFIL (MVP 2026)
 // Ubicación: clientesB2B.js -> Continuación de render()
 // =========================================================================
 
-    // 🎯 Conmutador de casillas reactivas
+    // 🎯 Conmutador de casillas reactivas e Inyector de Morosidad
     conmutarInputDeuda(tipoSeleccionado) {
         const wrapperSaldo = document.getElementById('wrapper-saldo-inicial');
         const wrapperDetalles = document.getElementById('wrapper-detalles-fiado');
@@ -175,11 +211,17 @@ const ClientesB2B = {
         if (tipoSeleccionado === 'DEUDOR') {
             if (wrapperSaldo) wrapperSaldo.style.display = 'block';
             if (wrapperDetalles) wrapperDetalles.style.display = 'block'; // 📦 Enciende el block de productos
+            
+            // 📡 DISPARADOR TELEMÉTRICO SOTO SYSTEM:
+            // Al activarse el perfil de deudor, forzamos la sincronización de pasivos en vivo
+            if (typeof window.consultarLibroMorosidadCloud === 'function') {
+                window.consultarLibroMorosidadCloud();
+            }
         } else {
             if (wrapperSaldo) wrapperSaldo.style.display = 'none';
             if (wrapperDetalles) wrapperDetalles.style.display = 'none';
         }
-    },
+    }, // 🎯 Cierre limpio de la propiedad conmutarInputDeuda con su coma de continuidad
 
     // =========================================================================
 // 🧠 REPAIR DE SIEMBRA CONTABLE MANUAL (EXTINGUIDO EL REFERENCEERROR LÍNEA 185)
