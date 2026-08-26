@@ -741,3 +741,143 @@ def subir_capture_api(request, tx_id):
             
     return JsonResponse({'status': 'error', 'message': 'Petición inválida o sin archivo.'}, status=400)
 
+import json
+import datetime
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from .models import Producto, GastoExpress, CuentaPorCobrar
+
+# =========================================================================
+# 💸 1. ENDPOINT: COMPILADOR Y GENERADOR DE PDF DE GASTOS EXPRESS
+# =========================================================================
+@csrf_exempt
+def descargar_gastos_pdf_api(request):
+    """
+    [COMPILADOR DE EGRESOS DIGITAL SOTO SYSTEM]
+    Recibe la ráfaga JSON de gastos desde el LocalStorage de Electron
+    y escupe de inmediato el balance físico digital en PDF usando ReportLab.
+    """
+    if request.method != 'POST':
+        return JsonResponse({"error": "Método no permitido. Se exige POST."}, status=405)
+    
+    try:
+        body = json.loads(request.body)
+        origen = body.get("origen", "Desconocido")
+        libro_gastos = body.get("libro_gastos", [])
+        
+        print(f"📡 [SOTO CLOUD]: Generando PDF ReportLab para egresos de -> {origen}")
+        
+        # Guardamos en la base de datos cloud para persistencia e histórico contable
+        for gasto in libro_gastos:
+            desc = gasto.get("descripcion", "Egreso General").strip()
+            monto_val = float(gasto.get("monto", 0.00))
+            # Evitamos duplicidad guardando solo si no existe el concepto hoy
+            GastoExpress.objects.get_or_create(descripcion=desc, monto=monto_val)
+
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="libro_gastos_mercantil.pdf"'
+        
+        # Inicializamos el lienzo ReportLab
+        canvas_pdf = canvas.Canvas(response, pagesize=letter)
+        ancho, alto = letter
+        
+        # Cabecera Premium Corporativa (Línea Estética Apio Software)
+        canvas_pdf.setFillColor(colors.HexColor("#0b0f19"))
+        canvas_pdf.rect(0, alto - 80, ancho, 80, fill=True, stroke=False)
+        
+        canvas_pdf.setFillColor(colors.white)
+        canvas_pdf.setFont("Helvetica-Bold", 16)
+        canvas_pdf.drawString(30, alto - 45, "APIO ERP - LIBRO DIGITAL DE EGRESOS OPERATIVOS")
+        
+        canvas_pdf.setFont("Helvetica", 10)
+        canvas_pdf.setFillColor(colors.HexColor("#ff9900")) # El icónico naranja de tu marca
+        canvas_pdf.drawString(30, alto - 62, "Control Interno de Caja Chica y Deducciones de Jornada")
+        
+        # Encabezados de la Tabla
+        canvas_pdf.setFillColor(colors.black)
+        canvas_pdf.setFont("Helvetica-Bold", 11)
+        canvas_pdf.drawString(40, alto - 120, "Descripción del Egreso / Concepto de Gasto")
+        canvas_pdf.drawRightString(ancho - 40, alto - 120, "Monto Deducido ($)")
+        
+        canvas_pdf.setStrokeColor(colors.HexColor("#1e293b"))
+        canvas_pdf.setLineWidth(1)
+        canvas_pdf.line(35, alto - 128, ancho - 35, alto - 128)
+        
+        y = alto - 150
+        total_egresado = 0.00
+        
+        canvas_pdf.setFont("Helvetica", 10)
+        for g in libro_gastos:
+            if y < 60:
+                canvas_pdf.showPage()
+                y = alto - 60
+                
+            desc_gasto = g.get("descripcion", "Egreso General").strip()
+            monto_gasto = float(g.get("monto", 0.00))
+            fecha_gasto = g.get("fecha", "N/A")
+            
+            canvas_pdf.drawString(40, y, f"• {desc_gasto} ({fecha_gasto})")
+            canvas_pdf.drawRightString(ancho - 40, y, f"-${monto_gasto:.2f}")
+            
+            total_egresado += monto_gasto
+            y -= 22
+            
+        canvas_pdf.line(35, y, ancho - 35, y)
+        y -= 25
+        
+        canvas_pdf.setFont("Helvetica-Bold", 12)
+        canvas_pdf.setFillColor(colors.HexColor("#ef4444")) # Rojo Alerta para deducciones
+        canvas_pdf.drawString(40, y, "TOTAL DEDUCIDO DE CAJA:")
+        canvas_pdf.drawRightString(ancho - 40, y, f"-${total_egresado:.2f} USD")
+        
+        canvas_pdf.showPage()
+        canvas_pdf.save()
+        return response
+        
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+# =========================================================================
+# 🚨 2. ENDPOINT: LISTADO COMPLETO Y ALERTAS DE MOROSIDAD (CLIENTES FIAR)
+# =========================================================================
+@csrf_exempt
+def listado_morosidad_clientes_api(request):
+    """
+    Retorna las cuentas por cobrar segmentando de forma inmediata a los
+    clientes morosos con retrasos vigentes basados en la fecha límite contable.
+    """
+    if request.method != 'GET':
+        return JsonResponse({"error": "Método GET requerido"}, status=405)
+    
+    try:
+        cuentas = CuentaPorCobrar.objects.exclude(estado='PAGADO')
+        
+        morosos = []
+        pendientes = []
+        total_deuda_usd = 0.00
+        
+        for c in cuentas:
+            total_deuda_usd += float(c.monto_deuda)
+            # Evaluamos morosidad en caliente comparando con la fecha actual del servidor (2026)
+            if datetime.date.today() > c.fecha_limite:
+                c.estado = 'MOROSO'
+                c.save()
+                morosos.append(c.to_dict())
+            else:
+                pendientes.append(c.to_dict())
+                
+        return JsonResponse({
+            "status": "success",
+            "conteo_critico": len(morosos),
+            "total_cuentas_activas": len(cuentas),
+            "balance_deudor_total_usd": total_deuda_usd,
+            "clientes_morosos": morosos,
+            "clientes_pendientes": pendientes
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)

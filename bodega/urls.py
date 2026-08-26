@@ -52,4 +52,10 @@ urlpatterns = [
 
     # C. API de consulta cíclica a la que Electron (pasarelaPago.js) interroga cada 3 segundos
     path('api/v1/verificar-pago-movil/<str:tx_id>/', views.verificar_pago_movil_api, name='api_verificar_pago_movil'),
+
+    # 🎯 ENDPOINT EXCLUSIVO: Elimina de raíz el error 404 del PDF de Gastos
+    path('api/v1/descargar-gastos-pdf/', views.descargar_gastos_pdf_api, name='descargar_gastos_pdf_api'),
+    
+    # 🎯 ENDPOINT MOROSIDAD: Mánager telemétrico de control de cuentas por cobrar
+    path('api/v1/listado-morosidad-api/', views.listado_morosidad_clientes_api, name='listado_morosidad_clientes_api'),
 ]
