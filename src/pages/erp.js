@@ -317,6 +317,49 @@ const ErpModulo = {
         });
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque A y le da paso en limpio al Bloque B
 
+    // =========================================================================
+    // 🏛️ EXTENSIÓN B: REPORTE DE MES FISCAL - DECLARACIÓN IVA 16% (SENIAT)
+    // =========================================================================
+    ejecutarCierreMensualPdf() {
+        console.log("📡 [SOTO CLOUD]: Compilando libro de ventas del mes...");
+        const iframeMensual = document.createElement('iframe');
+        iframeMensual.style.display = 'none';
+        document.body.appendChild(iframeMensual);
+
+        window.fetch('https://railway.app', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/pdf'
+            },
+            body: JSON.stringify({ "origen": "Electron Desktop ERP Master Mensual" })
+        })
+        .then(res => {
+            if (!res.ok) {
+                if (document.body.contains(iframeMensual)) document.body.removeChild(iframeMensual);
+                throw new Error("Rebote impositivo en Django (Status: " + res.status + ")");
+            }
+            return res.blob();
+        })
+        .then(blobPdf => {
+            const urlDescarga = window.URL.createObjectURL(blobPdf);
+            const enlace = document.createElement('a');
+            enlace.href = urlDescarga;
+            enlace.download = `REPORTE_MENSUAL_FISCAL_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(enlace);
+            enlace.click();
+            enlace.remove();
+            if (document.body.contains(iframeMensual)) document.body.removeChild(iframeMensual);
+
+            alert("🏛️ [REPORTE FISCAL MENSUAL EMITIDO - SENIAT VENEZUELA]");
+        })
+        .catch(err => {
+            console.error("❌ Falla Mensual:", err.message);
+            if (document.body.contains(iframeMensual)) document.body.removeChild(iframeMensual);
+            alert("⚠️ Alerta: Error de comunicación con el motor mensual.");
+        });
+    }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque B y abre el espacio para los nuevos módulos
+
             // =========================================================================
     // 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE (PROVEEDORES POLAR/TUNAL)
     // =========================================================================
