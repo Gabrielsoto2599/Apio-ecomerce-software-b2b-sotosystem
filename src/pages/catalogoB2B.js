@@ -246,21 +246,19 @@ const CatalogoB2B = {
             }
         });
 
-// =========================================================================
-// 📡 ANTENA DE ESCUCHA GLOBAL MULTIPERFIL - SOTO SYSTEM (SOLUCIÓN CATÁLOGO FIJO)
+
+        // =========================================================================
+// 📡 ANTENA DE ESCUCHA GLOBAL DE VÍVERES - SOTO SYSTEM (SOLUCIÓN FINAL)
 // Ubicación: Módulo de Enlace de Entrada (home.js / App.js)
 // =========================================================================
-
-// 🎯 INTERRUPTOR MAESTRO: Cámbialo a "ROPA" para la Boutique o "BODEGA" para los víveres
-const MODALIDAD_TIENDA_ACTIVA = "ROPA"; 
 
 window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
     const barraInput = document.querySelector('.search-core-input');
     
-    // Saneamos la cadena de texto cruda recibida
+    // Saneamos la cadena de texto cruda recibida en el mostrador
     const terminoLimpio = textoVoz ? textoVoz.trim() : "";
     
-    console.log(`📡 [SOTO CORE INTERRUPTOR]: Procesando término elástico -> "${terminoLimpio}" en modalidad [${MODALIDAD_TIENDA_ACTIVA}]`);
+    console.log(`📡 [SOTO CORE INTERRUPTOR]: Procesando término elástico -> "${terminoLimpio}" en pasillo de Víveres.`);
 
     if (barraInput) {
         barraInput.value = terminoLimpio;
@@ -273,28 +271,32 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
     
     window.App.state.ultimoTerminoBuscado = terminoLimpio;
     
-        // 🎯 REPARACIÓN DE TELEMETRÍA: Forzamos el uso de backendBase para conectar con la nube
+    // 🎯 VALIDACIÓN DE VALOR REAL: Asignamos y declaramos la URL inmutable de producción
+    const backendBase = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app';
+    
+    // 🎯 CONEXIÓN DE TELEMETRÍA: Forzamos el uso de backendBase para cablear la petición a internet
     const urlFinalBuscador = `${backendBase}/api/v1/buscador-productos-api/?q=${encodeURIComponent(terminoLimpio)}`;
 
     console.log(`📡 [SOTO CORE CONNECT]: Disparando ráfaga a internet -> ${urlFinalBuscador}`);
 
+    // 2. ⚡ DISPARO DE LA RÁFAGA TELEMÉTRICA NATIVA EN LA BODEGA
     window.fetch(urlFinalBuscador)
         .then(response => {
             if (!response.ok) throw new Error("Rebote de red en Django Status: " + response.status);
             return response.json();
         })
         .then(data => {
-            // Escudo elástico: extraemos el arreglo plano directo o la propiedad interna
+            // Escudo elástico multiformato: extraemos el arreglo plano directo o la propiedad interna
             const productosSaneados = Array.isArray(data) ? data : (data.productos || data.data || []);
             
             console.log(`✨ [SOTO POS SUCCESS]: Elementos recuperados de PostgreSQL -> ${productosSaneados.length}`);
 
-            // Sincronizamos la memoria RAM global de tu Electron con los víveres reales
+            // Sincronizamos la memoria RAM global de tu Electron con los 53 víveres reales
             if (window.App && window.App.state) {
                 window.App.state.productosFiltrados = productosSaneados;
             }
 
-            // 🖨️ RENDERIZADO EN CALIENTE: Forzamos al catálogo a pintar las cajas en el DOM
+            // 🖨️ RENDERIZADO EN CALIENTE: Forzamos al catálogo a pintar las cajas en el DOM de Windows
             if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
                 window.recalcularGrillaCatalogoB2BEnCaliente();
             } else if (window.App && typeof window.App.render === 'function') {
@@ -303,6 +305,7 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
         })
         .catch(err => console.error("❌ [SOTO BUSCADOR CONTINGENCIA CRÍTICA]:", err.message));
 };
+
 
 // =========================================================================
 // BLOQUE 4: ACOPLE DE LA IA DANIELA, RECUPERACIÓN DEL FOOTER Y EXPORTACIÓN
