@@ -6,26 +6,31 @@
 import uuid
 from django.db import models
 
-
+# =========================================================================
+# 📂 MODELO 1: CATEGORÍAS (RELACIÓN DE LLAVE FORÁNEA)
+# =========================================================================
 class Categoria(models.Model):
-    """📂 Segmentación comercial para organizar el catálogo de la bodega."""
+    """Segmentación comercial para organizar el catálogo de la bodega."""
     nombre = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.nombre
 
 
+# =========================================================================
+# 📦 MODELO 2: PRODUCTOS (EXCLUSIVO DE VÍVERES Y BODEGA DIGITAL)
+# =========================================================================
 class Producto(models.Model):
-    # ... tus campos actuales (nombre, precio, etc) ...
-    tipo_negocio = models.CharField(max_length=20, default="BODEGA", choices=[("BODEGA", "Bodega"), ("ROPA", "Tienda de Ropa")])
-
-    """📦 Inventario mayorista sincronizado en vivo con el instalador de Windows."""
-    # db_index=True en campos clave acelera las consultas de la IA exponencialmente
+    """Inventario contable sincronizado en vivo con el instalador de Windows."""
+    
+    # 🧠 DB_INDEX=True acelera las consultas telemétricas y búsquedas inline exponencialmente
     id_qr = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     sku = models.CharField(max_length=30, unique=True, db_index=True)
     nombre = models.CharField(max_length=150)
     precio_usd = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
+    
+    # Relación formal de Llave Foránea hacia la tabla Categoria
     categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name='productos')
     actualizado = models.DateTimeField(auto_now=True)
 
@@ -33,17 +38,21 @@ class Producto(models.Model):
         return f"{self.nombre} ({self.sku})"
 
     def to_dict(self):
-        """Evita botes de memoria evaluando el string directo para el proxy de Node."""
+        """
+        [MÁSTER PROXY SOTO SYSTEM]
+        Formatea las columnas de PostgreSQL a un diccionario nativo de Python.
+        Satisface el tipado estricto que exige catalogoB2B.js en Electron.
+        """
         return {
+            "id": self.id,
             "id_qr": str(self.id_qr),
             "sku": self.sku,
             "nombre": self.nombre,
             "precio_usd": float(self.precio_usd),
             "stock": self.stock,
-            "categoria": str(self.categoria.nombre)
+            "categoria": str(self.categoria.nombre)  # Extrae la palabra limpia (ej: "Pastas")
         }
-
-
+    
 import uuid
 from django.db import models
 
