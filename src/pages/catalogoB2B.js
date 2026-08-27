@@ -272,71 +272,37 @@ window.inyectarBusquedaDesdeDaniela = function(textoVoz) {
     if (!window.App.state) window.App.state = {};
     
     window.App.state.ultimoTerminoBuscado = terminoLimpio;
+    
+        // 🎯 REPARACIÓN DE TELEMETRÍA: Forzamos el uso de backendBase para conectar con la nube
+    const urlFinalBuscador = `${backendBase}/api/v1/buscador-productos-api/?q=${encodeURIComponent(terminoLimpio)}`;
 
-    // 2. ⏱️ GATILLO DE ACCESO ULTRA-RÁPIDO DIRECTO A LA RED DE DJANGO
-    // 🎯 REPARACIÓN DE SUBDOMINIO: Corregido 'software' con la ortografía real de internet
-    let backendBase = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app';
+    console.log(`📡 [SOTO CORE CONNECT]: Disparando ráfaga a internet -> ${urlFinalBuscador}`);
 
-    // Si el campo cae a un silencio total o borrado de letras, restauramos los productos
-    if (terminoLimpio.length === 0) {
-        window.App.state.productosFiltrados = null;
-        window.App.state.ultimoTerminoBuscado = "";
-        
-        // Le gritamos a la grilla del catálogo que re-renderice la visual completa en caliente
-        if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
-            window.recalcularGrillaCatalogoB2BEnCaliente();
-        } else if (typeof window.App.render === 'function') {
-            window.App.render();
-        }
-        return;
-    }
-
-        // Si trae texto (sea tecleado o por voz), disparamos la ráfaga telemétrica nativa
     window.fetch(urlFinalBuscador)
         .then(response => {
             if (!response.ok) throw new Error("Rebote de red en Django Status: " + response.status);
             return response.json();
         })
         .then(data => {
-            let arregloExtraido = [];
+            // Escudo elástico: extraemos el arreglo plano directo o la propiedad interna
+            const productosSaneados = Array.isArray(data) ? data : (data.productos || data.data || []);
+            
+            console.log(`✨ [SOTO POS SUCCESS]: Elementos recuperados de PostgreSQL -> ${productosSaneados.length}`);
 
-            // 🎯 ESCUDO ELÁSTICO DE PROCESAMIENTO MULTIFORMATO
-            if (Array.isArray(data)) {
-                // Formato Plano Definitivo (El de tu views actual): [ ... ]
-                arregloExtraido = data;
-            } else if (data && Array.isArray(data.productos)) {
-                // Formato Estructurado: { "productos": [...] }
-                arregloExtraido = data.productos;
-            } else if (data && Array.isArray(data.data)) {
-                // Fallback de contingencia: { "data": [...] }
-                arregloExtraido = data.data;
+            // Sincronizamos la memoria RAM global de tu Electron con los víveres reales
+            if (window.App && window.App.state) {
+                window.App.state.productosFiltrados = productosSaneados;
             }
 
-            console.log(`📊 [SOTO FRONT REPAIR]: Lote asimilado. Elementos en RAM -> ${arregloExtraido.length}`);
-
-            // Guardamos el arreglo real extraído en la memoria global de la suite
-            window.App.state.productosFiltrados = arregloExtraido;
-
-            // 🎯 ¡LA VICTORIA ATÓMICA REACCIONARIA!
+            // 🖨️ RENDERIZADO EN CALIENTE: Forzamos al catálogo a pintar las cajas en el DOM
             if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
                 window.recalcularGrillaCatalogoB2BEnCaliente();
-                
-                // Devolvemos el foco y colocamos el cursor al final de la palabra para escritura fluida
-                const inputRecargado = document.querySelector('.search-core-input');
-                if (inputRecargado) {
-                    inputRecargado.focus();
-                    // Colocamos un Try/Catch por si el elemento se re-renderiza rápido en el DOM
-                    try {
-                        inputRecargado.setSelectionRange(terminoLimpio.length, terminoLimpio.length);
-                    } catch(e) {}
-                }
-            } else if (typeof window.App.render === 'function') {
+            } else if (window.App && typeof window.App.render === 'function') {
                 window.App.render();
             }
         })
         .catch(err => console.error("❌ [SOTO BUSCADOR CONTINGENCIA CRÍTICA]:", err.message));
 };
-
 
 // =========================================================================
 // BLOQUE 4: ACOPLE DE LA IA DANIELA, RECUPERACIÓN DEL FOOTER Y EXPORTACIÓN
