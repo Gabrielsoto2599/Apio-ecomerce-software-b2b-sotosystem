@@ -1084,9 +1084,21 @@ moduloFacturacion.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: baseline;">
                         <h2 id="factura-total-bs" style="margin: 0; font-size: 26px; font-weight: 900; color: #00D2FF; text-shadow: 0 0 10px rgba(0, 210, 255, 0.3); font-family: monospace;">${totalBs_Base.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</h2>
                         <span id="factura-total-usd-ref" style="font-size: 13px; font-weight: 800; color: #10b981; font-family: monospace;">Ref: $${subtotalUSD_Base.toFixed(2)}</span>
-        `;
-        contenedorInterno.appendChild(moduloFacturacion);
+                    </div>
+                </div>
 
+                <!-- 🍊 BOTÓN MAESTRO DE DISPARO: Gradiente naranja corporativo con elevación y glow neón -->
+                <button type="button" id="btn-procesar-despacho" style="width: 100%; background: linear-gradient(135deg, #ff9900 0%, #d47a00 100%); color: #FFFFFF; border: none; padding: 14px; border-radius: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 153, 0, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease;"
+                    onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 153, 0, 0.5)';"
+                    onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px rgba(255, 153, 0, 0.3)';">
+                    Procesar y Despachar Mercancía
+                </button>
+            </div>
+
+        </div>
+    </div>
+`;
+contenedorInterno.appendChild(moduloFacturacion);
 
         // =========================================================================
         // INYECCIÓN DE COMPLEMENTOS DESDE HOME (IDÉNTICO AL REGISTRO B2B)
