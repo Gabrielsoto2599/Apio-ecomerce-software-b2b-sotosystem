@@ -261,14 +261,6 @@ const ErpModulo = {
 
 </div>
 
-<!-- 🖨️ FOOTER INTEGRAL INYECTADO AL FINAL DEL FLUJO DE LA CONSOLA ERP -->
-<div style="margin-top: 40px; padding: 20px 0; text-align: center; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-    <span style="font-size: 11px; font-weight: 800; color: #ff9900; letter-spacing: 0.05em; text-transform: uppercase;">
-        APIO E-COMMERCE SOFTWARE <small style="color: #3b82f6; font-family: monospace;">v1.0.0-SaaS</small>
-    </span>
-    <p style="margin: 4px 0 0 0; font-size: 10px; color: #64748b;">© 2026 All Rights Reserved.</p>
-    <p style="margin: 2px 0 0 0; font-size: 9px; color: #475569;">Desarrollado por Soto System Digital Solutions VE</p>
-</div>
 `; // <-- Aquí cerramos oficialmente el gran template string de tu ERP
 
         // Colgamos la consola unificada adentro del cascarón maestro de la SPA
@@ -703,7 +695,25 @@ const ErpModulo = {
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
 }; 
 
+// =========================================================================
+// 🚀 INICIALIZACIÓN INTEGRAL DEL DOM Y MONTAJE DEL FOOTER INSTITUCIONAL
+// =========================================================================
+if (typeof contenedorInterno !== 'undefined' && typeof erpPanel !== 'undefined') {
+    // 1. Inyectamos primero la estructura de tus tarjetas y tablas en el viewport
+    contenedorInterno.appendChild(erpPanel);
+
+    // 2. Renderizamos en caliente los gastos que estén en el LocalStorage
+    if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
+        ErpModulo.renderizarHistorialGastosLocal();
+    }
+
+    // 3. LLAMADA NATIVA AL FOOTER DE GABRIEL: Queda afuera, al final de la página y con su color #090b0f
+    if (window.Home && typeof window.Home.renderFooter === 'function') {
+        const footerOriginal = window.Home.renderFooter();
+        contenedorInterno.appendChild(footerOriginal);
+    }
+}
+
+// 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
-
-
