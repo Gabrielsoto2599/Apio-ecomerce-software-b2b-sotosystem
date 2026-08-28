@@ -696,20 +696,23 @@ const ErpModulo = {
 }; 
 
 // =========================================================================
-// 🚀 INICIALIZACIÓN INTEGRAL DEL DOM Y MONTAJE DEL FOOTER INSTITUCIONAL
+// 🚀 INYECCIÓN FINALES: FUERA DE COMPONENTES Y EN LA ÚLTIMA LÍNEA DE LA PÁGINA
 // =========================================================================
-if (typeof contenedorInterno !== 'undefined' && typeof erpPanel !== 'undefined') {
-    // 1. Inyectamos primero la estructura de tus tarjetas y tablas en el viewport
-    contenedorInterno.appendChild(erpPanel);
+if (typeof contenedorInterno !== 'undefined') {
+    // 1. Primero renderizamos el panel del ERP en el lienzo general si no se ha montado
+    if (typeof erpPanel !== 'undefined') {
+        contenedorInterno.appendChild(erpPanel);
+    }
 
-    // 2. Renderizamos en caliente los gastos que estén en el LocalStorage
+    // 2. Refrescamos la persistencia local de la micro-tabla de gastos
     if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
         ErpModulo.renderizarHistorialGastosLocal();
     }
 
-    // 3. LLAMADA NATIVA AL FOOTER DE GABRIEL: Queda afuera, al final de la página y con su color #090b0f
-    if (window.Home && typeof window.Home.renderFooter === 'function') {
-        const footerOriginal = window.Home.renderFooter();
+    // 3. 🖨️ LLAMADA NATIVA AL FOOTER INSTITUCIONAL (Apuntando al import del Bloque 0)
+    if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
+        const footerOriginal = Home.renderFooter();
+        // Lo inyectamos directo al contenedor de la app, quedando en la última línea
         contenedorInterno.appendChild(footerOriginal);
     }
 }
