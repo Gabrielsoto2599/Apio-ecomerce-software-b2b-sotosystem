@@ -182,77 +182,94 @@ const ErpModulo = {
 
 
 
-            <!-- ➕ CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
-            <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif; margin-bottom: 30px;">
-                <h4 style="margin: 0 0 15px 0; font-size: 12px; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">📦 Recepción de Mercancía Nueva (Carga Inventario Fijo)</h4>
-                
-                <form id="form-ingreso-inventario-nuevo" onsubmit="event.preventDefault(); window.ErpModulo.ingresarMercanciaNuevaManual();" 
-                    style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
-                    
-                    <div style="flex: 1; min-width: 120px;">
-                        <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">SKU / CÓDIGO:</label>
-                        <input type="text" id="inv-sku" required placeholder="Ej: POL-PAN-01" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-family:monospace; font-size:13px; outline:none;">
-                    </div>
-
-                    <div style="flex: 2; min-width: 180px;">
-                        <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">DESCRIPCIÓN DEL VÍVERE:</label>
-                        <input type="text" id="inv-nombre" required placeholder="Ej: Harina P.A.N. 1kg" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-size:13px; outline:none;">
-                    </div>
-
-                    <div style="flex: 1; min-width: 140px;">
-                        <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">DISTRIBUIDOR / PROVEEDOR:</label>
-                        <select id="inv-proveedor" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; cursor:pointer; font-size:13px; outline:none;">
-                            <option value="POLAR">Empresas Polar C.A.</option>
-                            <option value="EL TUNAL">Alimentos El Tunal</option>
-                            <option value="NATULAC">Industrias Natulac</option>
-                            <option value="OTROS">Mercancía General / Genéricos</option>
-                        </select>
-                    </div>
-
-                    <div style="flex: 1; min-width: 90px;">
-                        <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">COSTO COMPRA ($):</label>
-                        <input type="number" id="inv-precio" step="0.01" required value="1.10" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:#00D2FF; border-radius:6px; font-family:monospace; font-weight:bold; font-size:13px; outline:none;">
-                    </div>
-
-                    <div style="flex: 1; min-width: 80px;">
-                        <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">CANTIDAD (UNID):</label>
-                        <input type="number" id="inv-stock" required value="20" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-family:monospace; font-size:13px; outline:none;">
-                    </div>
-
-                    <button type="submit" style="background: linear-gradient(135deg, #00D2FF 0%, #0072FF 100%); color:#030712; border:none; padding:11px 24px; border-radius:6px; font-weight:800; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.05em; box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);">
-                        📥 Inyectar Stock
-                    </button>
-                </form>
+            <!-- 📦 EXTENSIÓN H: CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES ENVOLVENTE SANEADO) -->
+<div id="inventario-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    
+    <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif;">
+        <h4 style="margin: 0 0 15px 0; font-size: 12px; color: #38bdf8; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">📦 Recepción de Mercancía Nueva (Carga Inventario Fijo)</h4>
+        
+        <form id="form-ingreso-inventario-nuevo" onsubmit="event.preventDefault(); window.ErpModulo.ingresarMercanciaNuevaManual();" 
+            style="display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end;">
+            
+            <div style="flex: 1; min-width: 120px;">
+                <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">SKU / CÓDIGO:</label>
+                <input type="text" id="inv-sku" required placeholder="Ej: POL-PAN-01" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-family:monospace; font-size:13px; outline:none;">
             </div>
 
-                        <!-- 📊 LA ESTRUCTURA DE LA TABLA ÚNICA DE GABRIEL FUSIONADA DIRECTAMENTE EN EL FLUJO -->
-            <div style="background-color: #030712; padding: 22px; border-radius: 8px; border: 1px solid #1e293b;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
-                    <span style="color: #a855f7; font-size: 14px;">📊</span>
-                    <h4 style="margin: 0; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Historial de Movimientos y Transacciones Diarias</h4>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
-                        <thead>
-                            <tr style="background: #000000; color: #ffffff; border-bottom: 2px solid #1e293b; font-family: monospace; font-size: 11px; text-transform: uppercase;">
-                                <th style="padding: 12px 14px; width: 110px;">REF / HORA</th>
-                                <th style="padding: 12px 14px; width: 130px;">CÉDULA/RIF</th>
-                                <th style="padding: 12px 14px;">PRODUCTOS DESPACHADOS</th>
-                                <th style="padding: 12px 14px; width: 140px; text-align: center;">MÉTODO PAGO</th>
-                                <th style="padding: 12px 14px; width: 160px; text-align: right;">MONTO PAGADO</th>
-                            </tr>
-                        </thead>
-                        <tbody id="erp-movimientos-diarios-rows" style="font-family: monospace; font-weight: 600; color: #e2e8f0;">
-                            <tr>
-                                <td colspan="5" style="padding: 60px; text-align: center; color: #475569; font-style: italic; font-family: 'Inter', sans-serif; font-size: 13px;">
-                                    No se registran movimientos en la jornada actual. Las transacciones de la pasarela se listarán aquí en tiempo real.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div style="flex: 2; min-width: 180px;">
+                <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">DESCRIPCIÓN DEL VÍVERE:</label>
+                <input type="text" id="inv-nombre" required placeholder="Ej: Harina P.A.N. 1kg" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-size:13px; outline:none;">
             </div>
-        `;
+
+            <div style="flex: 1; min-width: 140px;">
+                <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">DISTRIBUIDOR / PROVEEDOR:</label>
+                <select id="inv-proveedor" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; cursor:pointer; font-size:13px; outline:none;">
+                    <option value="POLAR">Empresas Polar C.A.</option>
+                    <option value="EL TUNAL">Alimentos El Tunal</option>
+                    <option value="NATULAC">Industrias Natulac</option>
+                    <option value="OTROS">Mercancía General / Genéricos</option>
+                </select>
+            </div>
+
+            <div style="flex: 1; min-width: 90px;">
+                <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">COSTO COMPRA ($):</label>
+                <input type="number" id="inv-precio" step="0.01" required value="1.10" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:#00D2FF; border-radius:6px; font-family:monospace; font-weight:bold; font-size:13px; outline:none;">
+            </div>
+
+            <div style="flex: 1; min-width: 80px;">
+                <label style="display:block; font-size:10px; color:#64748b; margin-bottom:4px; font-weight:700;">CANTIDAD (UNID):</label>
+                <input type="number" id="inv-stock" required value="20" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-family:monospace; font-size:13px; outline:none;">
+            </div>
+
+            <button type="submit" style="background: linear-gradient(135deg, #00D2FF 0%, #0072FF 100%); color:#030712; border:none; padding:11px 24px; border-radius:6px; font-weight:800; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.05em; box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);">
+                📥 Inyectar Stock
+            </button>
+        </form>
+    </div>
+
+</div>
+
+                        <!-- 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES ENVOLVENTE Y FOOTER INTEGRAL SANEADO -->
+<div id="historial-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    
+    <div style="background-color: #030712; padding: 22px; border-radius: 8px; border: 1px solid #1e293b;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+            <span style="color: #a855f7; font-size: 14px;">📊</span>
+            <h4 style="margin: 0; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em;">Historial de Movimientos y Transacciones Diarias</h4>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+                <thead>
+                    <tr style="background: #000000; color: #ffffff; border-bottom: 2px solid #1e293b; font-family: monospace; font-size: 11px; text-transform: uppercase;">
+                        <th style="padding: 12px 14px; width: 110px;">REF / HORA</th>
+                        <th style="padding: 12px 14px; width: 130px;">CÉDULA/RIF</th>
+                        <th style="padding: 12px 14px;">PRODUCTOS DESPACHADOS</th>
+                        <th style="padding: 12px 14px; width: 140px; text-align: center;">MÉTODO PAGO</th>
+                        <th style="padding: 12px 14px; width: 160px; text-align: right;">MONTO PAGADO</th>
+                    </tr>
+                </thead>
+                <tbody id="erp-movimientos-diarios-rows" style="font-family: monospace; font-weight: 600; color: #e2e8f0;">
+                    <tr>
+                        <td colspan="5" style="padding: 60px; text-align: center; color: #475569; font-style: italic; font-family: 'Inter', sans-serif; font-size: 13px;">
+                            No se registran movimientos en la jornada actual. Las transacciones de la pasarela se listarán aquí en tiempo real.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- 🖨️ FOOTER INTEGRAL INYECTADO AL FINAL DEL FLUJO DE LA CONSOLA ERP -->
+<div style="margin-top: 40px; padding: 20px 0; text-align: center; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+    <span style="font-size: 11px; font-weight: 800; color: #ff9900; letter-spacing: 0.05em; text-transform: uppercase;">
+        APIO E-COMMERCE SOFTWARE <small style="color: #3b82f6; font-family: monospace;">v1.0.0-SaaS</small>
+    </span>
+    <p style="margin: 4px 0 0 0; font-size: 10px; color: #64748b;">© 2026 All Rights Reserved.</p>
+    <p style="margin: 2px 0 0 0; font-size: 9px; color: #475569;">Desarrollado por Soto System Digital Solutions VE</p>
+</div>
+`; // <-- Aquí cerramos oficialmente el gran template string de tu ERP
 
         // Colgamos la consola unificada adentro del cascarón maestro de la SPA
         section.appendChild(erpPanel);
