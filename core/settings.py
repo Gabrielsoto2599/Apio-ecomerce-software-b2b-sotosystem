@@ -153,27 +153,23 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 # =========================================================================
-# 🎯 ARQUITECTURA DE DATOS CLOUD SEGU_RA (SOTO SYSTEM 2026)
+# 🎯 ARQUITECTURA DE DATOS CLOUD CENTRALIZADA (SOTO SYSTEM 2026)
 # =========================================================================
 import dj_database_url
 
-# Extrae automáticamente las credenciales de la variable DATABASE_URL interna que inyectamos
-if os.environ.get('DATABASE_URL'):
-    print("☁️ [SOTO CORE]: Conexión Cloud Activa. Extrayendo tubería de datos desde Railway...")
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            ssl_require=False  # Permite conectar por la red privada interna sin requerir certificados SSL estrictos
-        )
-    }
-else:
-    print("🔒 [SOTO CORE]: Ejecución Offline. Activando SQLite3 interno...")
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+# Credenciales de conexión pública directa a tu base de datos en Railway
+URL_POSTGRESQL_CLOUD = "postgresql://postgres:gkfDbFUktFKmVUVIDxgujQVjlDtaJVbP@thomas.proxy.rlwy.net:18806/railway"
+
+# Forzamos la tubería de datos satelital ignorando cualquier fallback offline local
+print("☁️ [SOTO CORE]: Conexión Cloud Forzada. Conectando directo a PostgreSQL en Railway...")
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=URL_POSTGRESQL_CLOUD,
+        conn_max_age=600,
+        ssl_require=False  # Mantenido para conexiones rápidas sin trabas de certificados SSL
+    )
+}
 
 # Configuración por defecto para llaves primarias de modelos
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

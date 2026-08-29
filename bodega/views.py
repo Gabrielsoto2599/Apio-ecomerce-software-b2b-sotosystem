@@ -125,14 +125,32 @@ from django.db.models import Count, Q
 @csrf_exempt
 def lista_productos_api(request):
     """
-    Retorna el catálogo filtrado por modalidad (BODEGA o ROPA) en formato JSON.
-    Evita la mezcla de harinas con pantalones en el mostrador.
+    [CEREBRO INTEGRAL DE VÍVERES - DESPACHO PLANO MAESTRO]
+    Retorna el inventario completo de la bodega en formato de arreglo plano.
+    Elimina filtros fantasmas de ropa y variables inexistentes para evitar caídas en el DOM.
     """
-    modalidad = request.GET.get('modalidad', 'BODEGA').upper().strip()
-    productos = Producto.objects.filter(tipo_negocio=modalidad, activo=True)
-    data = [p.to_dict() for p in productos]
-    return JsonResponse({"status": "success", "productos": data}, safe=False, status=200)
-
+    try:
+        # Traemos todos los víveres reales sembrados desde PostgreSQL en Railway
+        productos = Producto.objects.all()
+        
+        # Mapeamos usando el to_dict() purificado que ya programamos en tu models.py
+        lista_plana = [p.to_dict() for p in productos]
+        
+        # 🚀 RETORNO PLANO DIRECTO: Satisface el mapeo nativo de la pasarela de Electron
+        response = JsonResponse(lista_plana, safe=False, status=200)
+        
+        # Escudo de red total contra bloqueos CORS locales
+        response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type"
+        return response
+        
+    except Exception as e:
+        print(f"❌ [CRASH LISTA PRODUCTOS API]: {str(e)}")
+        # Contingencia de salvavidas para que el Front-End nunca se quede a oscuras
+        fail_res = JsonResponse([], safe=False, status=200)
+        fail_res["Access-Control-Allow-Origin"] = "*"
+        return fail_res
 
 @csrf_exempt
 def detalle_producto_api(request, id_qr):
