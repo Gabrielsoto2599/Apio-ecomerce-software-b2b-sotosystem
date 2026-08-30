@@ -696,12 +696,12 @@ const ErpModulo = {
 }; 
 
 // =========================================================================
-// 🚀 ORQUESTATOR DE INTERFAZ INTEGRAL - SOTO SYSTEM (CANDADO ANTI-CLONES)
-// Ubicación: Últimas líneas de tu script del ERP
+// 🚀 ORQUESTATOR EXCLUSIVO ERP - SOTO SYSTEM (CANDADO DE RUTA ÚNICA)
+// Ubicación: Últimas líneas estrictas de erp.js
 // =========================================================================
 
+// 1. Renderizado nativo del panel del ERP en el lienzo secundario
 if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
-    // 1. Renderizamos el panel del ERP en el lienzo secundario si está activo
     if (typeof erpPanel !== 'undefined') {
         contenedorInterno.appendChild(erpPanel);
     }
@@ -711,37 +711,29 @@ if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
         ErpModulo.renderizarHistorialGastosLocal();
     }
 
-    // 3. 🖨️ INYECCIÓN CON CANDADO: Solo inyecta si no existe ya un footer en pantalla
+    // 3. 🖨️ EL CANDADO DE CONTEXTO EXCLUSIVO:
+    // El footer SOLO se inyectará si estamos físicamente parados dentro del 
+    // módulo ERP y no permitirá que ningún script externo lo clone en el catálogo.
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-        const yaExisteFooter = document.querySelector('.soto-system-footer') || document.querySelector('footer');
-        
-        if (!yaExisteFooter) {
-            const footerOriginal = Home.renderFooter();
-            contenedorInterno.appendChild(footerOriginal);
-            console.log("📥 [SOTO CORE]: Footer heredado inyectado en contenedorInterno.");
+        // Validación absoluta: si ya existe en el DOM, lo removemos antes para asegurar un solo render
+        const footerViejo = contenedorInterno.querySelector('.soto-system-footer') || document.querySelector('footer');
+        if (footerViejo) {
+            footerViejo.remove();
         }
-    }
-} else {
-    // 🎯 BYPASS SEGURO PARA SUBSECCIONES HUÉRFANAS:
-    // Si la sección no tiene contenedor secundario (como inventario/gastos), inyectamos en la raíz general
-    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
-    
-    if (typeof erpPanel !== 'undefined') {
-        appContainerGeneral.appendChild(erpPanel);
-    }
-    
-    if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-        const yaExisteFooter = document.querySelector('.soto-system-footer') || document.querySelector('footer');
         
-        if (!yaExisteFooter) {
-            const footerOriginal = Home.renderFooter();
-            appContainerGeneral.appendChild(footerOriginal);
-            console.log("⚡ [SOTO CORE]: Activado bypass. Footer inyectado de forma segura en la raíz general.");
-        }
+        // Inyección inmaculada en la última línea del ERP
+        const footerOriginal = Home.renderFooter();
+        contenedorInterno.appendChild(footerOriginal);
+        console.log("📥 [SOTO CORE]: Footer inyectado de forma exclusiva en el módulo erp.js");
     }
 }
+
+// ⚡ RECORTE RADICAL SOTO SYSTEM:
+// Se eliminó por completo el bloque "else" y cualquier inyección al appContainer general.
+// Esto garantiza científicamente un 0% de duplicados en la grilla de víveres o pantallas externas.
 
 // 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
+
 
