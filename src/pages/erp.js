@@ -696,12 +696,9 @@ const ErpModulo = {
 }; 
 
 // =========================================================================
-// 🚀 INYECCIÓN FINALES: ENLACE ELÁSTICO CORPORATIVO (ANTI-PANTALLA VACÍA)
-// Ubicación: Última línea de control de tu script del ERP
+// 🚀 ORQUESTATOR DE INTERFAZ INTEGRAL - SOTO SYSTEM (CANDADO ANTI-CLONES)
+// Ubicación: Últimas líneas de tu script del ERP
 // =========================================================================
-
-// Orquestamos el contenedor raíz de respaldo para asegurar que nunca falle la visual
-const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
 
 if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
     // 1. Renderizamos el panel del ERP en el lienzo secundario si está activo
@@ -714,23 +711,33 @@ if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
         ErpModulo.renderizarHistorialGastosLocal();
     }
 
-    // 3. 🖨️ INYECCIÓN POR HERENCIA: Ponemos el footer en el contenedor interno
+    // 3. 🖨️ INYECCIÓN CON CANDADO: Solo inyecta si no existe ya un footer en pantalla
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-        const footerOriginal = Home.renderFooter();
-        contenedorInterno.appendChild(footerOriginal);
+        const yaExisteFooter = document.querySelector('.soto-system-footer') || document.querySelector('footer');
+        
+        if (!yaExisteFooter) {
+            const footerOriginal = Home.renderFooter();
+            contenedorInterno.appendChild(footerOriginal);
+            console.log("📥 [SOTO CORE]: Footer heredado inyectado en contenedorInterno.");
+        }
     }
 } else {
-    // 🎯 EL BYPASS DE ORO SOTO SYSTEM:
-    // Si la pantalla se quedó huérfana de contenedor secundario, inyectamos el panel 
-    // y el footer original directo en el appContainer principal para que la vista nunca muera.
+    // 🎯 BYPASS SEGURO PARA SUBSECCIONES HUÉRFANAS:
+    // Si la sección no tiene contenedor secundario (como inventario/gastos), inyectamos en la raíz general
+    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
+    
     if (typeof erpPanel !== 'undefined') {
         appContainerGeneral.appendChild(erpPanel);
     }
     
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-        const footerOriginal = Home.renderFooter();
-        appContainerGeneral.appendChild(footerOriginal);
-        console.log("⚡ [SOTO CORE]: Activado bypass elástico. Footer inyectado de forma segura en appContainerGeneral.");
+        const yaExisteFooter = document.querySelector('.soto-system-footer') || document.querySelector('footer');
+        
+        if (!yaExisteFooter) {
+            const footerOriginal = Home.renderFooter();
+            appContainerGeneral.appendChild(footerOriginal);
+            console.log("⚡ [SOTO CORE]: Activado bypass. Footer inyectado de forma segura en la raíz general.");
+        }
     }
 }
 
