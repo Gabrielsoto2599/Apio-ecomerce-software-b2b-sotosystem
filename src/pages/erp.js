@@ -696,10 +696,15 @@ const ErpModulo = {
 }; 
 
 // =========================================================================
-// 🚀 INYECCIÓN FINALES: FUERA DE COMPONENTES Y EN LA ÚLTIMA LÍNEA DE LA PÁGINA
+// 🚀 INYECCIÓN FINALES: ENLACE ELÁSTICO CORPORATIVO (ANTI-PANTALLA VACÍA)
+// Ubicación: Última línea de control de tu script del ERP
 // =========================================================================
-if (typeof contenedorInterno !== 'undefined') {
-    // 1. Primero renderizamos el panel del ERP en el lienzo general si no se ha montado
+
+// Orquestamos el contenedor raíz de respaldo para asegurar que nunca falle la visual
+const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
+
+if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
+    // 1. Renderizamos el panel del ERP en el lienzo secundario si está activo
     if (typeof erpPanel !== 'undefined') {
         contenedorInterno.appendChild(erpPanel);
     }
@@ -709,17 +714,27 @@ if (typeof contenedorInterno !== 'undefined') {
         ErpModulo.renderizarHistorialGastosLocal();
     }
 
-    // 3. 🖨️ LLAMADA NATIVA AL FOOTER INSTITUCIONAL (Apuntando al import del Bloque 0)
-    // Conservamos esta inyección para que mantenga la herencia legítima en la última línea
+    // 3. 🖨️ INYECCIÓN POR HERENCIA: Ponemos el footer en el contenedor interno
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
         const footerOriginal = Home.renderFooter();
         contenedorInterno.appendChild(footerOriginal);
     }
-} // 🎯 LLAVE DE CIERRE OBLIGATORIA: Cierra el objeto ErpModulo de forma limpia
-
-// ⚡ CABLE RECORTE EXCLUSIVO SOTO SYSTEM (ANTI-CLON):
-// Se eliminó la inyección redundante externa que duplicaba el renderizado en el appContainer.
+} else {
+    // 🎯 EL BYPASS DE ORO SOTO SYSTEM:
+    // Si la pantalla se quedó huérfana de contenedor secundario, inyectamos el panel 
+    // y el footer original directo en el appContainer principal para que la vista nunca muera.
+    if (typeof erpPanel !== 'undefined') {
+        appContainerGeneral.appendChild(erpPanel);
+    }
+    
+    if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
+        const footerOriginal = Home.renderFooter();
+        appContainerGeneral.appendChild(footerOriginal);
+        console.log("⚡ [SOTO CORE]: Activado bypass elástico. Footer inyectado de forma segura en appContainerGeneral.");
+    }
+}
 
 // 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
+
