@@ -710,23 +710,15 @@ if (typeof contenedorInterno !== 'undefined') {
     }
 
     // 3. 🖨️ LLAMADA NATIVA AL FOOTER INSTITUCIONAL (Apuntando al import del Bloque 0)
+    // Conservamos esta inyección para que mantenga la herencia legítima en la última línea
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
         const footerOriginal = Home.renderFooter();
-        // Lo inyectamos directo al contenedor de la app, quedando en la última línea
         contenedorInterno.appendChild(footerOriginal);
     }
-}; // 🎯 LLAVE DE CIERRE OBLIGATORIA: Cierra el objeto ErpModulo de forma limpia
+} // 🎯 LLAVE DE CIERRE OBLIGATORIA: Cierra el objeto ErpModulo de forma limpia
 
-// =========================================================================
-// 🚀 INYECCIÓN GENERAL DEL FOOTER INSTITUCIONAL (AFUERA DE TODO CUADRO)
-// =========================================================================
-// Aseguramos que el orquestador tenga un contenedor para renderizar el pie de página
-const appContainer = document.getElementById('contenedor-interno') || document.body;
-
-if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-    const footerOriginal = Home.renderFooter();
-    appContainer.appendChild(footerOriginal);
-}
+// ⚡ CABLE RECORTE EXCLUSIVO SOTO SYSTEM (ANTI-CLON):
+// Se eliminó la inyección redundante externa que duplicaba el renderizado en el appContainer.
 
 // 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
