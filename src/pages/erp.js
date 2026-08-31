@@ -15,8 +15,8 @@ const ErpModulo = {
         listaProductosOriginal: JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) || []
     },
 
-            // =========================================================================
-    // 🔌 MÉTODO INICIALIZADOR ENCAPSULADO (ANTI-DUPLICACIÓN GLOBAL)
+                // =========================================================================
+    // 🔌 MÉTODO INICIALIZADOR ENCAPSULADO (RENDERIZADO AUTÓNOMO DEL FOOTER)
     // =========================================================================
     init: function() {
         console.log("📡 [SOTO ERP ENGINE]: Desplegando módulo administrativo de forma aislada...");
@@ -24,7 +24,7 @@ const ErpModulo = {
         // Definimos el contenedor raíz de respaldo para asegurar que nunca falle la visual
         const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
 
-        // 1. Renderizado nativo del panel del ERP en el lienzo secundario
+        // 1. Renderizado nativo del panel del ERP en el lienzo secundario si existe
         if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
             if (typeof erpPanel !== 'undefined') {
                 contenedorInterno.appendChild(erpPanel);
@@ -35,33 +35,48 @@ const ErpModulo = {
                 ErpModulo.renderizarHistorialGastosLocal();
             }
 
-            // 3. 🖨️ EL CANDADO DE CONTEXTO EXCLUSIVO:
-            if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-                // Validación absoluta: Limpiamos duplicados previos dentro del contenedor interno
-                const footerViejo = contenedorInterno.querySelector('.soto-system-footer') || document.querySelector('footer');
-                if (footerViejo) {
-                    footerViejo.remove();
-                }
-                
-                // Inyección inmaculada en la última línea física del panel ERP
-                const footerOriginal = Home.renderFooter();
-                contenedorInterno.appendChild(footerOriginal);
-                console.log("📥 [SOTO CORE]: Footer inyectado con éxito exclusivo dentro de erp.js");
+            // 3. 🖨️ INYECCIÓN NATIVA AUTÓNOMA DIRECTA (BYPASS DE IMPORTACIÓN)
+            // Creamos el nodo físicamente desde erp.js para no depender de home.js
+            const footerViejo = contenedorInterno.querySelector('.soto-system-footer') || document.querySelector('footer');
+            if (footerViejo) {
+                footerViejo.remove();
             }
+            
+            const footerOriginal = document.createElement('footer');
+            footerOriginal.className = 'soto-system-footer';
+            footerOriginal.style.textAlign = 'center';
+            footerOriginal.style.padding = '15px';
+            footerOriginal.style.marginTop = '20px';
+            footerOriginal.innerHTML = `
+                <p><strong>APIO E-COMMERCE SOFTWARE</strong> <span class="version-tag" style="color: #38bdf8;">v1.0.0-SaaS</span></p>
+                <p style="font-size: 11px; color: #94a3b8;">Fase de Desarrollo Comercial - Bodega Digital</p>
+                <p style="font-size: 11px; color: #64748b;">© 2026 All Rights Reserved. Desarrollado por Soto System Digital Solutions VE</p>
+            `;
+            
+            contenedorInterno.appendChild(footerOriginal);
+            console.log("📥 [SOTO CORE]: Footer nativo e independiente inyectado con éxito en erp.js");
+
         } else {
             // 🎯 BYPASS DE EMERGENCIA: Si el lienzo secundario no está listo, inyectamos en la raíz general
             if (typeof erpPanel !== 'undefined') {
                 appContainerGeneral.appendChild(erpPanel);
             }
             
-            if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-                const footerViejo = appContainerGeneral.querySelector('.soto-system-footer') || document.querySelector('footer');
-                if (footerViejo) {
-                    footerViejo.remove();
-                }
-                const footerOriginal = Home.renderFooter();
-                appContainerGeneral.appendChild(footerOriginal);
+            const footerViejo = appContainerGeneral.querySelector('.soto-system-footer') || document.querySelector('footer');
+            if (footerViejo) {
+                footerViejo.remove();
             }
+            
+            const footerOriginal = document.createElement('footer');
+            footerOriginal.className = 'soto-system-footer';
+            footerOriginal.style.textAlign = 'center';
+            footerOriginal.style.padding = '15px';
+            footerOriginal.innerHTML = `
+                <p><strong>APIO E-COMMERCE SOFTWARE</strong> <span class="version-tag" style="color: #38bdf8;">v1.0.0-SaaS</span></p>
+                <p style="font-size: 11px; color: #94a3b8;">Fase de Desarrollo Comercial - Bodega Digital</p>
+                <p style="font-size: 11px; color: #64748b;">© 2026 All Rights Reserved. Desarrollado por Soto System Digital Solutions VE</p>
+            `;
+            appContainerGeneral.appendChild(footerOriginal);
         }
     }
 }; // 🎯 LLAVE DE CIERRE CORPORATIVA: Cierra el objeto ErpModulo al final de toda la lógica
@@ -69,11 +84,6 @@ const ErpModulo = {
 // =========================================================================
 // 🚀 INYECCIÓN CONTROLADA SOTO SYSTEM
 // =========================================================================
-// Para levantar la sección desde el enrutador principal de tu SPA (home.js),
-// simplemente debes llamar a: window.ErpModulo.init(); en el evento del menú.
-
-// 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
-
 
