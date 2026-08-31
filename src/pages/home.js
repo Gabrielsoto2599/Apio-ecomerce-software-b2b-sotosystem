@@ -361,8 +361,8 @@ Home.renderMasterHeader = function() {
         });
     }
 
-      // =========================================================================
-    // 🧠 MOTOR DE BÚSQUEDA INDUSTRIAL ADAPTADO PARA INSTALABLE .EXE (CORREGIDO)
+          // =========================================================================
+    // 🧠 MOTOR DE BÚSQUEDA INDUSTRIAL ADAPTADO PARA INSTALABLE .EXE (PERFECTO)
     // Ubicación: Dentro del componente inyectable del Buscador en home.js
     // =========================================================================
     const inputCore = header.querySelector('.search-core-input');
@@ -375,9 +375,6 @@ Home.renderMasterHeader = function() {
         }
 
         inputCore.addEventListener('keyup', function(event) {
-            // 🎯 CONGELADO PREMIUM DE VOZ: Comentamos la inyección de Daniela para erradicar el TypeError en el mostrador
-            // window.inyectarBusquedaDesdeDaniela(event.target.value);
-
             if (event.key === 'Enter') {
                 event.preventDefault();
                 return;
@@ -385,7 +382,7 @@ Home.renderMasterHeader = function() {
 
             let termino = event.target.value; // Conservamos el texto crudo con espacios para edición
 
-                        // Limpiamos el temporizador anterior con cada nueva tecla pulsada
+            // Limpiamos el temporizador anterior con cada nueva tecla pulsada
             clearTimeout(temporizadorBusqueda);
 
             // 🎯 BYPASS ULTRA-RÁPIDO SOTO SYSTEM: Muerde las tarjetas directamente en el monitor
@@ -398,7 +395,7 @@ Home.renderMasterHeader = function() {
                 console.log(`📡 [SOTO ENGINE]: Buscando texto en ${tarjetasProductos.length} tarjetas del catálogo...`);
                 tarjetasProductos.forEach(tarjeta => {
                     // Evitamos ocultar elementos máster que no sean tarjetas de productos
-                    if (tarjeta.innerText && (tarjeta.innerText.includes("HARINA") || tarjeta.innerText.includes("$"))) {
+                    if (tarjeta.innerText && (tarjeta.innerText.includes("HARINA") || tarjeta.innerText.includes("$") || tarjeta.innerText.includes("PAS"))) {
                         const textoTarjeta = tarjeta.innerText.toLowerCase();
                         
                         // Si la tarjeta contiene el texto de la cajera (ej: "pan"), se queda; si no, se esconde al instante
@@ -419,14 +416,17 @@ Home.renderMasterHeader = function() {
                         tarjeta.style.display = "";
                     });
                 }
+                if (window.App && window.App.state) {
+                    window.App.state.ultimoTerminoBuscado = "";
+                    window.App.state.productosFiltrados = window.App.state.productosOriginales || window.App.state.productosVivos || [];
+                }
                 return;
             }
 
-                       // ⏱️ PARCHE DE DEBOUNCE SANEADO: Consulta a Django sin romper el layout visual
+            // ⏱️ PARCHE DE DEBOUNCE SANEADO: Consulta a Django sin romper el layout visual
             temporizadorBusqueda = setTimeout(() => {
-                // 🎯 CONTROL ABSOLUTO: Inyectamos la URL rígida integral hacia Django
-                let urlApi = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=${encodeURIComponent(termino.trim())}`;
-
+                // 🎯 REPARACIÓN DE ENDPOINT MÁSTER: Apunta milimétricamente a la ruta real de tu views.py plano
+                let urlApi = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador-productos-api/?q=${encodeURIComponent(termino.trim())}`;
                 
                 console.log(`📡 [Buscador Apio POS]: Consultando backend local -> ${urlApi}`);
 
@@ -435,34 +435,36 @@ Home.renderMasterHeader = function() {
                         if (!response.ok) throw new Error("Rebote de ruta en el servidor de Django");
                         return response.json();
                     })
-                                        .then(data => {
+                    .then(data => {
                         if (window.App && window.App.state) {
-                            // 1. Sembramos los productos devueltos por Django en la RAM global
-                            window.App.state.productosFiltrados = data.productos || [];
+                            // Extraemos el cargamento plano de forma elástica sin importar la estructura
+                            const loteProductos = Array.isArray(data) ? data : (data.productos || []);
+
+                            console.log(`✨ [SOTO POS BACKEND SUCCESS]: Elementos validados de Railway -> ${loteProductos.length}`);
+
+                            // 🎯 DOBLE IMPACTO SIMÉTRICO DE MEMORIA: Forzamos la asignación limpia en ambas variables de la RAM
+                            window.App.state.productosFiltrados = loteProductos;
+                            window.App.state.productosVivos = loteProductos; 
                             window.App.state.ultimoTerminoBuscado = termino; 
 
-                            // 2. 🎯 EL CABLE MAESTRO UNIFICADO: Usamos el string exacto que sí reconoce el .exe
-                            if (typeof window.App.navigate === 'function') {
-                                window.App.navigate('catalogo-b2b'); // 🔥 REPARADO: ¡Rompe el apagón negro para siempre!
-                            } else if (typeof window.App.render === 'function') {
-                                window.App.state.currentView = 'catalogo-b2b';
-                                window.App.render();
+                            // 🖨️ RE-RENDERIZADO SELECTIVO DE CONTENEDOR (NUNCA VOLVEMOS A DESTRUIR LA VISTA ENTERA)
+                            // Le avisamos directamente al catálogo que vuelva a pintar los elementos sobre el DOM existente
+                            if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
+                                window.recalcularGrillaCatalogoB2BEnCaliente(loteProductos);
+                            } else if (typeof window.App.renderViewOnly === 'function') {
+                                window.App.renderViewOnly('catalogo-b2b');
                             }
 
-                            // 3. Devolvemos el foco al buscador para escritura fluida
-                            setTimeout(() => {
-                                const inputRecargado = document.querySelector('.search-core-input');
-                                if (inputRecargado) {
-                                    inputRecargado.focus();
-                                    inputRecargado.value = window.App.state.ultimoTerminoBuscado;
-                                    inputRecargado.setSelectionRange(termino.length, termino.length);
-                                }
-                            }, 50);
+                            // 3. Devolvemos el foco al buscador de forma síncrona inmediata para escritura ultra-suave
+                            const inputRecargado = document.querySelector('.search-core-input');
+                            if (inputRecargado) {
+                                inputRecargado.focus();
+                                inputRecargado.setSelectionRange(termino.length, termino.length);
+                            }
                         }
                     })
-
                     .catch(error => console.error("❌ Error de comunicación en Apio Engine:", error.message));
-            }, 400); // 400 milisegundos de tolerancia
+            }, 350); // 350 milisegundos óptimos de tolerancia de escritura
 
         });
     }
