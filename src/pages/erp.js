@@ -15,11 +15,14 @@ const ErpModulo = {
         listaProductosOriginal: JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) || []
     },
 
-        // =========================================================================
-    // 🔌 MÉTODOR INICIALIZADOR ENCAPSULADO (ANTI-DUPLICACIÓN GLOBAL)
+            // =========================================================================
+    // 🔌 MÉTODO INICIALIZADOR ENCAPSULADO (ANTI-DUPLICACIÓN GLOBAL)
     // =========================================================================
     init: function() {
         console.log("📡 [SOTO ERP ENGINE]: Desplegando módulo administrativo de forma aislada...");
+
+        // Definimos el contenedor raíz de respaldo para asegurar que nunca falle la visual
+        const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
 
         // 1. Renderizado nativo del panel del ERP en el lienzo secundario
         if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
@@ -33,7 +36,6 @@ const ErpModulo = {
             }
 
             // 3. 🖨️ EL CANDADO DE CONTEXTO EXCLUSIVO:
-            // El footer SOLO se inyectará si el inicializador init() es invocado formalmente
             if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
                 // Validación absoluta: Limpiamos duplicados previos dentro del contenedor interno
                 const footerViejo = contenedorInterno.querySelector('.soto-system-footer') || document.querySelector('footer');
@@ -45,6 +47,20 @@ const ErpModulo = {
                 const footerOriginal = Home.renderFooter();
                 contenedorInterno.appendChild(footerOriginal);
                 console.log("📥 [SOTO CORE]: Footer inyectado con éxito exclusivo dentro de erp.js");
+            }
+        } else {
+            // 🎯 BYPASS DE EMERGENCIA: Si el lienzo secundario no está listo, inyectamos en la raíz general
+            if (typeof erpPanel !== 'undefined') {
+                appContainerGeneral.appendChild(erpPanel);
+            }
+            
+            if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
+                const footerViejo = appContainerGeneral.querySelector('.soto-system-footer') || document.querySelector('footer');
+                if (footerViejo) {
+                    footerViejo.remove();
+                }
+                const footerOriginal = Home.renderFooter();
+                appContainerGeneral.appendChild(footerOriginal);
             }
         }
     }
