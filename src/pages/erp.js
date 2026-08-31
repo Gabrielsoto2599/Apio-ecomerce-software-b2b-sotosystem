@@ -696,22 +696,15 @@ const ErpModulo = {
 }; 
 
 // =========================================================================
-// 🚀 ORQUESTATOR DE INTERFAZ INTEGRAL - SOTO SYSTEM (CANDADO ANTI-CLONES DEFINITIVO)
+// 🚀 ORQUESTATOR DE INTERFAZ INTEGRAL - SOTO SYSTEM (CANDADO Y ASINCRONÍA)
 // Ubicación: Últimas líneas estrictas de tu script del ERP
 // =========================================================================
 
-// 🔌 ENCAPSULAMOS EL BLOQUE ADENTRO DEL MÉTODO INIT PARA EVITAR DISPAROS FANTASMAS EN OTRAS SECCIONES
 ErpModulo.init = function() {
     console.log("📡 [SOTO CORE ENGINE]: Inicializando componentes del ERP de forma aislada...");
 
-    // 1. Limpieza preventiva local: Si la sección del ERP ya tiene un footer viejo adentro, lo removemos antes de pintar
+    // 1. Renderizado inmediato del panel del ERP en el lienzo secundario si está activo
     if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
-        const clonInternoViejo = contenedorInterno.querySelector('.soto-system-footer') || contenedorInterno.querySelector('footer');
-        if (clonInternoViejo) {
-            clonInternoViejo.remove();
-        }
-
-        // Renderizamos el panel del ERP en el lienzo secundario si está activo
         if (typeof erpPanel !== 'undefined') {
             contenedorInterno.appendChild(erpPanel);
         }
@@ -720,43 +713,52 @@ ErpModulo.init = function() {
         if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
             ErpModulo.renderizarHistorialGastosLocal();
         }
-
-        // 🖨️ INYECCIÓN EXCLUSIVA CONTROLADA: Genera el footer legítimo al final de este contenedor
-        if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-            const footerOriginal = Home.renderFooter();
-            contenedorInterno.appendChild(footerOriginal);
-            console.log("📥 [SOTO CORE]: Footer legítimo heredado inyectado en contenedorInterno.");
-        }
         
     } else {
-        // 🎯 BYPASS SEGURO PARA SUBSECCIONES HUÉRFANAS:
-        // Si la sección no tiene contenedor secundario (como inventario/gastos), inyectamos en la raíz general
+        // Bypass seguro para subsecciones huérfanas directo a la raíz general
         const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
-        
-        // Limpieza preventiva en la raíz general antes de renderizar para evitar la duplicación en cascada
-        const clonGeneralViejo = appContainerGeneral.querySelector('.soto-system-footer') || appContainerGeneral.querySelector('strong');
-        if (clonGeneralViejo) {
-            // Evaluamos con cuidado: si hay más de un footer en el cuerpo general, removemos el excedente
-            const todosLosFooters = appContainerGeneral.querySelectorAll('footer');
-            if (todosLosFooters.length > 0) {
-                todosLosFooters.forEach(f => f.remove());
-            }
-        }
-
         if (typeof erpPanel !== 'undefined') {
             appContainerGeneral.appendChild(erpPanel);
         }
-        
+    }
+
+    // 🎯 REPARACIÓN MÁSTER: Retraso controlado para ganarle a la latencia del DOM
+    // Esto garantiza que los cuadros se dibujen primero y el footer entre limpio al final
+    setTimeout(() => {
+        // Ubicamos el contenedor final real donde quedó montado el ERP
+        const destinoFinal = document.getElementById('contenedor-interno') || document.body;
+
+        // Limpieza física preventiva: Eliminamos cualquier rastro de footer viejo para evitar duplicados
+        const footersExistentes = document.querySelectorAll('.soto-system-footer, footer');
+        footersExistentes.forEach(f => f.remove());
+
+        // Verificamos si la función constructora original de home.js está disponible
         if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
             const footerOriginal = Home.renderFooter();
-            appContainerGeneral.appendChild(footerOriginal);
-            console.log("⚡ [SOTO CORE]: Activado bypass seguro. Footer inyectado de forma única en la raíz general.");
+            destinoFinal.appendChild(footerOriginal);
+            console.log("📥 [SOTO CORE]: Footer institucional único inyectado con éxito asíncrono.");
+        } else {
+            // Fallback de Autonomía Absoluta: Si Home no responde, creamos el nodo nativo en caliente
+            const footerNativo = document.createElement('footer');
+            footerNativo.className = 'soto-system-footer';
+            footerNativo.style.textAlign = 'center';
+            footerNativo.style.padding = '15px';
+            footerNativo.style.marginTop = '25px';
+            footerNativo.style.width = '100%';
+            footerNativo.innerHTML = `
+                <p style="margin: 0; color: #ffffff;"><strong>APIO E-COMMERCE SOFTWARE</strong> <span style="color: #38bdf8;">v1.0.0-SaaS</span></p>
+                <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">Fase de Desarrollo Comercial - Bodega Digital</p>
+                <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b;">© 2026 All Rights Reserved. Desarrollado por Soto System Digital Solutions VE</p>
+            `;
+            destinoFinal.appendChild(footerNativo);
+            console.log("⚡ [SOTO CORE]: Desplegado footer autónomo de contingencia.");
         }
-    }
+    }, 300); // ⏱️ Espera 300 milisegundos exactos a que el DOM se estabilice
 };
 
 // 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
+
 
 
