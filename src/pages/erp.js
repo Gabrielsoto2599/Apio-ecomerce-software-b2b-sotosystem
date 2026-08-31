@@ -7,22 +7,17 @@ import { Home } from './home.js';
 const ErpModulo = {
     // 📊 CORE MEMORY SOTO SYSTEM: El estado del negocio centraliza el histórico
     state: {
-        movimientosDiarios: [], // Traga: ref, hora, fecha, productos, monto, cedula, metodo
+        movimientosDiarios: [], 
         cierreEjecutado: false,
         tasaDolarActual: parseFloat(localStorage.getItem('APIO_TASA_CAMBIARIA')) || 36.50,
-        
-        // 💾 LECTURA MAESTRA DE DISCO: Carga el inventario vivo de Polar, Tunal y Natulac al arrancar
         listaProductosOriginal: JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) || []
     },
 
-    // =========================================================================
-    // 📥 [ESPACIO RESERVADO SOTO SYSTEM]: PEGA AQUÍ ABAJO TUS BLOQUES RESPALDADOS
-    // (Tus funciones intermedias de Gastos, Inyección de Stock e Historial)
-    // =========================================================================
-
-
-    
-
+    // 🎯 REPARACIÓN TEMPORAL SOTO SYSTEM: 
+    // Creamos un método intermedio vacío para cerrar el objeto legalmente antes del init
+    verificarEstadoSalud: function() {
+        return "OK";
+    },
 
     // =========================================================================
     // 🔌 MÉTODO INICIALIZADOR ENCAPSULADO (DIBUJO NATIVO AUTÓNOMO ANTI-CLONES)
@@ -51,12 +46,10 @@ const ErpModulo = {
         }
 
         // 2. ⏱️ DISPARO ASÍNCRONO DEL FOOTER CORPORATIVO (DIBUJO INDEPENDIENTE EXCLUSIVO)
-        // Se ejecuta después de asentar el DOM para garantizar que quede al final de todo
         setTimeout(() => {
-            // Ubicamos el contenedor final activo donde se montó la visual
             const lienzoActivo = document.getElementById('contenedor-interno') || document.body;
 
-            // Poda física preventiva: Barremos cualquier residuo para asegurar un único footer en pantalla
+            // Poda física preventiva para barrer cualquier residuo anterior
             const footersExistentes = document.querySelectorAll('.soto-system-footer, footer');
             footersExistentes.forEach(f => f.remove());
 
@@ -90,7 +83,7 @@ const ErpModulo = {
             console.log("🏆 [SOTO CENTRAL]: Footer nativo e independiente inyectado sin arrastrar herencia visual.");
         }, 150); // Tiempo de asentamiento exacto en la RAM
     }
-}; // 🎯 CIERRE DE OBJETO: Sella de forma inmutable la estructura del ErpModulo
+}; // 🎯 CIERRE SANO DE OBJETO: Sella la estructura provisionalmente
 
 // 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
