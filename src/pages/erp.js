@@ -696,52 +696,67 @@ const ErpModulo = {
 }; 
 
 // =========================================================================
-// 🚀 ORQUESTATOR DE INTERFAZ INTEGRAL - SOTO SYSTEM (CANDADO ANTI-CLONES)
-// Ubicación: Últimas líneas de tu script del ERP
+// 🚀 ORQUESTATOR DE INTERFAZ INTEGRAL - SOTO SYSTEM (CANDADO ANTI-CLONES DEFINITIVO)
+// Ubicación: Últimas líneas estrictas de tu script del ERP
 // =========================================================================
 
-if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
-    // 1. Renderizamos el panel del ERP en el lienzo secundario si está activo
-    if (typeof erpPanel !== 'undefined') {
-        contenedorInterno.appendChild(erpPanel);
-    }
+// 🔌 ENCAPSULAMOS EL BLOQUE ADENTRO DEL MÉTODO INIT PARA EVITAR DISPAROS FANTASMAS EN OTRAS SECCIONES
+ErpModulo.init = function() {
+    console.log("📡 [SOTO CORE ENGINE]: Inicializando componentes del ERP de forma aislada...");
 
-    // 2. Refrescamos la persistencia local de la micro-tabla de gastos
-    if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
-        ErpModulo.renderizarHistorialGastosLocal();
-    }
+    // 1. Limpieza preventiva local: Si la sección del ERP ya tiene un footer viejo adentro, lo removemos antes de pintar
+    if (typeof contenedorInterno !== 'undefined' && contenedorInterno !== null) {
+        const clonInternoViejo = contenedorInterno.querySelector('.soto-system-footer') || contenedorInterno.querySelector('footer');
+        if (clonInternoViejo) {
+            clonInternoViejo.remove();
+        }
 
-    // 3. 🖨️ INYECCIÓN CON CANDADO: Solo inyecta si no existe ya un footer en pantalla
-    if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-        const yaExisteFooter = document.querySelector('.soto-system-footer') || document.querySelector('footer');
-        
-        if (!yaExisteFooter) {
+        // Renderizamos el panel del ERP en el lienzo secundario si está activo
+        if (typeof erpPanel !== 'undefined') {
+            contenedorInterno.appendChild(erpPanel);
+        }
+
+        // Refrescamos la persistencia local de la micro-tabla de gastos
+        if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
+            ErpModulo.renderizarHistorialGastosLocal();
+        }
+
+        // 🖨️ INYECCIÓN EXCLUSIVA CONTROLADA: Genera el footer legítimo al final de este contenedor
+        if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
             const footerOriginal = Home.renderFooter();
             contenedorInterno.appendChild(footerOriginal);
-            console.log("📥 [SOTO CORE]: Footer heredado inyectado en contenedorInterno.");
+            console.log("📥 [SOTO CORE]: Footer legítimo heredado inyectado en contenedorInterno.");
         }
-    }
-} else {
-    // 🎯 BYPASS SEGURO PARA SUBSECCIONES HUÉRFANAS:
-    // Si la sección no tiene contenedor secundario (como inventario/gastos), inyectamos en la raíz general
-    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
-    
-    if (typeof erpPanel !== 'undefined') {
-        appContainerGeneral.appendChild(erpPanel);
-    }
-    
-    if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
-        const yaExisteFooter = document.querySelector('.soto-system-footer') || document.querySelector('footer');
         
-        if (!yaExisteFooter) {
+    } else {
+        // 🎯 BYPASS SEGURO PARA SUBSECCIONES HUÉRFANAS:
+        // Si la sección no tiene contenedor secundario (como inventario/gastos), inyectamos en la raíz general
+        const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
+        
+        // Limpieza preventiva en la raíz general antes de renderizar para evitar la duplicación en cascada
+        const clonGeneralViejo = appContainerGeneral.querySelector('.soto-system-footer') || appContainerGeneral.querySelector('strong');
+        if (clonGeneralViejo) {
+            // Evaluamos con cuidado: si hay más de un footer en el cuerpo general, removemos el excedente
+            const todosLosFooters = appContainerGeneral.querySelectorAll('footer');
+            if (todosLosFooters.length > 0) {
+                todosLosFooters.forEach(f => f.remove());
+            }
+        }
+
+        if (typeof erpPanel !== 'undefined') {
+            appContainerGeneral.appendChild(erpPanel);
+        }
+        
+        if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
             const footerOriginal = Home.renderFooter();
             appContainerGeneral.appendChild(footerOriginal);
-            console.log("⚡ [SOTO CORE]: Activado bypass. Footer inyectado de forma segura en la raíz general.");
+            console.log("⚡ [SOTO CORE]: Activado bypass seguro. Footer inyectado de forma única en la raíz general.");
         }
     }
-}
+};
 
 // 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
+
 
