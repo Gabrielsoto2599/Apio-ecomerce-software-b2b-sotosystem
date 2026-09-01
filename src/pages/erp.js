@@ -761,5 +761,34 @@ window.ErpModulo.reinyectarFilasTabla = function() {
     `).join('');
 }; // 🔒 CIERRE DE LA EXTENSIÓN I Y FIN ABSOLUTO DE LA CAPA LÓGICA DE TU SUITE
 
+// =========================================================================
+// 🔌 INICIALIZADOR ASINCRONO SANEADO: CONTROLADOR DE LIENZO DE LA SPA
+// Ubicación: erp.js -> Últimas líneas definitivas del archivo
+// =========================================================================
+window.ErpModulo.init = function() {
+    console.log("📡 [SOTO CORE ENGINE]: Sincronizando datos persistentes del ERP...");
+    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
+    
+    if (appContainerGeneral) {
+        // Limpiamos la pantalla anterior de forma segura
+        appContainerGeneral.innerHTML = '';
+        
+        // Inyectamos la estructura lineal completa llamando a tu render() original
+        appContainerGeneral.appendChild(window.ErpModulo.render());
+        
+        // Activamos los hilos lógicos de tus micro-tablas locales de egresos
+        if (typeof window.ErpModulo.renderizarHistorialGastosLocal === 'function') {
+            window.ErpModulo.renderizarHistorialGastosLocal();
+        }
+        console.log("🛡️ [SOTO CORE]: Ciclo de renderizado ERP completado con éxito.");
+    }
+};
+
+// 🎯 PRUEBA DE HERENCIA SIMPLE SOTO SYSTEM:
+// Mapeamos una constante de resguardo idéntica para cumplir con la exportación que exige Vite
+const ErpModulo = window.ErpModulo;
+
+// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE
+export { ErpModulo };
 
 
