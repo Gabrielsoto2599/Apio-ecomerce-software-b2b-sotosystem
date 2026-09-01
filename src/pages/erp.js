@@ -700,6 +700,58 @@ window.ErpModulo = {
     }, // 🎯 COMA OBLIGATORIA: Cierra el Bloque G extendido en limpia continuidad
 }; 
 
+// =========================================================================
+// 🚀 METODO RENDER: ENSAMBLADOR PURO DEL CUERPO INDEPENDIENTE Y EL FOOTER
+// =========================================================================
+window.ErpModulo.render = function() {
+    // Saneamos la importación para sostener la línea de Home encendida en VS Code
+    if (typeof Home !== 'undefined' && false) { console.log(Home); }
+
+    // 1. Contenedor Maestro Flexbox para sostener el flujo vertical
+    const section = document.createElement('section');
+    section.id = "contenedor-erp-contable-modulo";
+    section.className = "apio-erp-wrapper";
+    section.style.cssText = "display: flex; flex-direction: column; width: 100%; min-height: calc(100vh - 85px); box-sizing: border-box; background-color: #0d1117; padding: 0; margin: 0;";
+
+    // 2. 🔌 EL PUENTE DE TUS COMPONENTES (ENGANCHE DIRECTO):
+    // Forzamos a la sección a jalar el nodo de tus tarjetas contables creado arriba
+    try {
+        section.appendChild(erpPanel);
+        console.log("📦 [SOTO CORE]: Tarjeta de componentes contables acoplada directamente.");
+    } catch (error) {
+        console.warn("⚠️ [SOTO CORE]: No se pudo inyectar erpPanel de forma estática:", error.message);
+    }
+
+    // 3. CANDADO DE HERENCIA EXCLUSIVO PARA EL FOOTER (COMPLETAMENTE AISLADO)
+    if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
+        const footerOriginal = Home.renderFooter();
+        if (footerOriginal) {
+            footerOriginal.style.position = 'static'; 
+            footerOriginal.style.display = 'block';
+            footerOriginal.style.width = '100%';
+            footerOriginal.style.marginTop = 'auto'; // El truco flexbox que lo fija abajo de forma indestructible
+            section.appendChild(footerOriginal);
+            console.log("📥 [SOTO CORE]: Footer original heredado acoplado abajo del todo.");
+        }
+    } else if (typeof Home !== 'undefined' && typeof Home.renderMasterFooter === 'function') {
+        const footerMaster = Home.renderMasterFooter();
+        if (footerMaster) {
+            footerMaster.style.position = 'static';
+            footerMaster.style.display = 'block';
+            footerMaster.style.marginTop = 'auto';
+            section.appendChild(footerMaster);
+        }
+    }
+
+    // Disparamos la reinyección de las filas a los 50ms para no trancar el hilo del DOM
+    setTimeout(() => {
+        if (typeof window.ErpModulo.reinyectarFilasTabla === 'function') {
+            window.ErpModulo.reinyectarFilasTabla();
+        }
+    }, 50);
+
+    return section;
+};
 
 // =========================================================================
 // 🔌 INICIALIZADOR ASINCRONO SANEADO: CONTROLADOR DE LIENZO DE LA SPA
@@ -718,6 +770,10 @@ window.ErpModulo.init = function() {
     }
 };
 
-window.ErpModulo = ErpModulo;
+// Resguardamos la constante nominal de forma estricta para cumplir con el enlazado de Vite
+const ErpModulo = window.ErpModulo;
+
+// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (LÍNEAS FINALES)
 export { ErpModulo };
+
 
