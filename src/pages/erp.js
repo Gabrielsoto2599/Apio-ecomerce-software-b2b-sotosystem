@@ -704,29 +704,35 @@ window.ErpModulo = {
 const ErpModulo = window.ErpModulo;
 
 // =========================================================================
-// 🚀 METODO RENDER: RESPONSABILIDAD ÚNICA Y CANDADO DE POSICIÓN DEL FOOTER
+// 🚀 METODO RENDER: ENSAMBLADOR PURO DEL CUERPO INDEPENDIENTE Y EL FOOTER
 // =========================================================================
 ErpModulo.render = function() {
-    // Saneamos la importación para sostener la línea de Home encendida en VS Code
     if (typeof Home !== 'undefined' && false) { console.log(Home); }
 
-    // 1. Contenedor Maestro Flexbox para forzar la gravedad del Pie de Página
+    // 1. Contenedor Maestro Flexbox para sostener el flujo vertical
     const section = document.createElement('section');
     section.id = "contenedor-erp-contable-modulo";
     section.className = "apio-erp-wrapper";
     section.style.cssText = "display: flex; flex-direction: column; width: 100%; min-height: calc(100vh - 85px); box-sizing: border-box; background-color: #0d1117; padding: 0; margin: 0;";
 
-    // 2. 🎯 CANDADO DE HERENCIA EXCLUSIVO PARA EL FOOTER:
-    // Se acopla de forma lineal abajo del todo impulsado por el margen automático
+    // 2. 🔌 EL PUENTE DE TUS COMPONENTES:
+    // Buscamos el nodo físico de la tarjeta del ERP que creas e inicializas arriba en tu erp.js
+    // Reemplaza 'erpPanel' por el nombre exacto de la variable de tu tarjeta de componentes de arriba
+    if (typeof erpPanel !== 'undefined' && erpPanel !== null) {
+        section.appendChild(erpPanel);
+        console.log("📦 [SOTO CORE]: Tarjeta de componentes contables acoplada al flujo lineal.");
+    }
+
+    // 3. 🎯 CANDADO DE HERENCIA EXCLUSIVO PARA EL FOOTER (COMPLETAMENTE AISLADO)
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
         const footerOriginal = Home.renderFooter();
         if (footerOriginal) {
             footerOriginal.style.position = 'static'; 
             footerOriginal.style.display = 'block';
             footerOriginal.style.width = '100%';
-            footerOriginal.style.marginTop = 'auto'; // Fuerza al footer a bajar al fondo de la app si queda espacio libre
+            footerOriginal.style.marginTop = 'auto'; // El truco flexbox que lo fija abajo de forma indestructible
             section.appendChild(footerOriginal);
-            console.log("📥 [SOTO CORE]: Footer original heredado e inyectado en la base del lienzo.");
+            console.log("📥 [SOTO CORE]: Footer original heredado acoplado abajo del todo.");
         }
     } else if (typeof Home !== 'undefined' && typeof Home.renderMasterFooter === 'function') {
         const footerMaster = Home.renderMasterFooter();
@@ -738,7 +744,7 @@ ErpModulo.render = function() {
         }
     }
 
-    // Disparamos la reinyección lógica diferida de los datos a los 50ms
+    // Disparamos la reinyección de las filas a los 50ms para no trancar el hilo del DOM
     setTimeout(() => {
         if (typeof ErpModulo.reinyectarFilasTabla === 'function') {
             ErpModulo.reinyectarFilasTabla();
@@ -748,26 +754,4 @@ ErpModulo.render = function() {
     return section;
 };
 
-// =========================================================================
-// 🔌 INICIALIZADOR ASINCRONO SANEADO: CONTROLADOR DE LIENZO DE LA SPA
-// =========================================================================
-ErpModulo.init = function() {
-    console.log("📡 [SOTO CORE ENGINE]: Sincronizando datos persistentes del ERP...");
-    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
-    
-    if (appContainerGeneral) {
-        appContainerGeneral.innerHTML = '';
-        appContainerGeneral.appendChild(ErpModulo.render());
-        if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
-            ErpModulo.renderizarHistorialGastosLocal();
-        }
-        console.log("🛡️ [SOTO CORE]: Ciclo de renderizado ERP completado con éxito.");
-    }
-};
-
-// =========================================================================
-// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (LÍNEAS FINALES)
-// =========================================================================
-window.ErpModulo = ErpModulo; 
-export { ErpModulo };
 
