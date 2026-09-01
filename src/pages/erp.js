@@ -64,6 +64,12 @@ ErpModulo.init = function() {
     }
 };
 
-// 📡 EXPORTACIÓN HOMOLOGADA DEL ENTORNO GLOBAL PARA ELECTRON
-window.ErpModulo = ErpModulo;
+// =========================================================================
+// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (LÍNEAS FINALES)
+// =========================================================================
+
+// 1. Aseguramos el objeto en la ventana global de Electron
+window.ErpModulo = ErpModulo; 
+
+// 2. EXPORTACIÓN NOMINAL ESTRICTA (Verifica la E y la M mayúsculas)
 export { ErpModulo };
