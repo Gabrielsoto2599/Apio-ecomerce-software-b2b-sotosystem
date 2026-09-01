@@ -28,6 +28,30 @@ const ErpModulo = {
 
 
 // =========================================================================
+// 🔌 INICIALIZADOR ASINCRONO SANEADO: SIN APENDICES FANTASMAS
+// =========================================================================
+ErpModulo.init = function() {
+    console.log("📡 [SOTO CORE ENGINE]: Sincronizando datos persistentes del ERP...");
+    
+    // Capturamos el contenedor principal de la SPA donde se montan las pantallas
+    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
+    
+    if (appContainerGeneral) {
+        // Limpiamos la pantalla anterior de forma segura para borrar residuos
+        appContainerGeneral.innerHTML = '';
+        
+        // Inyectamos la estructura lineal completa (Header + Componentes ERP + Footer) de un solo golpe
+        appContainerGeneral.appendChild(ErpModulo.render());
+        
+        // Activamos los hilos lógicos de tus micro-tablas una vez el DOM esté pintado
+        if (typeof ErpModulo.renderizarHistorialGastosLocal === 'function') {
+            ErpModulo.renderizarHistorialGastosLocal();
+        }
+        console.log("🛡️ [SOTO CORE]: Ciclo de renderizado ERP completado con éxito.");
+    }
+};
+
+// =========================================================================
 // 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (LÍNEAS FINALES)
 // =========================================================================
 
