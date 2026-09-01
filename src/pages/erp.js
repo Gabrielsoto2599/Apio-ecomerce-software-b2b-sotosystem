@@ -761,24 +761,7 @@ window.ErpModulo.reinyectarFilasTabla = function() {
     `).join('');
 }; // 🔒 CIERRE DE LA EXTENSIÓN I Y FIN ABSOLUTO DE LA CAPA LÓGICA DE TU SUITE
 
-// =========================================================================
-// 🔌 INICIALIZADOR ASINCRONO SANEADO: CONTROLADOR DE LIENZO DE LA SPA
-// =========================================================================
-window.ErpModulo.init = function() {
-    console.log("📡 [SOTO CORE ENGINE]: Sincronizando datos persistentes del ERP...");
-    const appContainerGeneral = document.getElementById('contenedor-interno') || document.body;
-    
-    if (appContainerGeneral) {
-        appContainerGeneral.innerHTML = '';
-        appContainerGeneral.appendChild(window.ErpModulo.render());
-        if (typeof window.ErpModulo.renderizarHistorialGastosLocal === 'function') {
-            window.ErpModulo.renderizarHistorialGastosLocal();
-        }
-        console.log("🛡️ [SOTO CORE]: Ciclo de renderizado ERP completado con éxito.");
-    }
-};
-
-// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (HERENCIA DIRECTA ORIGINAL)
+window.ErpModulo = ErpModulo;
 export { ErpModulo };
 
 
