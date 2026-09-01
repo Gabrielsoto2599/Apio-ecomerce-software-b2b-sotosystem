@@ -372,9 +372,9 @@ const App = {
         pageBody.style.zIndex = '100';
         pageBody.style.width = '100%';
 
-                     // =========================================================================
-            // BLOQUE 5 (PARTE 2): ENRUTADOR SEGURO DE PANTALLAS (APIO CORE UNIFICADO)
-            // =========================================================================
+                   // =========================================================================
+        // BLOQUE 5 (PARTE 2): ENRUTADOR SEGURO DE PANTALLAS (APIO CORE UNIFICADO SANEADO)
+        // =========================================================================
         switch(this.state.view) {
             case 'home':
                 if (window.Home && typeof window.Home.render === 'function') {
@@ -396,11 +396,25 @@ const App = {
                     pageBody.appendChild(window.ClientesB2B.render());
                 }
                 break;
+                
             case 'erp':
+                // 🚀 ACCESO DIRECTO NATIVO: Evitamos el contenedor intermedio 'pageBody' para el ERP
                 if (window.ErpModulo && typeof window.ErpModulo.render === 'function') {
-                    pageBody.appendChild(window.ErpModulo.render());
+                    // Limpiamos todo el contenedor principal para purgar el Header duplicado de la línea 27
+                    this.container.innerHTML = ''; 
+                    
+                    // Inyectamos la sección lineal completa (Header + Componentes + Footer) directo a la raíz
+                    this.container.appendChild(window.ErpModulo.render());
+                    
+                    // Activamos las sub-tablas lógicas de gastos locales
+                    if (typeof window.ErpModulo.renderizarHistorialGastosLocal === 'function') {
+                        window.ErpModulo.renderizarHistorialGastosLocal();
+                    }
+                    console.log("📥 [SOTO ROUTER]: Renderizado del ERP acoplado directo a la raíz de la aplicación.");
+                    return; // Terminamos la ejecución del render de App.js de inmediato para evitar que inyecte el pageBody vacío abajo
                 }
                 break;
+                
             case 'pasarela-pago':
                 if (window.PasarelaPago && typeof window.PasarelaPago.render === 'function') {
                     pageBody.appendChild(window.PasarelaPago.render());
@@ -425,8 +439,9 @@ const App = {
                 break;
         }
 
-        // 4. Inyectamos el cuerpo dinámico en el contenedor principal
+        // 4. Inyectamos el cuerpo dinámico en el contenedor principal (No se ejecutará si entra al ERP)
         this.container.appendChild(pageBody);
+
     },
 
     // =========================================================================
