@@ -704,43 +704,29 @@ window.ErpModulo = {
 const ErpModulo = window.ErpModulo;
 
 // =========================================================================
-// 🚀 METODO RENDER: ESTRUCTURACIÓN LINEAL Y CANDADO DE POSITION DEL FOOTER
+// 🚀 METODO RENDER: RESPONSABILIDAD ÚNICA Y CANDADO DE POSICIÓN DEL FOOTER
 // =========================================================================
 ErpModulo.render = function() {
     // Saneamos la importación para sostener la línea de Home encendida en VS Code
     if (typeof Home !== 'undefined' && false) { console.log(Home); }
 
-    // 1. Contenedor Maestro de la Pantalla Completa (Usa Flexbox para empujar el footer)
+    // 1. Contenedor Maestro Flexbox para forzar la gravedad del Pie de Página
     const section = document.createElement('section');
     section.id = "contenedor-erp-contable-modulo";
     section.className = "apio-erp-wrapper";
-    section.style.cssText = "display: flex; flex-direction: column; width: 100%; min-height: calc(100vh - 85px); box-sizing: border-box; background-color: #0d1117; padding: 20px; margin: 0;";
+    section.style.cssText = "display: flex; flex-direction: column; width: 100%; min-height: calc(100vh - 85px); box-sizing: border-box; background-color: #0d1117; padding: 0; margin: 0;";
 
-    // 2. HERENCIA DEL HEADER GLOBAL: Se acopla arriba de la sección raíz de forma limpia
-    if (typeof Home !== 'undefined' && typeof Home.renderMasterHeader === 'function') {
-        section.appendChild(Home.renderMasterHeader());
-    } else if (window.App && typeof window.App.renderMasterHeader === 'function') {
-        section.appendChild(window.App.renderMasterHeader());
-    }
-
-    // 3. Consola Maestra del ERP Contable (La gran Tarjeta que encapsula los componentes)
-    const erpPanel = document.createElement('div');
-    erpPanel.style.cssText = "background-color: #0b0f19; padding: 35px 28px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #a855f7; max-width: 1200px; width: 100%; box-shadow: 0 0 25px rgba(168, 85, 247, 0.15), 0 20px 40px rgba(0,0,0,0.7); font-family: 'Inter', sans-serif; margin: 20px auto; box-sizing: border-box; color: #ffffff; overflow: hidden; position: relative;";
-
-
-    // Adjuntamos la tarjeta consolidada al lienzo principal de la sección
-    section.appendChild(erpPanel);
-
-    // 4. 🎯 EL CANDADO DE ACOPLE DEL FOOTER MAESTRO (COMPLETAMENTE AISLADO DE LA TARJETA)
+    // 2. 🎯 CANDADO DE HERENCIA EXCLUSIVO PARA EL FOOTER:
+    // Se acopla de forma lineal abajo del todo impulsado por el margen automático
     if (typeof Home !== 'undefined' && typeof Home.renderFooter === 'function') {
         const footerOriginal = Home.renderFooter();
         if (footerOriginal) {
             footerOriginal.style.position = 'static'; 
             footerOriginal.style.display = 'block';
             footerOriginal.style.width = '100%';
-            footerOriginal.style.marginTop = 'auto'; // Truco maestro Flexbox: empuja el footer al fondo absoluto de la sección
+            footerOriginal.style.marginTop = 'auto'; // Fuerza al footer a bajar al fondo de la app si queda espacio libre
             section.appendChild(footerOriginal);
-            console.log("📥 [SOTO CORE]: Footer original acoplado de forma indestructible abajo del todo.");
+            console.log("📥 [SOTO CORE]: Footer original heredado e inyectado en la base del lienzo.");
         }
     } else if (typeof Home !== 'undefined' && typeof Home.renderMasterFooter === 'function') {
         const footerMaster = Home.renderMasterFooter();
@@ -752,7 +738,7 @@ ErpModulo.render = function() {
         }
     }
 
-    // Disparamos la reinyección de las filas a los 50ms para no trancar el hilo del DOM
+    // Disparamos la reinyección lógica diferida de los datos a los 50ms
     setTimeout(() => {
         if (typeof ErpModulo.reinyectarFilasTabla === 'function') {
             ErpModulo.reinyectarFilasTabla();
@@ -763,7 +749,7 @@ ErpModulo.render = function() {
 };
 
 // =========================================================================
-// 🔌 INICIALIZADOR ASINCRONO SANEADO: SIN APENDICES FANTASMAS
+// 🔌 INICIALIZADOR ASINCRONO SANEADO: CONTROLADOR DE LIENZO DE LA SPA
 // =========================================================================
 ErpModulo.init = function() {
     console.log("📡 [SOTO CORE ENGINE]: Sincronizando datos persistentes del ERP...");
@@ -784,3 +770,4 @@ ErpModulo.init = function() {
 // =========================================================================
 window.ErpModulo = ErpModulo; 
 export { ErpModulo };
+
