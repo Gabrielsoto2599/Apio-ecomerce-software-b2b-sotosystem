@@ -754,8 +754,3 @@ window.ErpModulo.reinyectarFilasTabla = function() {
     `).join('');
 }; // 🔒 CIERRE FISCAL DE LA ESTRUCTURA PRINCIPAL DEL OBJETO ERPMODULO
 
-// Vinculamos al entorno global window para que App.js lo detecte de forma inmediata
-window.ErpModulo = ErpModulo;
-
-// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (HERENCIA DIRECTA ORIGINAL)
-export { ErpModulo };
