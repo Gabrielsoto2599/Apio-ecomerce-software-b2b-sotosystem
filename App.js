@@ -397,24 +397,21 @@ const App = {
                 }
                 break;
                 
-            case 'erp':
-                // 🚀 ACCESO DIRECTO NATIVO: Evitamos el contenedor intermedio 'pageBody' para el ERP
+                        case 'erp':
+                // 🚀 ADAPTACIÓN SIMÉTRICA SOTO SYSTEM: El ERP se unifica al flujo regular de la SPA
                 if (window.ErpModulo && typeof window.ErpModulo.render === 'function') {
-                    // Limpiamos todo el contenedor principal para purgar el Header duplicado de la línea 27
-                    this.container.innerHTML = ''; 
+                    // Inyectamos el ERP de forma normal dentro del cuerpo dinámico al igual que el Catálogo
+                    pageBody.appendChild(window.ErpModulo.render());
                     
-                    // Inyectamos la sección lineal completa (Header + Componentes + Footer) directo a la raíz
-                    this.container.appendChild(window.ErpModulo.render());
-                    
-                    // Activamos las sub-tablas lógicas de gastos locales
-                    if (typeof window.ErpModulo.renderizarHistorialGastosLocal === 'function') {
-                        window.ErpModulo.renderizarHistorialGastosLocal();
-                    }
-                    console.log("📥 [SOTO ROUTER]: Renderizado del ERP acoplado directo a la raíz de la aplicación.");
-                    return; // Terminamos la ejecución del render de App.js de inmediato para evitar que inyecte el pageBody vacío abajo
+                    // Activamos las sub-tablas luegos de que el enrutador pinte el árbol
+                    setTimeout(() => {
+                        if (typeof window.ErpModulo.renderizarHistorialGastosLocal === 'function') {
+                            window.ErpModulo.renderizarHistorialGastosLocal();
+                        }
+                    }, 0);
                 }
                 break;
-                
+             
             case 'pasarela-pago':
                 if (window.PasarelaPago && typeof window.PasarelaPago.render === 'function') {
                     pageBody.appendChild(window.PasarelaPago.render());
