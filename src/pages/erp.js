@@ -23,27 +23,19 @@ const ErpModulo = {
 
 // =========================================================================
 // 🎛️ PARTE 1-A: CONSTRUCTOR DEL LIENZO Y APERTURA DE PLANTILLA ATÓMICA
-// Ubicación: erp.js -> Continuación Lineal de la Suite
+// Ubicación: src/pages/erp.js -> Refactor Saneado de Layout Unificado
 // =========================================================================
 ErpModulo.render = function() {
     // Saneamos la importación para sostener la línea de Home encendida en VS Code
     if (typeof Home !== 'undefined' && false) { console.log(Home); }
 
-    // 1. Contenedor Maestro de la Pantalla Completa (Lienzo General)
+    // 1. Contenedor Maestro de la Pantalla Completa (Se acopla de forma nativa en el pageBody)
     const section = document.createElement('section');
     section.id = "contenedor-erp-contable-modulo";
     section.className = "apio-erp-wrapper";
-    section.style.cssText = "display: flex; flex-direction: column; width: 100%; box-sizing: border-box; background-color: #0d1117; padding: 20px; margin: 0;";
+    section.style.cssText = "display: flex; flex-direction: column; width: 100%; box-sizing: border-box; background-color: #0b0e14; padding: 20px; margin: 0;";
 
-    // 2. HERENCIA DEL HEADER GLOBAL (IDÉNTICO A LAS DEMÁS SECCIONES)
-    // Se importa y se inyecta directamente en la raíz de la sección antes que las tarjetas
-    if (typeof Home !== 'undefined' && typeof Home.renderMasterHeader === 'function') {
-        section.appendChild(Home.renderMasterHeader());
-    } else if (window.App && typeof window.App.renderMasterHeader === 'function') {
-        section.appendChild(window.App.renderMasterHeader());
-    }
-
-    // 3. Consola Maestra del ERP Contable (La gran tarjeta contenedora)
+    // 2. Consola Maestra del ERP Contable (La gran tarjeta contenedora con iluminación lateral)
     const erpPanel = document.createElement('div');
     erpPanel.id = "apio-erp-panel-tarjeta";
     erpPanel.style.cssText = "background-color: #0b0f19; padding: 35px 28px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #a855f7; max-width: 1200px; width: 100%; box-shadow: 0 0 25px rgba(168, 85, 247, 0.15), 0 20px 40px rgba(0,0,0,0.7); font-family: 'Inter', sans-serif; margin: 20px auto; box-sizing: border-box; color: #ffffff; overflow: hidden; position: relative;";
