@@ -23,7 +23,7 @@ const ErpModulo = {
 
 // =========================================================================
 // 🎛️ PARTE 1-A: CONSTRUCTOR DEL LIENZO Y APERTURA DE PLANTILLA ATÓMICA
-// Ubicación: src/pages/erp.js -> Refactor Saneado de Layout Unificado
+// Ubicación: src/pages/erp.js -> Espacio Central (Fase 1 de Prueba Visual)
 // =========================================================================
 ErpModulo.render = function() {
     // Saneamos la importación para sostener la línea de Home encendida en VS Code
@@ -38,9 +38,10 @@ ErpModulo.render = function() {
     // 2. Consola Maestra del ERP Contable (La gran tarjeta contenedora con iluminación lateral)
     const erpPanel = document.createElement('div');
     erpPanel.id = "apio-erp-panel-tarjeta";
+    erpPanel.style.styleHtml = ""; // Resguardo limpio de estilos inline
     erpPanel.style.cssText = "background-color: #0b0f19; padding: 35px 28px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #a855f7; max-width: 1200px; width: 100%; box-shadow: 0 0 25px rgba(168, 85, 247, 0.15), 0 20px 40px rgba(0,0,0,0.7); font-family: 'Inter', sans-serif; margin: 20px auto; box-sizing: border-box; color: #ffffff; overflow: hidden; position: relative;";
 
-    // 4. Abrimos la plantilla unificada continua inyectando los botones fiscales
+    // 3. Abrimos la plantilla unificada continua inyectando los botones fiscales
     erpPanel.innerHTML = `
         <!-- 👑 ENCABEZADO PREMIUM DE LA CONSOLA -->
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 15px;">
@@ -66,70 +67,73 @@ ErpModulo.render = function() {
                 🔵 Cierre Semanal (PDF)
             </button>
 
-            <!-- 🟢 Botón Reporte Mes Fiscal SENIAT -->
-            <button type="button" onclick="window.ErpModulo.ejecutarCierreMensualPdf()" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: transform 0.2s;">
-                🟢 Reporte Mes (IVA 16% SENIAT)
-            </button>
+                    <!-- 🟢 Botón Reporte Mes Fiscal SENIAT -->
+        <button type="button" onclick="window.ErpModulo.ejecutarCierreMensualPdf()" style="background: linear-gradient(135deg, #10b981 0%, #047857 100%); color:white; border:none; padding:14px; border-radius:8px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:11px; font-family:'Inter',sans-serif; box-shadow: 0 4px 12px rgba(16,185,129,0.3); transition: transform 0.2s;">
+            🟢 Reporte Mes (IVA 16% SENIAT)
+        </button>
+    </div>
+
+    <!-- 📊 EXTENSIÓN D: TARJETA ANALÍTICA PREMIUM CON COLOR GLOW (APIO INTELLIGENCE) -->
+    <div id="analytics-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #020617 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #00D2FF; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+            
+            <div>
+                <span style="font-size: 10px; color: #38bdf8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">🔥 Métrica de Rotación (PostgreSQL Cloud)</span>
+                <h4 id="analytics-producto-estrella" style="margin: 0; color: #ffffff; font-size: 15px; font-weight: 800; letter-spacing: -0.01em;">Sincronizando con Railway...</h4>
+            </div>
+
+                   <!-- Indicador Neón de Rendimiento Integrado -->
+            <div style="background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); padding: 8px 14px; border-radius: 6px; text-align: center; box-shadow: 0 0 10px rgba(0, 210, 255, 0.1); min-width: 110px;">
+                <span style="display: block; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Ventas Mes</span>
+                <strong id="analytics-unidades-estrella" style="font-size: 13px; color: #00D2FF; font-family: monospace; font-weight: 900;">0 Unds</strong>
+            </div>
+
         </div>
-        <!-- 📊 EXTENSIÓN D: TARJETA ANALÍTICA PREMIUM CON COLOR GLOW (APIO INTELLIGENCE) -->
-        <div id="analytics-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-            <div style="background: linear-gradient(135deg, #0f172a 0%, #020617 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #00D2FF; box-shadow: 0 4px 15px rgba(0, 210, 255, 0.15); display: flex; justify-content: space-between; align-items: center; gap: 15px;">
+    </div>
+
+    <!-- 💳 EXTENSIÓN E: PANEL DE RECAUDACIÓN Y CONCILIACIÓN DE COBRANZAS (SOTO FINANCIAL ENGINE) -->
+    <div id="cobranzas-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+        <div style="background: linear-gradient(135deg, #0b1329 0%, #020c1b 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);">
+            
+            <span style="font-size: 10px; color: #10b981; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 12px; letter-spacing: 0.08em;">📋 Canales de Recaudación y Cobranzas (Turno Activo)</span>
+            
+            <!-- Rejilla Triple de Métodos de Pago con Estilo Fiscal Fino -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
                 
-                <div>
-                    <span style="font-size: 10px; color: #38bdf8; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">🔥 Métrica de Rotación (PostgreSQL Cloud)</span>
-                    <h4 id="analytics-producto-estrella" style="margin: 0; color: #ffffff; font-size: 15px; font-weight: 800; letter-spacing: -0.01em;">Sincronizando con Railway...</h4>
+                <!-- Canal A: Pago Móvil -->
+                <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
+                    <span style="display: block; font-size: 9px; color: #a3e635; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">📱 PAGO MÓVIL</span>
+                    <strong id="cobranza-pago-movil" style="font-size: 14px; color: #ffffff; font-family: monospace;">0.00 Bs.</strong>
                 </div>
 
-                <!-- Indicador Neón de Rendimiento Integrado -->
-                <div style="background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); padding: 8px 14px; border-radius: 6px; text-align: center; box-shadow: 0 0 10px rgba(0, 210, 255, 0.1); min-width: 110px;">
-                    <span style="display: block; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Ventas Mes</span>
-                    <strong id="analytics-unidades-estrella" style="font-size: 13px; color: #00D2FF; font-family: monospace; font-weight: 900;">0 Unds</strong>
+                <!-- Canal B: Biopago / Tarjeta -->
+                <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
+                    <span style="display: block; font-size: 9px; color: #38bdf8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚡ BIOPAGO / REF</span>
+                    <strong id="cobranza-biopago" style="font-size: 14px; color: #ffffff; font-family: monospace;">0.00 Bs.</strong>
+                </div>
+
+                <!-- Canal C: Efectivo -->
+                <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
+                    <span style="display: block; font-size: 9px; color: #fbbf24; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">💵 EFECTIVO (USD)</span>
+                    <strong id="cobranza-efectivo" style="font-size: 14px; color: #ffffff; font-family: monospace;">$0.00</strong>
                 </div>
 
             </div>
+
         </div>
-        <!-- 💳 EXTENSIÓN E: PANEL DE RECAUDACIÓN Y CONCILIACIÓN DE COBRANZAS (SOTO FINANCIAL ENGINE) -->
-        <div id="cobranzas-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-            <div style="background: linear-gradient(135deg, #0b1329 0%, #020c1b 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #10b981; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);">
-                
-                <span style="font-size: 10px; color: #10b981; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 12px; letter-spacing: 0.08em;">📋 Canales de Recaudación y Cobranzas (Turno Activo)</span>
-                
-                <!-- Rejilla Triple de Métodos de Pago con Estilo Fiscal Fino -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
-                    
-                    <!-- Canal A: Pago Móvil -->
-                    <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
-                        <span style="display: block; font-size: 9px; color: #a3e635; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">📱 PAGO MÓVIL</span>
-                        <strong id="cobranza-pago-movil" style="font-size: 14px; color: #ffffff; font-family: monospace;">0.00 Bs.</strong>
-                    </div>
+    </div>
 
-                    <!-- Canal B: Biopago / Tarjeta -->
-                    <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
-                        <span style="display: block; font-size: 9px; color: #38bdf8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">⚡ BIOPAGO / REF</span>
-                        <strong id="cobranza-biopago" style="font-size: 14px; color: #ffffff; font-family: monospace;">0.00 Bs.</strong>
-                    </div>
-
-                    <!-- Canal C: Efectivo -->
-                    <div style="background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: center;">
-                        <span style="display: block; font-size: 9px; color: #fbbf24; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">💵 EFECTIVO (USD)</span>
-                        <strong id="cobranza-efectivo" style="font-size: 14px; color: #ffffff; font-family: monospace;">$0.00</strong>
-                    </div>
-
-                </div>
-
+    <!-- 👤 EXTENSIÓN F: MÁNAGER OPERACIONAL DE VENDEDORES Y CAJEROS ACTIVOS -->
+    <div id="vendedores-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
+        <div style="background: linear-gradient(135deg, #0f1526 0%, #030a16 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #8b5cf6; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: center; width: 100%; box-sizing: border-box;">
+            
+            <!-- Bloque de Texto Saneado -->
+            <div style="width: 100%;">
+                <span style="font-size: 10px; color: #a78bfa; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">👤 Control y Auditoría de Personal</span>
+                <h4 style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: -0.01em;">Asignación de Operador en Taquilla</h4>
             </div>
-        </div>
-        <!-- 👤 EXTENSIÓN F: MÁNAGER OPERACIONAL DE VENDEDORES Y CAJEROS ACTIVOS -->
-        <div id="vendedores-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
-            <div style="background: linear-gradient(135deg, #0f1526 0%, #030a16 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #8b5cf6; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.15); display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; align-items: center; width: 100%; box-sizing: border-box;">
-                
-                <!-- Bloque de Texto Saneado -->
-                <div style="width: 100%;">
-                    <span style="font-size: 10px; color: #a78bfa; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.08em;">👤 Control y Auditoría de Personal</span>
-                    <h4 style="margin: 0; color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: -0.01em;">Asignación de Operador en Taquilla</h4>
-                </div>
 
-                <!-- Selector Estilizado Comercial -->
+                           <!-- Selector Estilizado Comercial -->
                 <div style="width: 100%;">
                     <select id="erp-vendedor-activo" onchange="window.ErpModulo.registrarCambioVendedorTurno()" style="width: 100%; padding: 10px 12px; background: #030712; border: 1px solid #334155; color: #a78bfa; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; outline: none; box-shadow: 0 0 10px rgba(139, 92, 246, 0.05); font-family: 'Inter', sans-serif; box-sizing: border-box;">
                         <option value="Cajera Turno Mañana">👤 Cajera Turno Mañana (Taquilla A)</option>
@@ -141,6 +145,7 @@ ErpModulo.render = function() {
 
             </div>
         </div>
+
         <!-- 💸 EXTENSIÓN G: PANEL DE REGISTRO DE GASTOS EXPRESS CON HISTORIAL FISCAL DIGITAL -->
         <div id="gastos-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
             <div style="background: linear-gradient(135deg, #1a0f1a 0%, #0a030a 100%); padding: 18px; border-radius: 10px; border: 1px solid #1e293b; border-left: 5px solid #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.12);">
@@ -171,9 +176,9 @@ ErpModulo.render = function() {
                                 <th style="padding-bottom: 6px; text-align: right; width: 35%;">Monto Deducido</th>
                             </tr>
                         </thead>
-                        <tbody id="lista-gastos-cuerpo" style="color: #cbd5e1; font-family: monospace;">
+                                                <tbody id="lista-gastos-cuerpo" style="color: #cbd5e1; font-family: monospace;">
                             <tr>
-                                <td colspan="2" style="padding: 8px 0; text-align: center; color: #475569; font-family: sans-serif; font-style: italic;">No se registran egresos operacionales en el turno actual.</td>
+                                <td colspan="2" style="padding: 8px 0; text-align: center; color: #475569; font-style: italic;">No se registran egresos operacionales en el turno actual.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -181,6 +186,7 @@ ErpModulo.render = function() {
 
             </div>
         </div>
+
         <!-- 📦 EXTENSIÓN H: CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
         <div id="inventario-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
             
@@ -220,14 +226,15 @@ ErpModulo.render = function() {
                         <input type="number" id="inv-stock" required value="20" style="width:100%; background:#0b0f19; border:1px solid #1e293b; padding:10px; color:white; border-radius:6px; font-family:monospace; font-size:13px; outline:none;">
                     </div>
 
-                    <button type="submit" style="background: linear-gradient(135deg, #00D2FF 0%, #0072FF 100%); color:#030712; border:none; padding:11px 24px; border-radius:6px; font-weight:800; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.05em; box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);">
+                                        <button type="submit" style="background: linear-gradient(135deg, #00D2FF 0%, #0072FF 100%); color:#030712; border:none; padding:11px 24px; border-radius:6px; font-weight:800; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.05em; box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);">
                         📥 Inyectar Stock
                     </button>
                 </form>
             </div>
 
         </div>
- <!-- 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES ENVOLVENTE -->
+
+        <!-- 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES ENVOLVENTE -->
         <div id="historial-card-container" style="margin-bottom: 24px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
             
             <div style="background-color: #030712; padding: 22px; border-radius: 8px; border: 1px solid #1e293b;">
@@ -259,10 +266,21 @@ ErpModulo.render = function() {
 
         </div>
     `; // 🔒 CIERRE OFICIAL DEL TEMPLATE STRING DE TU INTERFAZ
+
+    // Enganchamos físicamente la gran tarjeta morada adentro de la sección unificada
+    section.appendChild(erpPanel);
+
+    // Disparamos la reinyección diferida a los 50ms para no trancar el hilo del DOM en Electron
+    setTimeout(() => {
+        if (typeof ErpModulo.reinyectarFilasTabla === 'function') {
+            ErpModulo.reinyectarFilasTabla();
+        }
+    }, 50);
+
     return section;
 }; // 🔒 AQUÍ CIERRA TU MÉTODO RENDER CON LLAVE Y PUNTO Y COMA, SIN COMAS.
 
-   // =========================================================================
+// =========================================================================
 // 🧠 BLOQUE 2 (PARTE 1): PROCESADORES LÓGICOS ASIGNADOS (SOTO FINANCIAL ENGINE)
 // Ubicación: erp.js -> Continuación de la lógica pura del ERP
 // =========================================================================
@@ -711,7 +729,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 
 // =========================================================================
 // 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES EN VIVO EN LA PIZARRA FISCAL
-// Ubicación: erp.js -> Última línea de procesamiento lógico puro
+// Ubicación: src/pages/erp.js -> Última línea de procesamiento lógico puro
 // =========================================================================
 window.ErpModulo.reinyectarFilasTabla = function() {
     const tbody = document.getElementById('erp-movimientos-diarios-rows');
@@ -754,3 +772,8 @@ window.ErpModulo.reinyectarFilasTabla = function() {
     `).join('');
 }; // 🔒 CIERRE FISCAL DE LA ESTRUCTURA PRINCIPAL DEL OBJETO ERPMODULO
 
+// Vinculamos al entorno global window para que App.js lo detecte de forma inmediata
+window.ErpModulo = ErpModulo;
+
+// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (HERENCIA DIRECTA ORIGINAL)
+export { ErpModulo };
