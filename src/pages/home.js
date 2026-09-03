@@ -443,7 +443,7 @@ Home.renderMasterHeader = function() {
 
                             console.log(`✨ [SOTO POS BACKEND SUCCESS]: Elementos validados de Railway -> ${loteProductos.length}`);
 
-                            // 🎯 DOBLE IMPACTO SIMÉTRICO DE MEMORIA: Forzamos la asignación limpia en ambas variables de la RAM
+                            // 🎯 DOBLE IMPACTO SIMÉTRICO DE MEMORIA: Forzamos la asignación en ambas variables de la RAM
                             window.App.state.productosFiltrados = loteProductos;
                             window.App.state.productosVivos = loteProductos; 
                             window.App.state.ultimoTerminoBuscado = termino; 
@@ -455,6 +455,13 @@ Home.renderMasterHeader = function() {
                                 window.App.renderViewOnly('catalogo-b2b');
                             }
 
+                            // 🎯 TRANSICIÓN DE PANTALLA EXCLUSIVA SOTO SYSTEM:
+                            // Forzamos al enrutador central de la SPA a mover al usuario a la vista del catálogo 
+                            // para que vea los resultados de su búsqueda en tiempo real.
+                            if (window.App && typeof window.App.navigate === 'function') {
+                                window.App.navigate('catalogo-b2b');
+                            }
+
                             // Devolvemos el foco al buscador de forma síncrona inmediata para escritura ultra-suave
                             const inputRecargado = document.querySelector('.search-core-input');
                             if (inputRecargado) {
@@ -463,6 +470,7 @@ Home.renderMasterHeader = function() {
                             }
                         }
                     })
+
                     .catch(error => console.error("❌ Error de comunicación en Apio Engine:", error.message));
             }, 350); // 350 milisegundos óptimos de tolerancia de escritura
 
