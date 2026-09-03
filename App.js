@@ -398,17 +398,8 @@ const App = {
                 break;
                 
                         case 'erp':
-                // 🚀 ADAPTACIÓN SIMÉTRICA SOTO SYSTEM: El ERP se unifica al flujo regular de la SPA
                 if (window.ErpModulo && typeof window.ErpModulo.render === 'function') {
-                    // Inyectamos el ERP de forma normal dentro del cuerpo dinámico al igual que el Catálogo
                     pageBody.appendChild(window.ErpModulo.render());
-                    
-                    // Activamos las sub-tablas luegos de que el enrutador pinte el árbol
-                    setTimeout(() => {
-                        if (typeof window.ErpModulo.renderizarHistorialGastosLocal === 'function') {
-                            window.ErpModulo.renderizarHistorialGastosLocal();
-                        }
-                    }, 0);
                 }
                 break;
              

@@ -1,25 +1,26 @@
 // =========================================================================
 // BLOQUE 0: CONTROL DE IMPORTACIONES Y CORE ADMINISTRATIVO (MVP 2026)
-// Ubicación: erp.js -> Comienzo Saneado con Cierre de Sintaxis Hermético
+// Ubicación: src/pages/erp.js -> Saneamiento del Puntero Global
 // =========================================================================
-// Encendemos de forma nativa la importación usándola en las líneas de inyección de abajo
 import { Home } from './home.js';
 
-const ErpModulo = {
-    // 🧠 MEMORIA RADIAL SOTO SYSTEM CON PERSISTENCIA DE DISCO RÍGIDO (localStorage)
-    state: {
-        movimientosDiarios: [], 
-        cierreEjecutado: false,
-        tasaDolarActual: parseFloat(localStorage.getItem('APIO_TASA_CAMBIARIA')) || 40.00,
-        // Lee el disco duro; si está vacío por ser primer arranque, nace con el fallback
-        listaProductosOriginal: JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) || []
-    },
+// 🎯 REPARACIÓN MÁSTER SOTO SYSTEM: Amarramos el objeto global "window" de inmediato
+if (!window.ErpModulo) {
+    window.ErpModulo = {
+        state: {
+            movimientosDiarios: [], 
+            cierreEjecutado: false,
+            tasaDolarActual: parseFloat(localStorage.getItem('APIO_TASA_CAMBIARIA')) || 40.00,
+            listaProductosOriginal: JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) || []
+        },
+        verificarEstadoSalud: function() {
+            return "OK";
+        }
+    };
+}
 
-    // Validador de consistencia inicial de la suite contable
-    verificarEstadoSalud: function() {
-        return "OK";
-    }
-}; // 🔒 CANDADO DE CIERRE SOTO SYSTEM: Sella legalmente el objeto principal antes de las asignaciones
+// Creamos un alias local apuntando al espacio global para que tus funciones (window.ErpModulo.nombre) engranen al 100%
+const ErpModulo = window.ErpModulo;
 
 // =========================================================================
 // 🎛️ PARTE 1-A: CONSTRUCTOR DEL LIENZO Y APERTURA DE PLANTILLA ATÓMICA
