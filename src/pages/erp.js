@@ -282,7 +282,7 @@ ErpModulo.render = function() {
 
 // =========================================================================
 // 🧠 BLOQUE 2 (PARTE 1): PROCESADORES LÓGICOS ASIGNADOS (SOTO FINANCIAL ENGINE)
-// Ubicación: erp.js -> Continuación de la lógica pura del ERP
+// Ubicación: src/pages/erp.js -> Continuación de la lógica pura del ERP
 // =========================================================================
 
 // 🎯 BLINDAJE SOTO SYSTEM: Aseguramos el objeto global antes de adosarle métodos lógicos
@@ -331,7 +331,10 @@ window.ErpModulo.reinyectarFilasTabla = function() {
     `).join('');
 }; // 🔒 CANDADO DE CIERRE: Finaliza de forma legal con llave y punto y coma, sin comas.
 
+// =========================================================================
 // 🔒 LA FÓRMULA DE GABRIEL BLINDADA: Cierre de Caja con Descarga Asíncrona de PDF
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// =========================================================================
 window.ErpModulo.ejecutarCierreYGenerarPdf = function() {
     console.log("🔒 [Apio ERP Core]: Evaluando registros para inicio de auditoría final...");
     const movimientos = window.ErpModulo.state.movimientosDiarios || [];
@@ -389,7 +392,10 @@ window.ErpModulo.ejecutarCierreYGenerarPdf = function() {
     }, 50);
 }; // 🔒 Cierre legal con punto y coma
 
+// =========================================================================
 // 📅 EXTENSIÓN A: COMPILADOR DE CONSOLIDADO SEMANAL (REPORTLAB)
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// =========================================================================
 window.ErpModulo.ejecutarCierreSemanalPdf = function() {
     console.log("📡 [SOTO CLOUD]: Generando balance consolidado de 7 días...");
 
@@ -423,7 +429,10 @@ window.ErpModulo.ejecutarCierreSemanalPdf = function() {
     });
 }; // 🔒 Cierre legal con punto y coma
 
+// =========================================================================
 // 🏛️ EXTENSIÓN B: REPORTE DE MES FISCAL - DECLARACIÓN IVA 16% (SENIAT)
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// =========================================================================
 window.ErpModulo.ejecutarCierreMensualPdf = function() {
     console.log("📡 [SOTO CLOUD]: Compilando libro de ventas del mes...");
 
@@ -457,7 +466,10 @@ window.ErpModulo.ejecutarCierreMensualPdf = function() {
     });
 }; // 🔒 Cierre legal con punto y coma
 
+// =========================================================================
 // 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE (PROVEEDORES POLAR/TUNAL)
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// =========================================================================
 window.ErpModulo.ingresarMercanciaNuevaManual = function() {
     const txtSku = document.getElementById('inv-sku');
     const txtNombre = document.getElementById('inv-nombre');
@@ -467,6 +479,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 
     if (!txtSku || !txtNombre || !selProveedor || !numPrecio || !numStock) return;
 
+    // SANEAMIENTO CORE: Forzamos mayúsculas para evitar duplicaciones accidentales por tipeo
     const skuLimpio = txtSku.value.trim().toUpperCase();
     const nombreLimpio = txtNombre.value.trim();
     const proveedor = selProveedor.value;
@@ -478,6 +491,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
         || window.CatalogoB2B?.productos 
         || [];
 
+    // Verificamos colisión de llaves primarias en la memoria persistente antes de inyectar
     if (inventarioVivo.some(p => p.sku === skuLimpio)) {
         alert(`⚠️ Error: El SKU ${skuLimpio} ya existe en el catálogo.`);
         return;
@@ -486,6 +500,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
     const nuevoItem = { sku: skuLimpio, nombre: nombreLimpio, precio_usd: costoUsd, stock: stockIngresado, categoria: proveedor };
     inventarioVivo.push(nuevoItem);
 
+    // Sincronizamos simétricamente todas las capas de memoria RAM y almacenamiento local
     if (window.App && window.App.state) window.App.state.listaProductosOriginal = inventarioVivo;
     localStorage.setItem('APIO_INVENTARIO_PERSISTENTE', JSON.stringify(inventarioVivo));
     
@@ -503,7 +518,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 
  // =========================================================================
 // 💳 EXTENSIÓN E: CONCILIADOR DE RECAUDACIÓN EN CALIENTE (SOTO FINANCIAL ENGINE)
-// Ubicación: erp.js -> Asignación nominal limpia sin dos puntos fiscales
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
 // =========================================================================
 window.ErpModulo.calcularConciliacionCobranzasTurno = function() {
     console.log("📡 [SOTO FINANCIAL]: Ejecutando auditoría de flujos en caja...");
@@ -520,6 +535,7 @@ window.ErpModulo.calcularConciliacionCobranzasTurno = function() {
         const montoBs = parseFloat(mov.montoBs || mov.total_bs || 0.00);
         const montoUsd = parseFloat(mov.montoUsd || mov.total_usd || 0.00);
 
+        // CORE REPAIR: Barrido elástico con y sin acentos para evitar pérdidas contables en taquilla
         if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGO MOVIL") || metodo.includes("PAGOMOVIL")) {
             acumuladoPagoMovil += montoBs;
         } else if (metodo.includes("BIOPAGO") || metodo.includes("TARJETA")) {
@@ -540,7 +556,7 @@ window.ErpModulo.calcularConciliacionCobranzasTurno = function() {
 
 // =========================================================================
 // 👤 EXTENSIÓN F: MÁNAGER DE VENDEDORES Y OPERADORES DE TAQUILLA
-// Ubicación: erp.js -> Mapeo exacto acoplado al onchange de la UI
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
 // =========================================================================
 window.ErpModulo.registrarCambioVendedorTurno = function() {
     const selectorVendedor = document.getElementById('erp-vendedor-activo');
@@ -557,10 +573,9 @@ window.ErpModulo.registrarCambioVendedorTurno = function() {
 }; // 🔒 Cierre legal con llave y punto y coma.
 
 // =========================================================================
-// 💸 EXTENSIÓN G: REGISTRO DE GASTOS EXPRESS, HISTORIAL VIVO Y REPORTE PDF
-// Ubicación: erp.js -> Cierre de los Procesadores Contables de la Suite
+// 💸 EXTENSIÓN G: REGISTRO DE GASTOS EXPRESS Y HISTORIAL VIVO SANITIZADO
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
 // =========================================================================
-
 window.ErpModulo.registrarGastoMensualExpress = function() {
     const descInput = document.getElementById('gasto-descripcion');
     const montoInput = document.getElementById('gasto-monto');
@@ -632,6 +647,10 @@ window.ErpModulo.renderizarHistorialGastosLocal = function() {
     });
 }; // 🔒 Cierre lineal con punto y coma
 
+// =========================================================================
+// 🖨️ EMISOR ASINCRONO: COMPILADOR DEL REPORTE DE EGRESOS EN DJANGO (REPORTLAB)
+// Ubicación: src/pages/erp.js -> Cierre de la Extensión G
+// =========================================================================
 window.ErpModulo.descargarGastosMesPdf = function() {
     const gastos = JSON.parse(localStorage.getItem('APIO_GASTOS_MES')) || [];
     if (gastos.length === 0) {
@@ -641,7 +660,8 @@ window.ErpModulo.descargarGastosMesPdf = function() {
 
     console.log("📡 [SOTO CLOUD]: Despachando balance de egresos operativos al compilador de ReportLab...");
     
-    window.fetch('https://railway.app', {
+    // 🎯 REPARACIÓN DE ENDPOINT: Apunta con precisión milimétrica a tu ruta real de Django en Railway
+    window.fetch('https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/descargar-gastos-pdf/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -658,7 +678,7 @@ window.ErpModulo.descargarGastosMesPdf = function() {
         const urlDescarga = window.URL.createObjectURL(blobPdf);
         const enlace = document.createElement('a');
         
-        // SANEAMIENTO DE FECHA: Estampamos el nombre del archivo con la hora local de Venezuela
+        // SANEAMIENTO DE FECHA: Estampamos el nombre del archivo con el huso horario local de Venezuela (AAAA-MM-DD)
         const fechaLocal = new Date().toLocaleDateString('sv-SE');
         
         enlace.href = urlDescarga;
@@ -672,11 +692,11 @@ window.ErpModulo.descargarGastosMesPdf = function() {
         console.error("❌ Falla Gastos PDF:", err.message);
         alert("⚠️ Error: No se pudo conectar con el compilador contable cloud.");
     });
-}; // 🔒 CIERRE DE LA EXTENSIÓN G Y DE TODA TU CAPA LÓGICA TRANSACCIONAL
+}; // 🔒 CIERRE DE LA EXTENSIÓN G Y DE TODA TU CAPA LÓGICA TRANSACCIONAL DE EGRESOS
 
 // =========================================================================
 // 📦 EXTENSIÓN H: CONSOLA DE INGRESO DE MERCANCÍA NUEVA PERSISTENTE
-// Ubicación: erp.js -> Continuación de la lógica transaccional limpia
+// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
 // =========================================================================
 window.ErpModulo.ingresarMercanciaNuevaManual = function() {
     const txtSku = document.getElementById('inv-sku');
@@ -728,14 +748,14 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 }; // 🔒 Cierre lineal con punto y coma
 
 // =========================================================================
-// 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES EN VIVO EN LA PIZARRA FISCAL
+// 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES CON DETALLES DE PAGO MÓVIL EXTENDIDO
 // Ubicación: src/pages/erp.js -> Última línea de procesamiento lógico puro
 // =========================================================================
 window.ErpModulo.reinyectarFilasTabla = function() {
     const tbody = document.getElementById('erp-movimientos-diarios-rows');
     if (!tbody) return;
 
-    // Pescamos la RAM actualizada de las ventas del día
+    // Pescamos la RAM actualizada de las ventas de la jornada
     const lista = window.ErpModulo.state.movimientosDiarios || [];
     
     if (lista.length === 0) {
@@ -749,31 +769,52 @@ window.ErpModulo.reinyectarFilasTabla = function() {
         return;
     }
 
-    // Mapeamos los checkouts a filas del DOM usando formateo regional nativo
-    tbody.innerHTML = lista.map(mov => `
-        <tr style="border-bottom: 1px solid #1e293b; background-color: rgba(255,255,255, 0.01);">
-            <td style="padding: 14px; color: #a855f7; font-weight: bold; font-size: 11px; font-family: monospace;">
-                ${mov.ref || 'TR-N/A'}<br><span style="color: #64748b; font-size: 9px;">${mov.hora || '00:00'}</span>
-            </td>
-            <td style="padding: 14px; color: #cbd5e1; font-family: monospace;">${mov.cedula || 'V-99999999'}</td>
-            <td style="padding: 14px; color: #94a3b8; font-family: 'Inter', sans-serif; line-height: 1.4; font-size: 11px;">
-                ${mov.productos || 'Mercancía General'}
-            </td>
-            <td style="padding: 14px; text-align: center;">
-                <span style="background-color: #0b1329; color: #38bdf8; font-size: 9px; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2); text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: 700;">
-                    ${(mov.metodo || 'BIOPAGO').replace('_', ' ')}
-                </span>
-            </td>
-            <td style="padding: 14px; text-align: right; color: #00D2FF; font-size: 13px; font-family: monospace;">
-                ${parseFloat(mov.montoBs || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
-                <span style="color: #10b981; font-size: 10px;">$${parseFloat(mov.montoUsd || 0).toFixed(2)}</span>
-            </td>
-        </tr>
-    `).join('');
-}; // 🔒 CIERRE FISCAL DE LA ESTRUCTURA PRINCIPAL DEL OBJETO ERPMODULO
+    // Mapeamos los checkouts a filas del DOM usando formateo regional nativo de Venezuela
+    tbody.innerHTML = lista.map(mov => {
+        const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
+        let metadatosPagoMovilHtml = "";
 
-// Vinculamos al entorno global window para que App.js lo detecte de forma inmediata
+        // 🧠 AUDITORÍA EXTENDIDA SOTO FINANCIAL: Si es Pago Móvil, extraemos y pintamos sus variables
+        if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGO MOVIL") || metodo.includes("PAGOMOVIL")) {
+            const banco = mov.banco || mov.detallesPagoMovil?.banco || "BANCO N/A";
+            const tlf = mov.telefono || mov.detallesPagoMovil?.telefono || "04XX-XXXXXXX";
+            const refBanco = mov.ref_banco || mov.detallesPagoMovil?.refBanco || mov.ref || "REF N/A";
+
+            metadatosPagoMovilHtml = `
+                <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: 'Inter', sans-serif; font-size: 10px;">
+                    <span style="background: rgba(163, 230, 53, 0.1); color: #a3e635; border: 1px solid rgba(163, 230, 53, 0.2); padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase;">
+                        🏦 ${banco}
+                    </span>
+                    <span style="color: #94a3b8;">📱 Tlf: <strong style="color: #cbd5e1; font-family: monospace;">${tlf}</strong></span>
+                    <span style="color: #94a3b8;">🧾 Ref: <strong style="color: #a3e635; font-family: monospace;">#${refBanco}</strong></span>
+                </div>
+            `;
+        }
+
+        return `
+            <tr style="border-bottom: 1px solid #1e293b; background-color: rgba(255,255,255, 0.01);">
+                <td style="padding: 14px; color: #a855f7; font-weight: bold; font-size: 11px; font-family: monospace;">
+                    ${mov.ref || 'TR-N/A'}<br><span style="color: #64748b; font-size: 9px;">${mov.hora || '00:00'}</span>
+                </td>
+                <td style="padding: 14px; color: #cbd5e1; font-family: monospace;">${mov.cedula || 'V-99999999'}</td>
+                <td style="padding: 14px; color: #94a3b8; font-family: 'Inter', sans-serif; line-height: 1.4; font-size: 11px;">
+                    <span style="color: #fff; font-weight: 600;">${mov.productos || 'Mercancía General'}</span>
+                    ${metadatosPagoMovilHtml}
+                </td>
+                <td style="padding: 14px; text-align: center;">
+                    <span style="background-color: #0b1329; color: #38bdf8; font-size: 9px; padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.2); text-transform: uppercase; font-family: 'Inter', sans-serif; font-weight: 700;">
+                        ${metodo.replace('_', ' ')}
+                    </span>
+                </td>
+                <td style="padding: 14px; text-align: right; color: #00D2FF; font-size: 13px; font-family: monospace;">
+                    ${parseFloat(mov.montoBs || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
+                    <span style="color: #10b981; font-size: 10px;">$${parseFloat(mov.montoUsd || 0).toFixed(2)}</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}; // 🔒 CANDADO DE CIERRE DE LA EXTENSIÓN I
+
 window.ErpModulo = ErpModulo;
-
-// 📡 ENLAZADO FINAL HOMOLOGADO PARA ELECTRON Y VITE (HERENCIA DIRECTA ORIGINAL)
 export { ErpModulo };
+
