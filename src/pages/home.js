@@ -426,7 +426,7 @@ Home.renderMasterHeader = function() {
             // ⏱️ PARCHE DE DEBOUNCE SANEADO: Consulta a Django sin romper el layout visual
             temporizadorBusqueda = setTimeout(() => {
                 // 🚀 ENLACE CORREGIDO CON DOBLE "M" EX_CLUS_IVO PARA TU SERVIDOR EN RAILWAY
-            let urlApi = `https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=${encodeURIComponent(termino.trim())}`;
+            let urlApi = `https://apio-ecommerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=${encodeURIComponent(termino.trim())}`;
 
                 
                 console.log(`📡 [Buscador Apio POS]: Consultando backend real en Railway -> ${urlApi}`);
