@@ -422,11 +422,11 @@ Home.renderMasterHeader = function() {
                 }
                 return;
             }
-            
+
             // ⏱️ PARCHE DE DEBOUNCE SANEADO: Consulta a Django sin romper el layout visual
             temporizadorBusqueda = setTimeout(() => {
                 // 🎯 REPARACIÓN DE ENDPOINT MÁSTER: Sincronizado milimétricamente con tu urls.py real de Django
-                let urlApi = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=\${encodeURIComponent(termino.trim())}`;
+                let urlApi = `https://apio-ecommerce-sotfware-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=${encodeURIComponent(termino.trim())}`;
                 
                 console.log(`📡 [Buscador Apio POS]: Consultando backend real en Railway -> ${urlApi}`);
 
