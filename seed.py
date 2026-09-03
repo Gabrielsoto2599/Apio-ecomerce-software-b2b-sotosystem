@@ -4,14 +4,22 @@ import django
 
 # =========================================================================
 # 🚀 SOTO SYSTEM BODEGA SEEDER - EXCLUSIVO VÍVERES PURIFICADO (2026)
-# Ubicación: seed.py (Raíz del Proyecto)
+# Ubicación: seed.py (Raíz del Proyecto) -> COMPUERTA HIBRIDA DE RED CLOUD
 # =========================================================================
 
+# La clave maestra impositiva se mantiene firme
 CLAVE_MAESTRA = "gkfDbFUktFKmVUVIDxgujQVjlDtaJVbP"
-HOST_PUBLICO = "thomas.proxy.rlwy.net"  
-PUERTO_PUBLICO = "18806"                
 
-if not os.environ.get('DATABASE_URL'):
+# 🎯 CONTROLADOR DE FLUJO DE RED SATELITAL SOTO SYSTEM:
+if os.environ.get('DATABASE_URL'):
+    # REGLA A: Si corre dentro del servidor de Railway, usa el túnel nativo directo de producción
+    print("📡 [SOTO CENTRAL]: Detectado entorno Cloud. Conectando por red interna segura de Railway...")
+else:
+    # REGLA B: Si ejecutas el script desde el PowerShell de tu laptop Windows
+    print("💻 [SOTO CENTRAL]: Detectado entorno de desarrollo local. Usando proxies públicos...")
+    
+    HOST_PUBLICO = "thomas.proxy.rlwy.net"  
+    PUERTO_PUBLICO = "18806"                
     os.environ['DATABASE_URL'] = f"postgresql://postgres:{CLAVE_MAESTRA}@{HOST_PUBLICO}:{PUERTO_PUBLICO}/railway"
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
@@ -36,7 +44,7 @@ def sembrar_catalogo_viveres_exclusivo():
 
         conteo_exitoso = 0
 
-        # 🎯 SIEMBRA PURA DE VÍVERES: Libre de variables muertas de ropa
+        # 🎯 SIEMBRA PURA DE VÍVERES: Libre de variables muertas
         for item in datos_productos:
             sku_limpio = str(item.get('sku', '')).strip().upper()
             nombre_prod = str(item.get('nombre', 'Producto sin Nombre')).strip()
@@ -49,7 +57,7 @@ def sembrar_catalogo_viveres_exclusivo():
 
             categoria_obj, creado = Categoria.objects.get_or_create(nombre=texto_categoria)
 
-            # Instanciamos el producto acoplando estrictamente tus campos reales de la laptop
+            # Instanciamos el producto acoplando estrictamente tus campos reales
             nuevo_producto = Producto(
                 sku=sku_limpio,
                 nombre=nombre_prod,
