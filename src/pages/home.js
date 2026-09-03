@@ -361,7 +361,7 @@ Home.renderMasterHeader = function() {
         });
     }
 
-          // =========================================================================
+              // =========================================================================
     // 🧠 MOTOR DE BÚSQUEDA INDUSTRIAL ADAPTADO PARA INSTALABLE .EXE (PERFECTO)
     // Ubicación: Dentro del componente inyectable del Buscador en home.js
     // =========================================================================
@@ -422,17 +422,17 @@ Home.renderMasterHeader = function() {
                 }
                 return;
             }
-
+            
             // ⏱️ PARCHE DE DEBOUNCE SANEADO: Consulta a Django sin romper el layout visual
             temporizadorBusqueda = setTimeout(() => {
-                // 🎯 REPARACIÓN DE ENDPOINT MÁSTER: Apunta milimétricamente a la ruta real de tu views.py plano
-                let urlApi = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador-productos-api/?q=${encodeURIComponent(termino.trim())}`;
+                // 🎯 REPARACIÓN DE ENDPOINT MÁSTER: Sincronizado milimétricamente con tu urls.py real de Django
+                let urlApi = `https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/buscador/?q=\${encodeURIComponent(termino.trim())}`;
                 
-                console.log(`📡 [Buscador Apio POS]: Consultando backend local -> ${urlApi}`);
+                console.log(`📡 [Buscador Apio POS]: Consultando backend real en Railway -> ${urlApi}`);
 
                 window.fetch(urlApi)
                     .then(response => {
-                        if (!response.ok) throw new Error("Rebote de ruta en el servidor de Django");
+                        if (!response.ok) throw new Error("Rebote de ruta en el servidor de Django (Status: " + response.status + ")");
                         return response.json();
                     })
                     .then(data => {
@@ -448,14 +448,13 @@ Home.renderMasterHeader = function() {
                             window.App.state.ultimoTerminoBuscado = termino; 
 
                             // 🖨️ RE-RENDERIZADO SELECTIVO DE CONTENEDOR (NUNCA VOLVEMOS A DESTRUIR LA VISTA ENTERA)
-                            // Le avisamos directamente al catálogo que vuelva a pintar los elementos sobre el DOM existente
                             if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
                                 window.recalcularGrillaCatalogoB2BEnCaliente(loteProductos);
                             } else if (typeof window.App.renderViewOnly === 'function') {
                                 window.App.renderViewOnly('catalogo-b2b');
                             }
 
-                            // 3. Devolvemos el foco al buscador de forma síncrona inmediata para escritura ultra-suave
+                            // Devolvemos el foco al buscador de forma síncrona inmediata para escritura ultra-suave
                             const inputRecargado = document.querySelector('.search-core-input');
                             if (inputRecargado) {
                                 inputRecargado.focus();
