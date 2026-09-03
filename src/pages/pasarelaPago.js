@@ -582,28 +582,46 @@ PasarelaPago.iniciarEscuchaCaptureCelular = function(txId, botonDespachar) {
     }, 3000);
 };
 
-       // =========================================================================
+// =========================================================================
 // BLOQUE 2-A: SELECTOR PREMIUM CON IMÁGENES BANCARIAS VENEZOLANAS (VERDE NEÓN)
+// Ubicación: src/pages/pasarelaPago.js -> Refactor Saneado Dropdown 2026
 // =========================================================================
 const moduloPasarelas = document.createElement('section');
 moduloPasarelas.id = "step-payment-methods";
 moduloPasarelas.setAttribute('style', 'background-color: #0b0f19; padding: 24px; border-radius: 12px; border: 1px solid #1e293b; border-left: 4px solid #10b981; position: relative; overflow: hidden; width: 100%; box-sizing: border-box; margin-bottom: 24px; font-family: "Inter", sans-serif;');
 
 moduloPasarelas.innerHTML = `
-    <div id="step-payment-methods" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; box-sizing: border-box; width: 100%;">
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 20px; box-sizing: border-box; width: 100%; position: relative;">
     
-    <!-- Opción 1: Punto de Venta -->
-    <button type="button" id="pay-punto" data-metodo="PUNTO" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <div style="width: 36px; height: 36px; border-radius: 6px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b; flex-shrink: 0;">
-                <img src="./assets/punto-venta.jpg" alt="Punto" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='💳';">
+        <!-- 🛒 Opción 1: Punto de Venta (Envuelto en Contenedor Relativo Soto System) -->
+    <div id="wrapper-punto-venta-dropdown" style="position: relative; width: 100%; box-sizing: border-box;">
+        
+        <!-- Botón de Punto de Venta Original (Mantiene data-metodo e ID intactos) -->
+        <button type="button" id="pay-punto" data-metodo="PUNTO" onclick="window.PasarelaPago.alternarDropdownTarjetas(event)" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 6px; background-color: #030712; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #1e293b; flex-shrink: 0;">
+                    <img src="./assets/punto-venta.jpg" alt="Punto" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'; this.parentNode.innerHTML='💳';">
+                </div>
+                <div>
+                    <h4 style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin: 0;">Punto Venta</h4>
+                    <p id="label-punto-subtipo" style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Débito / Crédito</p>
+                </div>
             </div>
-            <div>
-                <h4 style="font-weight: 700; font-size: 13px; color: #FFFFFF; margin: 0;">Punto Venta</h4>
-                <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0 0;">Débito / Crédito</p>
-            </div>
+        </button>
+
+        <!-- 👑 DROP-DOWN FLOTANTE: Abre hacia abajo sin romper la cuadrícula del grid de Electron -->
+        <div id="dropdown-tarjetas-caja" style="position: absolute; top: calc(100% + 6px); left: 0; width: 100%; background-color: #050b14; border: 1px solid #1e293b; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.8), 0 0 15px rgba(16, 185, 129, 0.05); display: none; flex-direction: column; z-index: 100; overflow: hidden;">
+            <button type="button" onclick="window.PasarelaPago.seleccionarSubTipoTarjeta('DEBITO', 'Débito')" style="background: transparent; border: none; color: #cbd5e1; text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; border-bottom: 1px solid #111827; transition: background 0.2s; font-family: 'Inter', sans-serif;">
+                🟢 Tarjeta de Débito
+            </button>
+            <button type="button" onclick="window.PasarelaPago.seleccionarSubTipoTarjeta('CREDITO', 'Crédito')" style="background: transparent; border: none; color: #cbd5e1; text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; border-bottom: 1px solid #111827; transition: background 0.2s; font-family: 'Inter', sans-serif;">
+                🔵 Tarjeta de Crédito
+            </button>
+            <button type="button" onclick="window.PasarelaPago.seleccionarSubTipoTarjeta('UBII', 'Ubii')" style="background: transparent; border: none; color: #cbd5e1; text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s; font-family: 'Inter', sans-serif;">
+                ⚡ Tarjeta Ubii
+            </button>
         </div>
-    </button>
+    </div>
 
     <!-- Opción 2: Cashea -->
     <button type="button" id="pay-cashea" data-metodo="CASHEA" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background-color: #030712; border: 1px solid #1e293b; border-radius: 12px; text-align: left; cursor: pointer; transition: all 0.2s ease; outline: none; box-sizing: border-box; width: 100%;">
@@ -644,8 +662,7 @@ moduloPasarelas.innerHTML = `
         </div>
     </button>
 
-</div> <!-- 🎯 AQUÍ TERMINA EL CONTENEDOR DE BOTONES. NADA MÁS ENTRA AQUÍ -->
-
+</div>
 
 <!-- ===================================================================== -->
 <!-- 2. CAJA DE INSTRUCCIONES PREMIUM (UBICADA NATURALMENTE ABAJO)         -->
