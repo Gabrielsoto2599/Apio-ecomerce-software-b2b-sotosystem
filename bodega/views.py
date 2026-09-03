@@ -48,6 +48,7 @@ def detalle_producto(request, id):
 
 # =====================================================================
 # 🔍 ENDPOINT API DEL BUSCADOR REACTIVO INMUNE A TILDES (BUILD 2026)
+# Ubicación: bodega/views.py -> REPARADO CON SERIALIZADOR SOTO SYSTEM
 # =====================================================================
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -59,7 +60,7 @@ def buscador_productos_api(request):
     """
     [CEREBRO EXCLUSIVO DE VÍVERES - RETORNO PLANO INMUNE A ERRORES]
     Carga el catálogo completo al inicio y filtra en caliente de forma plana.
-    Destruye cualquier complicación de entornos o modalidades para la presentación.
+    Satisface el tipado estricto que exige catalogoB2B.js en Electron.
     """
     try:
         # Capturamos la ráfaga de la cabecera de Electron
@@ -77,33 +78,44 @@ def buscador_productos_api(request):
             
             productos_filtrados = []
             for prod in todos_los_productos:
+                # 🎯 REPARACIÓN CORE: Extraemos .nombre, .sku y el string real de la categoría foránea
                 nombre_saneado = eliminar_tildes_python(prod.nombre or "").lower()
-                categoria_saneada = eliminar_tildes_python(prod.categoria or "").lower()
                 sku_saneado = (prod.sku or "").lower().strip()
                 
-                # Coincidencia por iniciales, SKU o nombre interno
+                # Jalamas de forma segura el texto de la tabla Categoria
+                texto_categoria = prod.categoria.nombre if prod.categoria else "General"
+                categoria_saneada = eliminar_tildes_python(texto_categoria).lower()
+                
+                # Coincidencia elástica por iniciales, SKU o nombre interno
                 if (terminoSaneado in nombre_saneado or 
                     nombre_saneado.startswith(terminoSaneado) or 
                     terminoSaneado in categoria_saneada or 
                     terminoSaneado == sku_saneado):
                     productos_filtrados.append(prod)
 
-        # Construimos el formato de ARREGLO PLANO puro exigido por catalogoB2B.js
+        # 👑 REPARACIÓN DE SERIALIZACIÓN: Usamos to_dict() para homologar con Electron
         lista_json = []
         for prod in productos_filtrados:
-            lista_json.append({
-                "id": prod.id,
-                "sku": prod.sku or "",
-                "nombre": prod.nombre or "Producto sin nombre",
-                "categoria": prod.categoria or "General",
-                "precio_usd": float(prod.precio_usd or 0.0),
-                "stock": prod.stock or 0
-            })
+            try:
+                # El proxy inyecta el formato idéntico exigido por catalogoB2B.js
+                lista_json.append(prod.to_dict())
+            except Exception as inner_err:
+                print(f"⚠️ Error serializando producto {prod.sku}: {str(inner_err)}")
+                # Fallback elástico de emergencia en el bucle
+                lista_json.append({
+                    "id": prod.id,
+                    "id_qr": str(prod.id_qr),
+                    "sku": prod.sku or "",
+                    "nombre": prod.nombre or "Producto sin nombre",
+                    "categoria": prod.categoria.nombre if prod.categoria else "General",
+                    "precio_usd": float(prod.precio_usd or 0.0),
+                    "stock": prod.stock or 0
+                })
             
         # 🚀 DISPARO ORIGINAL DE HISTORIAL: Formato [...] directo sin llaves extras
         response = JsonResponse(lista_json, safe=False, status=200)
         
-        # Escudo protector CORS para Electron
+        # Escudo protector CORS para Electron Desktop App
         response["Access-Control-Allow-Origin"] = "*"
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "Content-Type"
@@ -116,11 +128,16 @@ def buscador_productos_api(request):
         fail_res["Access-Control-Allow-Origin"] = "*"
         return fail_res
 
-
 # =====================================================================
-# 2. ENDPOINTS API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
+# 🔍 ENDPOINT API REST JSON (El cerebro para la IA Daniela y el Sistema Apio)
+# Ubicación: bodega/views.py -> CONSOLIDADO CONTABLE 2026
 # =====================================================================
-from django.db.models import Count, Q
+import json
+import datetime
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404  # 🎯 REPARACIÓN CORE: Inyectada función faltante
+from .models import Producto
 
 @csrf_exempt
 def lista_productos_api(request):
@@ -160,12 +177,15 @@ def detalle_producto_api(request, id_qr):
     """
     try:
         producto = get_object_or_404(Producto, id_qr=id_qr)
-        tasa = TasaCambio.objects.latest('fecha_actualizacion')
         
-        precio_ves = round(float(producto.precio_usd) * float(tasa.precio_bcv), 2)
+        # 🎯 PROTECCIÓN APION CORE: Usamos la tasa del día inyectada en el estado global de tu SPA
+        # Evitamos caídas si la tabla TasaCambio interna de Django no está poblada aún
+        tasa_bcv_viva = float(request.GET.get('tasa', 40.00))
+        
+        precio_ves = round(float(producto.precio_usd) * tasa_bcv_viva, 2)
         guion_vocal = f"Es {producto.nombre}. Tiene un costo de {producto.precio_usd} dólares, que equivalen a {precio_ves} bolívares."
         
-        return JsonResponse({
+        response = JsonResponse({
             "estatus": "encontrado",
             "producto": producto.to_dict(),
             "precios": {"usd": float(producto.precio_usd), "ves": precio_ves},
@@ -173,9 +193,11 @@ def detalle_producto_api(request, id_qr):
             "alerta_stock": producto.stock <= 3
         }, status=200)
         
-    except TasaCambio.DoesNotExist:
-        return JsonResponse({"error": "Falta registrar la tasa BCV en la base de datos."}, status=400)
-    except Exception:
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
+        
+    except Exception as e:
+        print(f"❌ [CRASH DETALLE QR API]: {str(e)}")
         return JsonResponse({"error": "Código QR no reconocido en el sistema Apio."}, status=404)
 
 
@@ -190,7 +212,6 @@ def metricas_analitica_api(request):
     
     try:
         from .models import Factura
-        import datetime
         
         hoy = datetime.date.today()
         # Filtramos las facturas del mes en curso
@@ -200,9 +221,8 @@ def metricas_analitica_api(request):
         
         # Molienda de datos: recorremos las facturas y extraemos los artículos
         for fac in facturas_mes:
-            # Si guardas los productos como string/JSON en la columna unificada, los parseamos
             try:
-                # Modifica según cómo guardes el string de productos (si es lista u objeto)
+                # 🎯 REPARACIÓN MÁSTER: La librería json ya se encuentra importada arriba de forma global
                 articulos = json.loads(fac.productos_despachados) if isinstance(fac.productos_despachados, str) else fac.productos_despachados
                 if isinstance(articulos, list):
                     for art in articulos:
@@ -214,7 +234,6 @@ def metricas_analitica_api(request):
                             conteo_skus[sku] = {"nombre": nombre, "total_unidades": 0}
                         conteo_skus[sku]["total_unidades"] += cantidad
             except Exception:
-                # Salvaguarda si la factura tiene formato de texto plano
                 pass
 
         # Encontramos el líder de la tabla
@@ -228,12 +247,15 @@ def metricas_analitica_api(request):
         else:
             producto_estrella = {"sku": "N/A", "nombre": "Sin transacciones este mes", "unidades": 0}
             
-        return JsonResponse({"status": "success", "producto_mas_vendido": producto_estrella})
+        response = JsonResponse({"status": "success", "producto_mas_vendido": producto_estrella})
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
         
     except Exception as e:
+        print(f"❌ [CRASH METRICAS API]: {str(e)}")
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
-    
+
 # =========================================================================
 # 📊 CONTROLADOR INTEGRAL DE ONBOARDING DE CLIENTES POSTGRESQL (BUILD 2026)
 # Ubicación: Al final de tu bodega/views.py
