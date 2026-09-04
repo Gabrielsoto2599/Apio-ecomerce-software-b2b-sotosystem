@@ -707,7 +707,7 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
 
 
                 // =========================================================================
-        // BLOQUE 2-B: EVENTOS DE INTERFAZ INTELIGENTES (CONEXIÓN CARTERA MULTIPERFIL)
+        // 🧠 BLOQUE 2-B: EVENTOS DE INTERFAZ INTELIGENTES CON ENCHUFE DE DESPACHO
         // Ubicación: Dentro del componente de identificación en pasarelaPago.js
         // =========================================================================
         
@@ -835,11 +835,33 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
                     } else if (typeof PasarelaPago.calcularSubtotalesYTotales === 'function') {
                         PasarelaPago.calcularSubtotalesYTotales();
                     }
-                };
-            }
-        }, 50);
 
-        // =========================================================================
+                                        // 🔌 ENCHUFE NATIVO MÁSTER: Forzamos la escucha del clic por debajo en JavaScript puro
+                    const botonNaranjaDespacho = document.getElementById('btn-procesar-despacho');
+                    if (botonNaranjaDespacho) {
+                        console.log("🔌 [SOTO LINKER]: Cableando el addeventlistener nativo de forma remota al botón maestro...");
+                        
+                        // Limpiamos referencias duplicadas clonando el nodo en el árbol del DOM
+                        botonNaranjaDespacho.replaceWith(botonNaranjaDespacho.cloneNode(true));
+                        const btnLimpio = document.getElementById('btn-procesar-despacho');
+                        
+                        // 🎯 REPARACIÓN CORE: Inyectamos la apertura formal de la escucha de clics
+                        btnLimpio.addEventListener('click', function(eventAction) {
+                            eventAction.preventDefault();
+                            console.log("🍊 [SOTO POS]: Clic certificado en el chasis del botón naranja.");
+                            
+                            // [CONTINUACIÓN DIRECTA DE LA TRANSMISIÓN REMOTA]
+                            if (window.PasarelaPago && typeof window.PasarelaPago.procesarDespachoFactura === 'function') {
+                                window.PasarelaPago.procesarDespachoFactura();
+                            } else {
+                                alert("⚠️ Error de memoria RAM: El hilo remoto de procesamiento no se encuentra cargado.");
+                            }
+                        }); // ✅ Ahora este cierre de llave engrana perfectamente con el addEventListener de arriba
+                    }
+                }; // Cierre de btnValidar.onclick
+            } // Cierre de if (btnValidar && inputRIF)
+        }, 50); // 🔒 Cierre formal del temporizador máster de interfaces del Bloque 2-B
+
 // 🕹️ PARTE 2: PROCESADORES DEL DROPDOWN DE TARJETAS (SOTO FINANCIAL)
 // Ubicación: src/pages/pasarelaPago.js -> Última línea absoluta del archivo
 // =========================================================================
