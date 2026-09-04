@@ -845,14 +845,12 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
                         botonNaranjaDespacho.replaceWith(botonNaranjaDespacho.cloneNode(true));
                         const btnLimpio = document.getElementById('btn-procesar-despacho');
                         
-                        btnLimpio.addEventListener('click', function(eventAction) {
+                                                btnLimpio.addEventListener('click', function(eventAction) {
                             eventAction.preventDefault();
                             console.log("🍊 [SOTO POS]: Clic certificado en el chasis del botón naranja.");
                             
-                            // 🎯 EL DISPARADOR ELÁSTICO: Busca la función remota en el alias local o global instantáneamente
-                            if (typeof PasarelaPago.procesarDespachoFactura === 'function') {
-                                PasarelaPago.procesarDespachoFactura();
-                            } else if (window.PasarelaPago && typeof window.PasarelaPago.procesarDespachoFactura === 'function') {
+                            // 🎯 DETONACIÓN DIRECTA A LA COMPUERTA GLOBAL:
+                            if (window.PasarelaPago && typeof window.PasarelaPago.procesarDespachoFactura === 'function') {
                                 window.PasarelaPago.procesarDespachoFactura();
                             } else {
                                 alert("⚠️ Error de memoria RAM: El hilo remoto de procesamiento no se encuentra cargado.");
@@ -1628,10 +1626,10 @@ ejecutarRetrostorAlMostrador(nodoModal) {
 
 // =========================================================================
 // 🚀 PARTE A: PROCESADOR REMOTO DE TRANSACCIONES A DJANGO (SOTO CORE)
-// Ubicación: src/pages/pasarelaPago.js -> Aseguramos el objeto global
+// Ubicación: src/pages/pasarelaPago.js -> Inyección Global Máster
 // =========================================================================
 
-// 🎯 BLINDAJE CORE SOTO SYSTEM: Si el objeto de la pasarela no existe en la RAM, lo creamos al vuelo
+// 🎯 ASEGURAMOS EL CONTENEDOR EN LA RAM GLOBAL
 if (!window.PasarelaPago) window.PasarelaPago = {};
 if (!window.PasarelaPago.estadoTransaccion) {
     window.PasarelaPago.estadoTransaccion = {
@@ -1641,11 +1639,12 @@ if (!window.PasarelaPago.estadoTransaccion) {
     };
 }
 
-// Ahora la asignación engranará al centavo sin lanzar TypeErrors en Electron:
+// 👑 COMPUERTA FISCAL DIRECTA: Seteamos la función directamente en el objeto global window
 window.PasarelaPago.procesarDespachoFactura = function() {
-    console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload hacia Railway...");
+    console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
     
-    const tx = PasarelaPago.estadoTransaccion;
+    // Accedemos de forma directa y segura a las propiedades de la ventana activa
+    const tx = window.PasarelaPago.estadoTransaccion;
 
     // 🎯 RECOLECCIÓN ULTRA-LIGERA DE LA COMPRA desde la RAM de Electron
     const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
