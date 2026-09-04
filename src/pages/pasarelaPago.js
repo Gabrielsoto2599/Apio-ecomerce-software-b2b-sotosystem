@@ -88,24 +88,72 @@ const PasarelaPago = {
             if (!res.ok) throw new Error("Rebote fiscal en Django (Status: " + res.status + ")");
             return res.json();
         })
-        .then(data => {
+                .then(data => {
             console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
+            
+            // 🔮 CAPTURA DE NÚMERO FISCAL REMOTO: Pescamos la referencia devuelta por Django en la nube
             const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
             
-            // Invocamos la animación de la copa pasándole la variable local
-            if (typeof window.PasarelaPago?.dispararAnimacionExitoVisual === 'function') {
-                window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
-            } else if (typeof PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+            // =========================================================================
+            // 📊 ALIMENTACIÓN INTEGRAL DE LOS COMPONENTES DEL ERP (REGLAS DE LA A A LA I)
+            // =========================================================================
+            const nuevoMovimientoContable = {
+                ref: refFactura,
+                hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
+                cedula: cedulaCliente,
+                // Mapeamos los nombres y cantidades para la Extensión I (Historial Detallado)
+                productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
+                metodo: metodoFinalLabel, // Guarda: "PAGO_MOVIL", "BIOPAGO_BDV" o "PUNTO (UBII)", "PUNTO (DEBITO)", etc.
+                montoBs: totalBs,
+                montoUsd: totalUsd,
+                // Inyectamos el soporte auditado de Pago Móvil con el banco y los 4 dígitos
+                detallesPagoMovil: tx.soportePagoMovil || null
+            };
+
+            // A. Sincronización en Caliente de la RAM del ERP (Para Cierres y Gráficas de Turno)
+            if (!window.ErpModulo) window.ErpModulo = { state: { movimientosDiarios: [] } };
+            if (!window.ErpModulo.state) window.ErpModulo.state = { movimientosDiarios: [] };
+            if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
+            
+            // Empujamos el registro al inicio del array para que aparezca de primero en el monitor
+            window.ErpModulo.state.movimientosDiarios.unshift(nuevoMovimientoContable);
+
+            // B. Persistencia Total en el Disco (A prueba de apagones o bajones de luz en Baradida)
+            const historialHistorico = JSON.parse(localStorage.getItem('APIO_MOVIMIENTOS_DIARIOS')) || [];
+            historialHistorico.unshift(nuevoMovimientoContable);
+            localStorage.setItem('APIO_MOVIMIENTOS_DIARIOS', JSON.stringify(historialHistorico));
+
+            // C. Disparador de Conciliación en Caliente del ERP
+            if (typeof window.ErpModulo.calcularConciliacionCobranzasTurno === 'function') {
+                window.ErpModulo.calcularConciliacionCobranzasTurno();
+            }
+
+            console.log("📊 [SOTO AUDIT SUCCESS]: Componentes del ERP alimentados de la A a la I.");
+
+            // =========================================================================
+            // 🎭 INVOCACIÓN ELÁSTICA DE LA ANIMACIÓN DE LA COPA DORADA
+            // =========================================================================
+            if (typeof PasarelaPago.dispararAnimacionExitoVisual === 'function') {
                 PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            } else if (typeof window.PasarelaPago?.dispararAnimacionExitoVisual === 'function') {
+                window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            } else {
+                // Salvavidas de contingencia si la animación no se cargó a tiempo en la SPA
+                if (window.App && window.App.state) window.App.state.carritoActual = [];
+                alert(`🏆 ¡Venta Exitosa Registrada! REF FISCAL: ${refFactura}`);
+                if (window.App && typeof window.App.navigate === 'function') window.App.navigate('catalogo-b2b');
             }
         })
         .catch(error => {
             console.error("❌ Error de comunicación asíncrona:", error.message);
             alert("⚠️ Error contable: No se pudo conectar con el servidor remoto para cerrar la venta.");
         });
-    },
+    }, // 🔒 CIERRE FORMAL Y SEGURO DE LA FUNCIÓN procesarDespachoFactura()
 
-               render() {
+    // =========================================================================
+    // 🧱 RENDER ORIGINAL INTEGRADO (MANTIENE TU ESTRUCTURA TOTALMENTE INTACTA)
+    // =========================================================================
+    render() {
         // 1. Contenedor Maestro acoplado a la identidad oscura de Apio B2B
         const section = document.createElement('div');
         section.className = "pasarela-pago-view-wrapper w-full";
@@ -131,7 +179,6 @@ const PasarelaPago = {
         `;
         section.appendChild(mainContent);
         const contenedorInterno = mainContent.querySelector('#contenedor-pasarela-pago');
-
 
         // =========================================================================
         // BLOQUE 1: COMPONENTE INYECTABLE - BUSCADOR DE CÉDULA / RIF FISCAL (ESTILO PREMIUM GARENA)
