@@ -1605,12 +1605,26 @@ ejecutarRetrostorAlMostrador(nodoModal) {
 
 // =========================================================================
 // 🚀 PARTE A: PROCESADOR REMOTO DE TRANSACCIONES A DJANGO (SOTO CORE)
-// Ubicación: src/pages/pasarelaPago.js -> Primera función de cierre transaccional
+// Ubicación: src/pages/pasarelaPago.js -> Aseguramos el objeto global
 // =========================================================================
+
+// 🎯 BLINDAJE CORE SOTO SYSTEM: Si el objeto de la pasarela no existe en la RAM, lo creamos al vuelo
+if (!window.PasarelaPago) window.PasarelaPago = {};
+if (!window.PasarelaPago.estadoTransaccion) {
+    window.PasarelaPago.estadoTransaccion = {
+        metodoSeleccionado: "EFECTIVO",
+        subTipoTarjeta: null,
+        soportePagoMovil: null
+    };
+}
+
+// Creamos un alias local seguro apuntando al espacio global
+PasarelaPago = window.PasarelaPago;
+
+// Ahora la asignación engranará al centavo sin lanzar TypeErrors en Electron:
 window.PasarelaPago.procesarDespachoFactura = function() {
     console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload hacia Railway...");
-
-    if (!PasarelaPago.estadoTransaccion) PasarelaPago.estadoTransaccion = {};
+    
     const tx = PasarelaPago.estadoTransaccion;
 
     // 🎯 RECOLECCIÓN ULTRA-LIGERA DE LA COMPRA desde la RAM de Electron
@@ -1619,8 +1633,6 @@ window.PasarelaPago.procesarDespachoFactura = function() {
     const totalUsd = parseFloat(tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
     const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
     
-    const horaActual = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
-
     // Mapeamos los métodos de pago extendidos con las tarjetas para el historial detallado
     let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
     if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
@@ -1654,7 +1666,6 @@ window.PasarelaPago.procesarDespachoFactura = function() {
         console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
         
         // 🔮 PASO DE RELAY: Si el backend responde OK, invocamos la ventana visual de éxito
-        // Le pasamos la referencia oficial devuelta por Django o generamos un fallback
         const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
         
         if (typeof window.PasarelaPago.dispararAnimacionExitoVisual === 'function') {
