@@ -1618,9 +1618,6 @@ if (!window.PasarelaPago.estadoTransaccion) {
     };
 }
 
-// Creamos un alias local seguro apuntando al espacio global
-PasarelaPago = window.PasarelaPago;
-
 // Ahora la asignación engranará al centavo sin lanzar TypeErrors en Electron:
 window.PasarelaPago.procesarDespachoFactura = function() {
     console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload hacia Railway...");
