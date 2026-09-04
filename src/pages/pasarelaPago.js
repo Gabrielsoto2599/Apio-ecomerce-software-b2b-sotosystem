@@ -49,6 +49,62 @@ const PasarelaPago = {
 
     pagosProcesados: [],
 
+    // 🎯 ENLAZADOR REMOTO CLOUD INTEGRADO SOTO SYSTEM (2026)
+    // Ubicación: Dentro del objeto PasarelaPago, justo arriba del método render()
+    procesarDespachoFactura() {
+        console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
+        const tx = this.estadoTransaccion;
+
+        // Recolección ligera de la compra desde la RAM de Electron
+        const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
+        const totalBs = parseFloat(document.getElementById('total-neto-pagar')?.innerText || "0.00");
+        const totalUsd = parseFloat(tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
+        const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
+        
+        let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
+        if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
+            metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
+        }
+
+        const datosOrden = {
+            "origen": "Electron Desktop Pasarela Master",
+            "cedula_cliente": cedulaCliente,
+            "monto_bs": totalBs,
+            "monto_usd": totalUsd,
+            "metodo_pago": metodoFinalLabel,
+            "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
+            "soporte_pago_movil": tx.soportePagoMovil || null
+        };
+
+        // Conexión limpia y directa a tu urls.py en la nube de Railway
+        const urlApiTransaccion = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+
+        window.fetch(urlApiTransaccion, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosOrden)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Rebote fiscal en Django (Status: " + res.status + ")");
+            return res.json();
+        })
+        .then(data => {
+            console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
+            const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
+            
+            // Invocamos la animación de la copa pasándole la variable local
+            if (typeof window.PasarelaPago?.dispararAnimacionExitoVisual === 'function') {
+                window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            } else if (typeof PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+                PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error de comunicación asíncrona:", error.message);
+            alert("⚠️ Error contable: No se pudo conectar con el servidor remoto para cerrar la venta.");
+        });
+    },
+
                render() {
         // 1. Contenedor Maestro acoplado a la identidad oscura de Apio B2B
         const section = document.createElement('div');
@@ -77,7 +133,7 @@ const PasarelaPago = {
         const contenedorInterno = mainContent.querySelector('#contenedor-pasarela-pago');
 
 
-                // =========================================================================
+        // =========================================================================
         // BLOQUE 1: COMPONENTE INYECTABLE - BUSCADOR DE CÉDULA / RIF FISCAL (ESTILO PREMIUM GARENA)
         // =========================================================================
         const moduloIdentificacion = document.createElement('section');
@@ -845,17 +901,18 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
                         botonNaranjaDespacho.replaceWith(botonNaranjaDespacho.cloneNode(true));
                         const btnLimpio = document.getElementById('btn-procesar-despacho');
                         
-                                                btnLimpio.addEventListener('click', function(eventAction) {
+                        btnLimpio.addEventListener('click', function(eventAction) {
                             eventAction.preventDefault();
                             console.log("🍊 [SOTO POS]: Clic certificado en el chasis del botón naranja.");
                             
-                            // 🎯 DETONACIÓN DIRECTA A LA COMPUERTA GLOBAL:
-                            if (window.PasarelaPago && typeof window.PasarelaPago.procesarDespachoFactura === 'function') {
-                                window.PasarelaPago.procesarDespachoFactura();
+                            // Muerde directamente la función local integrada del objeto
+                            if (typeof PasarelaPago.procesarDespachoFactura === 'function') {
+                                PasarelaPago.procesarDespachoFactura();
                             } else {
                                 alert("⚠️ Error de memoria RAM: El hilo remoto de procesamiento no se encuentra cargado.");
                             }
                         });
+
                     }
                 }; // Cierre de btnValidar.onclick
             } // Cierre de if (btnValidar && inputRIF)
