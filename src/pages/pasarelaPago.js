@@ -1604,155 +1604,119 @@ ejecutarRetrostorAlMostrador(nodoModal) {
 }; // <--- 🔒 CIERRE INTEGRAL DEFINITIVO DEL OBJETO MAESTRO PASARELAPAGO
 
 // =========================================================================
-// 📡 SYNC GLOBAL INDESTRUCTIBLE SOTO SYSTEM (EL CABLE DE LA VICTORIA TOTAL)
-// Ubicación: Al puro final de tu archivo pasarelaPago.js (Línea 1040 en adelante)
+// 🚀 PARTE A: PROCESADOR REMOTO DE TRANSACCIONES A DJANGO (SOTO CORE)
+// Ubicación: src/pages/pasarelaPago.js -> Primera función de cierre transaccional
 // =========================================================================
+window.PasarelaPago.procesarDespachoFactura = function() {
+    console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload hacia Railway...");
 
-// 🚀 INYECTAMOS EL MOTOR PROCESADOR DIRECTAMENTE EN EL CUERPO DEL OBJETO
-PasarelaPago.procesarCompraYDespachar = function() {
-    console.log("📡 [SOTO NET]: Iniciando ráfaga de facturación legal y despacho asíncrono...");
+    if (!PasarelaPago.estadoTransaccion) PasarelaPago.estadoTransaccion = {};
+    const tx = PasarelaPago.estadoTransaccion;
 
-    // 1. Extraemos el carrito reducido real de la memoria RAM global de la SPA
-    const carritoActual = window.App?.state?.carrito || [];
-    if (carritoActual.length === 0) {
-        alert("⚠️ Alerta de Checkout: El carrito de compras se encuentra vacío.\nCargue productos en el catálogo antes de proceder al cobro.");
-        return;
-    }
-
-    // 2. Extraemos el RIF/Cédula y la tasa reaccionaria del búnker
-    const refCedula = this.estadoTransaccion?.rifCliente || "V-99999999 (Consumidor Final)";
+    // 🎯 RECOLECCIÓN ULTRA-LIGERA DE LA COMPRA desde la RAM de Electron
+    const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
+    const totalBs = parseFloat(document.getElementById('total-neto-pagar')?.innerText || "0.00");
+    const totalUsd = parseFloat(tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
+    const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
     
-    // 🎯 INITIALIZATION REACTION: Si la tasa viene en cero absoluto por protección de código, bloquea el disparo financiero
-    const tasaDolar = parseFloat(this.tasaActivaBCV || window.TasaCambioModulo?.state?.precio_bcv || window.App?.state?.tasaDelDia || localStorage.getItem('APIO_TASA_ACTUAL_BS') || 0.00);
-    if (tasaDolar <= 0) {
-        alert("🚨 Error de Facturación: La tasa cambiaria se encuentra en 0.00 Bs.\nPor favor, actualice la tasa cambiaria oficial antes de despachar.");
-        return;
+    const horaActual = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+
+    // Mapeamos los métodos de pago extendidos con las tarjetas para el historial detallado
+    let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
+    if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
+        metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
     }
 
-    // Capturamos el subtotal exacto en dólares recalculado tras los descartes de la "X"
-    const subtotalUSD = parseFloat(this.estadoTransaccion?.montoTotal || window.App?.state?.montoTotal || 0.00);
-    const montoBsCalculado = subtotalUSD * tasaDolar;
-    const montoBsConIva = montoBsCalculado * 1.16; // Adición automática del 16% del IVA fiscal de ley
+    // 🧠 COMPILAMOS EL PAYLOAD MÁSTER DE COMUNICACIÓN REMOTA
+    const datosOrden = {
+        "origen": "Electron Desktop Pasarela Master",
+        "cedula_cliente": cedulaCliente,
+        "monto_bs": totalBs,
+        "monto_usd": totalUsd,
+        "metodo_pago": metodoFinalLabel,
+        "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
+        "soporte_pago_movil": tx.soportePagoMovil || null // Captura los últimos 4 dígitos y banco del formulario
+    };
 
-    // Formateamos la lista compacta de las harinas, pastas o mayonesas que se quedaron en la orden
-    const stringProductos = carritoActual.map(item => `${item.nombre ? item.nombre.trim() : 'Víveres'} (x${parseInt(item.cantidad) || 1})`).join(', ');
+    // 🎯 REPARACIÓN DE RUTA CLOUD: Apunta con precisión milimétrica a tu urls.py en Railway
+    const urlApiTransaccion = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
-    // Asegúrate de que el JSON que sale de Electron tenga esta estructura exacta:
-const payloadFactura = {
-    numero_factura: `FAC-${Math.floor(10000 + Math.random() * 90000)}`,
-    cliente_identificacion: document.getElementById('pm-cedula')?.value || "V-99999999",
-    metodo_pago: this.estadoTransaccion?.metodoSeleccionado || "BIOPAGO",
-    tasa_bcv: parseFloat(document.getElementById('tasa-bcv-input')?.value || 0.00),
-    total_usd: parseFloat(this.estadoTransaccion?.totalUsd || 0.00),
-    articulos: this.estadoTransaccion?.carrito || [] // Lista de harinas, ropa, etc.
+    window.fetch(urlApiTransaccion, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datosOrden)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Rebote fiscal en el procesador de Django (Status: " + res.status + ")");
+        return res.json();
+    })
+    .then(data => {
+        console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
+        
+        // 🔮 PASO DE RELAY: Si el backend responde OK, invocamos la ventana visual de éxito
+        // Le pasamos la referencia oficial devuelta por Django o generamos un fallback
+        const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
+        
+        if (typeof window.PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+            window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error de comunicación asíncrona en la Pasarela:", error.message);
+        alert("⚠️ Error contable: No se pudo conectar con el servidor remoto para cerrar la venta.");
+    });
 };
 
-    // 🚀 BYPASS PURIFICADO SOTO SYSTEM (CORREGIDO): Forzamos el origen correcto en el iframe
-    const iframeLimpio = document.createElement('iframe');
+// =========================================================================
+// 🎭 PARTE B: ANIMACIÓN DE ÉXITO VISUAL Y LIMPIEZA DE FLUJO (SOTO CORE)
+// Ubicación: src/pages/pasarelaPago.js -> Siguiente procesador en la base del archivo
+// =========================================================================
+window.PasarelaPago.dispararAnimacionExitoVisual = function(refFactura, metodoFinalLabel, cedulaCliente, totalBs) {
+    console.log("🎭 [SOTO UI]: Levantando cortina de éxito fiscal en Electron...");
+
+    // 🏆 FABRICAMOS LA CAPA FLOTANTE INDESTRUCTIBLE (Z-INDEX ALTO)
+    const panelAnimacion = document.createElement('div');
+    panelAnimacion.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; font-family: 'Inter', sans-serif;";
     
-    // El secreto: Forzamos a que el iframe comparta exactamente el mismo origen de tu app local
-    iframeLimpio.src = window.location.origin; 
-    iframeLimpio.style.display = 'none';
-    document.body.appendChild(iframeLimpio);
-    
-    // 🎯 SOTO CORE BLINDAJE: Damos un respiro de 50ms para que el iframe asimile el origen y destruya 'about:blank'
+    panelAnimacion.innerHTML = `
+        <div style="text-align: center; padding: 40px; background: #0b1329; border-radius: 16px; border: 2px solid #10b981; box-shadow: 0 0 30px rgba(16, 185, 129, 0.3); max-width: 400px; width: 90%;">
+            <div style="font-size: 64px; color: #10b981; margin-bottom: 16px;">🏆</div>
+            <h2 style="color: white; margin: 0 0 8px 0; font-size: 22px; font-weight: 800;">¡Venta Despachada!</h2>
+            <p style="color: #94a3b8; font-size: 13px; margin: 0 0 20px 0;">La transacción por <strong style="color: #00D2FF;">${totalBs.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.</strong> ha sido impactada con éxito en la nube.</p>
+            
+            <div style="font-family: monospace; font-size: 11px; color: #64748b; background: #030712; padding: 10px; border-radius: 6px; border: 1px solid #1e293b; text-align: left; margin-bottom: 24px; line-height: 1.5;">
+                <b style="color: #cbd5e1;">REF FISCAL:</b> ${refFactura}<br>
+                <b style="color: #cbd5e1;">MÉTODO PAGO:</b> ${metodoFinalLabel}<br>
+                <b style="color: #cbd5e1;">IDENTIFICACIÓN:</b> ${cedulaCliente}
+            </div>
+            
+            <span style="color: #10b981; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: block;">🔄 Sincronizando Catálogo...</span>
+        </div>
+    `;
+    document.body.appendChild(panelAnimacion);
+
+    // 🧹 SECUENCIA DE PURGA AUTOMÁTICA Y REINICIO
     setTimeout(() => {
-        // Extraemos el fetch virgen una vez acoplado el origen de forma segura en RAM
-        const fetchNativoPuro = iframeLimpio.contentWindow.fetch || window.fetch;
+        // 1. Vaciamos el carrito de compras en la RAM simétricamente
+        if (window.App && window.App.state) window.App.state.carritoActual = [];
+        if (window.CatalogoB2B && window.CatalogoB2B.state) window.CatalogoB2B.state.carrito = [];
+        
+        // 2. Reseteamos la caché temporal de la pasarela para la próxima transacción
+        PasarelaPago.estadoTransaccion = {
+            movimientosDiarios: window.ErpModulo?.state?.movimientosDiarios || [],
+            tasaDolarActual: parseFloat(localStorage.getItem('APIO_TASA_CAMBIARIA')) || 40.00
+        };
 
-        const endpointRailway = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+        // 3. Removemos físicamente el panel de la vista para liberar memoria en Chromium
+        panelAnimacion.remove();
 
-        fetchNativoPuro(endpointRailway, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payloadFactura)
-        })
-        .then(respuesta => {
-            if (!respuesta.ok) {
-                if (document.body.contains(iframeLimpio)) document.body.removeChild(iframeLimpio);
-                throw new Error("Rebote de red en el búnker de Django");
-            }
-            return respuesta.json();
-        })
-        .then(data => {
-            console.log("✅ [SOTO DATABASE SUCCESS]: Venta asentada en PostgreSQL Railway:", data);
-            
-            // Remueve el iframe de la memoria una vez usado para mantener la RAM limpia
-            if (document.body.contains(iframeLimpio)) document.body.removeChild(iframeLimpio);
-            
-            const nroFacturaReal = data.numero_factura || `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
-            const horaActual = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
-            const fechaActual = new Date().toLocaleDateString('es-VE');
-
-            // 📊 SETEO COMPLETO DEL HISTORIAL DE GABRIEL: Alimentamos la matriz de movimientos lineales del ERP
-            if (window.ErpModulo && window.ErpModulo.state) {
-                if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
-                window.ErpModulo.state.movimientosDiarios.push({
-                    ref: nroFacturaReal,
-                    hora: horaActual,
-                    fecha: fechaActual,
-                    cedula: refCedula,
-                    productos: stringProductos,
-                    metodo: this.estadoTransaccion?.metodoSeleccionado || 'BIOPAGO',
-                    montoBs: montoBsConIva,
-                    montoUsd: subtotalUSD
-                });
-                
-                // Si la vista del ERP está cargada en pantalla, refresca quirúrgicamente la tabla rows
-                if (typeof window.ErpModulo.reinyectarFilasTabla === 'function') {
-                    window.ErpModulo.reinyectarFilasTabla();
-                }
-            }
-
-            // 🏆 ¡LA VICTORIA VISUAL! Hacemos brotar tu hermosa animación neón de recibo en la pantalla
-            if (typeof this.dispararAnimacionCompraExitosa === 'function') {
-                this.dispararAnimacionCompraExitosa(nroFacturaReal);
-            } else {
-                alert(`🏆 ¡Compra Realizada Exitosamente!\n• Factura N° ${nroFacturaReal}\n• Datos sincronizados con el Historial del ERP.`);
-                if (window.App && window.App.state) window.App.state.carrito = [];
-                if (window.App && typeof window.App.navigate === 'function') window.App.navigate('catalogo-b2b');
-            }
-        })
-        .catch(err => {
-            console.error("❌ [SOTO CRITICAL PASARELA CONTINGENCIA]:", err.message);
-            if (document.body.contains(iframeLimpio)) document.body.removeChild(iframeLimpio);
-            
-            // 💾 PLAN DE RESCATE LOCAL INDESTRUCTIBLE EN EL .EXE (SI EL INTERNET DE LA BODEGA PARPADEA)
-            const nroFacturaEmergencia = `FAC-${Math.floor(1000 + Math.random() * 9000)}`;
-            const horaEmergencia = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
-            const fechaEmergencia = new Date().toLocaleDateString('es-VE');
-
-            if (window.ErpModulo && window.ErpModulo.state) {
-                if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
-                window.ErpModulo.state.movimientosDiarios.push({
-                    ref: nroFacturaEmergencia,
-                    hora: horaEmergencia,
-                    fecha: fechaEmergencia,
-                    cedula: refCedula,
-                    productos: stringProductos,
-                    metodo: this.estadoTransaccion?.metodoSeleccionado || 'BIOPAGO',
-                    montoBs: montoBsConIva,
-                    montoUsd: subtotalUSD
-                });
-                
-                if (typeof window.ErpModulo.reinyectarFilasTabla === 'function') {
-                    window.ErpModulo.reinyectarFilasTabla();
-                }
-            }
-
-            // Forzamos que se encienda tu recibo neón de contingencia local para no trancar la cola del abasto
-            if (typeof this.dispararAnimacionCompraExitosa === 'function') {
-                this.dispararAnimacionCompraExitosa(nroFacturaEmergencia);
-            } else {
-                alert("🛒 Despacho Manual Procesado Exitosamente por Contingencia Local.");
-                if (window.App && window.App.state) window.App.state.carrito = [];
-                if (window.App && typeof window.App.navigate === 'function') window.App.navigate('catalogo-b2b');
-            }
-        });
-    }, 50);
+        // 4. 🚀 TRANSICIÓN SUAVE: Devolvemos de forma remota al operador a la grilla comercial
+        if (window.App && typeof window.App.navigate === 'function') {
+            window.App.navigate('catalogo-b2b');
+        } else {
+            window.location.reload();
+        }
+    }, 3500); // 3.5 segundos exactos en pantalla para control visual de la cajera
 };
 
 // =========================================================================
