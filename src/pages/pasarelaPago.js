@@ -824,7 +824,7 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
                         }
                     }
                     
-                    // Congelamos el input para evitar alteraciones fiscales y ajustamos estética
+                    // [CONTINUACIÓN DIRECTA DEL SANEAMIENTO CONTABLE SOTO SYSTEM]
                     inputRIF.disabled = true;
                     inputRIF.style.opacity = "0.5";
                     inputRIF.style.borderColor = "#1e293b";
@@ -836,27 +836,28 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
                         PasarelaPago.calcularSubtotalesYTotales();
                     }
 
-                                        // 🔌 ENCHUFE NATIVO MÁSTER: Forzamos la escucha del clic por debajo en JavaScript puro
+                    // 🔌 ENCHUFE NATIVO MÁSTER: Capturamos el botón naranja de tu interfaz
                     const botonNaranjaDespacho = document.getElementById('btn-procesar-despacho');
                     if (botonNaranjaDespacho) {
-                        console.log("🔌 [SOTO LINKER]: Cableando el addeventlistener nativo de forma remota al botón maestro...");
+                        console.log("🔌 [SOTO LINKER]: Cableando el addeventlistener nativo al botón maestro...");
                         
-                        // Limpiamos referencias duplicadas clonando el nodo en el árbol del DOM
+                        // Clonamos el nodo en el árbol del DOM para purgar residuos o dobles clics accidentales
                         botonNaranjaDespacho.replaceWith(botonNaranjaDespacho.cloneNode(true));
                         const btnLimpio = document.getElementById('btn-procesar-despacho');
                         
-                        // 🎯 REPARACIÓN CORE: Inyectamos la apertura formal de la escucha de clics
                         btnLimpio.addEventListener('click', function(eventAction) {
                             eventAction.preventDefault();
                             console.log("🍊 [SOTO POS]: Clic certificado en el chasis del botón naranja.");
                             
-                            // [CONTINUACIÓN DIRECTA DE LA TRANSMISIÓN REMOTA]
-                            if (window.PasarelaPago && typeof window.PasarelaPago.procesarDespachoFactura === 'function') {
+                            // 🎯 EL DISPARADOR ELÁSTICO: Busca la función remota en el alias local o global instantáneamente
+                            if (typeof PasarelaPago.procesarDespachoFactura === 'function') {
+                                PasarelaPago.procesarDespachoFactura();
+                            } else if (window.PasarelaPago && typeof window.PasarelaPago.procesarDespachoFactura === 'function') {
                                 window.PasarelaPago.procesarDespachoFactura();
                             } else {
                                 alert("⚠️ Error de memoria RAM: El hilo remoto de procesamiento no se encuentra cargado.");
                             }
-                        }); // ✅ Ahora este cierre de llave engrana perfectamente con el addEventListener de arriba
+                        });
                     }
                 }; // Cierre de btnValidar.onclick
             } // Cierre de if (btnValidar && inputRIF)
