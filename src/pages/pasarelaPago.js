@@ -616,10 +616,11 @@ moduloPasarelas.innerHTML = `
             </button>
             <button type="button" onclick="window.PasarelaPago.seleccionarSubTipoTarjeta('CREDITO', 'Crédito')" style="background: transparent; border: none; color: #cbd5e1; text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; border-bottom: 1px solid #111827; transition: background 0.2s; font-family: 'Inter', sans-serif;">
                 🔵 Tarjeta de Crédito
-            </button>
+        <!-- ⚡ ACTUALIZACIÓN DE MARCA: Sustituido el rayo por el círculo violeta oficial de Ubii Pagos -->
             <button type="button" onclick="window.PasarelaPago.seleccionarSubTipoTarjeta('UBII', 'Ubii')" style="background: transparent; border: none; color: #cbd5e1; text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.2s; font-family: 'Inter', sans-serif;">
-                ⚡ Tarjeta Ubii
+                🟣 Tarjeta Ubii
             </button>
+
         </div>
     </div>
 
@@ -837,6 +838,66 @@ moduloPasarelas.querySelectorAll('button[data-metodo]').forEach(btn => {
                 };
             }
         }, 50);
+
+        // =========================================================================
+// 🕹️ PARTE 2: PROCESADORES DEL DROPDOWN DE TARJETAS (SOTO FINANCIAL)
+// Ubicación: src/pages/pasarelaPago.js -> Última línea absoluta del archivo
+// =========================================================================
+
+// 1. Abre y cierra la persiana flotante al pulsar el botón de Punto de Venta
+window.PasarelaPago.alternarDropdownTarjetas = function(event) {
+    if (event) event.stopPropagation();
+    
+    // Invocamos la función interceptora original de tu app para encender el borde verde neón
+    if (typeof PasarelaPago.conmutarMetodoPagoPorIA === 'function') {
+        PasarelaPago.conmutarMetodoPagoPorIA('PUNTO');
+    }
+
+    const menuDropdown = document.getElementById('dropdown-tarjetas-caja');
+    if (!menuDropdown) return;
+
+    // Cambiamos el estado visual de forma elástica
+    if (menuDropdown.style.display === 'flex') {
+        menuDropdown.style.display = 'none';
+    } else {
+        menuDropdown.style.display = 'flex';
+    }
+
+    // Cerramos el dropdown de forma automática si hacen clic en cualquier fondo de la SPA
+    document.addEventListener('click', function cerrarDropdownAfuera() {
+        if (menuDropdown) menuDropdown.style.display = 'none';
+        document.removeEventListener('click', cerrarDropdownAfuera);
+    });
+};
+
+window.PasarelaPago.seleccionarSubTipoTarjeta = function(codigoTarjeta, etiquetaVisual) {
+    console.log(`💳 [SOTO POS AUDIT]: Tarjeta del Punto fijada en -> ${codigoTarjeta}`);
+    
+    if (!PasarelaPago.estadoTransaccion) PasarelaPago.estadoTransaccion = {};
+    
+    // Asentamos simétricamente el método maestro y el subtipo en la RAM contable
+    PasarelaPago.estadoTransaccion.metodoSeleccionado = "PUNTO";
+    PasarelaPago.estadoTransaccion.subTipoTarjeta = codigoTarjeta;
+
+    // Actualizamos el texto informativo abajo de la palabra "Punto Venta" aplicando el círculo violeta si es Ubii
+    const labelSubtipo = document.getElementById('label-punto-subtipo');
+    if (labelSubtipo) {
+        if (codigoTarjeta === 'UBII') {
+            labelSubtipo.innerText = `🟣 ${etiquetaVisual}`;
+            labelSubtipo.style.color = '#c084fc'; // Cambiamos el subtexto a un elegante color lila/morado neón
+        } else if (codigoTarjeta === 'DEBITO') {
+            labelSubtipo.innerText = `🟢 ${etiquetaVisual}`;
+            labelSubtipo.style.color = '#10b981';
+        } else {
+            labelSubtipo.innerText = `🔵 ${etiquetaVisual}`;
+            labelSubtipo.style.color = '#38bdf8';
+        }
+    }
+
+    // Cerramos la persiana al confirmar la selección
+    const menuDropdown = document.getElementById('dropdown-tarjetas-caja');
+    if (menuDropdown) menuDropdown.style.display = 'none';
+};
 
                 // =========================================================================
         // BLOQUE 3: REJILLA SIMPLIFICADA DE PRODUCTOS (CARRITO MAYORISTA B2B - NARANJA NEÓN)
