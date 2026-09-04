@@ -1165,12 +1165,13 @@ moduloFacturacion.innerHTML = `
                     </div>
                 </div>
 
-                <!-- 🍊 BOTÓN MAESTRO DE DISPARO: Conectado milimétricamente al procesador remoto de Railway -->
+                <!-- 🍊 BOTÓN MAESTRO DE DISPARO: Saneado milimétricamente en su disparador de clic -->
 <button type="button" id="btn-procesar-despacho" onclick="window.PasarelaPago.procesarDespachoFactura()" style="width: 100%; background: linear-gradient(135deg, #ff9900 0%, #d47a00 100%); color: #FFFFFF; border: none; padding: 14px; border-radius: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(255, 153, 0, 0.3); transition: transform 0.2s ease, box-shadow 0.2s ease;"
     onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 153, 0, 0.5)';"
     onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px rgba(255, 153, 0, 0.3)';">
     Procesar y Despachar Mercancía
 </button>
+
         </div>
     </div>
 `;
