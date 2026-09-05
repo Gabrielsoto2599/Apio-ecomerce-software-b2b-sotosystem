@@ -1764,17 +1764,53 @@ window.PasarelaPago.procesarDespachoFactura = function() {
         metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
     }
 
-    // Compilamos el objeto del movimiento contable con los nombres exactos que lee tu erp.js
+    // 🧱 COMPILAMOS EL OBJETO DE MOVIMIENTO DUAL (SOTO FINANCIAL ENGINE)
     const nuevoMovimientoContable = {
         ref: `TR-${Math.floor(100000 + Math.random() * 900000)}`,
         hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
         cedula: cedulaCliente,
         productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
         metodo: metodoFinalLabel,
-        montoBs: dineroBsReal, // ✅ Inyectamos el dinero real capturado del motor fiscal
-        montoUsd: dineroUsdReal, // ✅ Inyectamos los dólares reales capturados del motor fiscal
+        
+        // 💰 CANDADO TOTAL: Multi-asignación redundante de montos para el historial
+        montoBs: dineroBsReal,
+        monto_bs: dineroBsReal,
+        montoBS: dineroBsReal,
+        monto: dineroBsReal,
+        
+        montoUsd: dineroUsdReal,
+        monto_usd: dineroUsdReal,
+        montoUSD: dineroUsdReal,
+        precio_usd: dineroUsdReal,
+        precioUSD: dineroUsdReal,
         detallesPagoMovil: tx.soportePagoMovil || null
     };
+
+    // Payload de envío simétrico que viaja en el túnel seguro hacia PostgreSQL Cloud
+    const datosOrdenRemota = {
+        "origen": "Electron Desktop Pasarela Master",
+        "cedula_cliente": cedulaCliente,
+        "monto_bs": dineroBsReal,
+        "monto_usd": dineroUsdReal,
+        "metodo_pago": metodoFinalLabel,
+        "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
+        "soporte_pago_movil": tx.soportePagoMovil || null
+    };
+
+    // =========================================================================
+    // 📊 CONEXIÓN MÁSTER (CONSUMO DE LA CONSTANTE): Alimentamos el ERP
+    // =========================================================================
+    if (!window.ErpModulo) window.ErpModulo = { state: { movimientosDiarios: [] } };
+    if (!window.ErpModulo.state) window.ErpModulo.state = { movimientosDiarios: [] };
+    if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
+    
+    // 👑 AQUÍ SE ENCIENDE EL OBJETO: Lo inyectamos en la RAM global del Historial
+    window.ErpModulo.state.movimientosDiarios.unshift(nuevoMovimientoContable);
+
+    // Resguardo local redundante en el disco local para cortes de luz en Baradida
+    const historialHistorico = JSON.parse(localStorage.getItem('APIO_MOVIMIENTOS_DIARIOS')) || [];
+    historialHistorico.unshift(nuevoMovimientoContable);
+    localStorage.setItem('APIO_MOVIMIENTOS_DIARIOS', JSON.stringify(historialHistorico));
 
     // 🎯 REPARACIÓN DE RUTA CLOUD: Apunta con precisión milimétrica a tu urls.py en Railway
     const urlApiTransaccion = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
@@ -1782,7 +1818,7 @@ window.PasarelaPago.procesarDespachoFactura = function() {
     window.fetch(urlApiTransaccion, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datosOrden)
+        body: JSON.stringify(datosOrdenRemota) // ✅ CORREGIDO: Enviamos el payload real mapeado arriba
     })
     .then(res => {
         if (!res.ok) throw new Error("Rebote fiscal en el procesador de Django (Status: " + res.status + ")");
@@ -1791,11 +1827,14 @@ window.PasarelaPago.procesarDespachoFactura = function() {
     .then(data => {
         console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
         
-        // 🔮 PASO DE RELAY: Si el backend responde OK, invocamos la ventana visual de éxito
-        const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
+        const refFactura = data.referencia_factura || data.ref || nuevoMovimientoContable.ref;
+        nuevoMovimientoContable.ref = refFactura;
         
+        // Invocamos la copa dorada pasándole las variables de montos reales y corregidos
         if (typeof window.PasarelaPago.dispararAnimacionExitoVisual === 'function') {
-            window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, dineroBsReal);
+        } else if (typeof PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+            PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, dineroBsReal);
         }
     })
     .catch(error => {
