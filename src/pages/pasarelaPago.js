@@ -1414,7 +1414,6 @@ contenedorInterno.appendChild(moduloFacturacion);
     document.getElementById('vuelto-ves').innerText = `${vueltoVes.toFixed(2)} Bs.`;
 }
 
-
         // =========================================================================
         // INYECCIÓN DE VIDA EN LA CONSOLA DE DANIELA IA IZQUIERDA (MODO LATENTE)
         // =========================================================================
@@ -1747,30 +1746,34 @@ if (!window.PasarelaPago.estadoTransaccion) {
 window.PasarelaPago.procesarDespachoFactura = function() {
     console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
     
-    // Accedemos de forma directa y segura a las propiedades de la ventana activa
-    const tx = window.PasarelaPago.estadoTransaccion;
-
-    // 🎯 RECOLECCIÓN ULTRA-LIGERA DE LA COMPRA desde la RAM de Electron
+        // =========================================================================
+    // 🎯 REPARACIÓN DE VARIABLES ULTRA-SEGURA SOTO SYSTEM (CALIBRACIÓN DE MAYÚSCULAS)
+    // Ubicación: Dentro de window.PasarelaPago.procesarDespachoFactura en pasarelaPago.js
+    // =========================================================================
+    const tx = window.PasarelaPago?.estadoTransaccion || {};
+    
     const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
-    const totalBs = parseFloat(document.getElementById('total-neto-pagar')?.innerText || "0.00");
-    const totalUsd = parseFloat(tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
     const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
     
-    // Mapeamos los métodos de pago extendidos con las tarjetas para el historial detallado
+    // 🧠 SINCRO MÁSTER: Jalamos los montos directamente de las llaves reales de tu cerebro fiscal
+    const dineroBsReal = parseFloat(tx.montoBs || document.getElementById('factura-total-bs')?.innerText || "0.00");
+    const dineroUsdReal = parseFloat(tx.montoUSD || tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
+
     let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
     if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
         metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
     }
 
-    // 🧠 COMPILAMOS EL PAYLOAD MÁSTER DE COMUNICACIÓN REMOTA
-    const datosOrden = {
-        "origen": "Electron Desktop Pasarela Master",
-        "cedula_cliente": cedulaCliente,
-        "monto_bs": totalBs,
-        "monto_usd": totalUsd,
-        "metodo_pago": metodoFinalLabel,
-        "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
-        "soporte_pago_movil": tx.soportePagoMovil || null // Captura los últimos 4 dígitos y banco del formulario
+    // Compilamos el objeto del movimiento contable con los nombres exactos que lee tu erp.js
+    const nuevoMovimientoContable = {
+        ref: `TR-${Math.floor(100000 + Math.random() * 900000)}`,
+        hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
+        cedula: cedulaCliente,
+        productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
+        metodo: metodoFinalLabel,
+        montoBs: dineroBsReal, // ✅ Inyectamos el dinero real capturado del motor fiscal
+        montoUsd: dineroUsdReal, // ✅ Inyectamos los dólares reales capturados del motor fiscal
+        detallesPagoMovil: tx.soportePagoMovil || null
     };
 
     // 🎯 REPARACIÓN DE RUTA CLOUD: Apunta con precisión milimétrica a tu urls.py en Railway
