@@ -750,7 +750,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 
 // =========================================================================
 // 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES CON DETALLES DE PAGO MÓVIL EXTENDIDO
-// Ubicación: src/pages/erp.js -> Última línea de procesamiento lógico puro
+// Ubicación: src/pages/erp.js -> SANEADO CON BYPASS ELÁSTICO SOTO SYSTEM
 // =========================================================================
 window.ErpModulo.reinyectarFilasTabla = function() {
     const tbody = document.getElementById('erp-movimientos-diarios-rows');
@@ -792,6 +792,10 @@ window.ErpModulo.reinyectarFilasTabla = function() {
             `;
         }
 
+        // 🎯 BYPASS ELÁSTICO SOTO SYSTEM: Pescamos el valor real sin importar si viene de Railway (_bs) o de la RAM (Bs)
+        const valorBsReal = parseFloat(mov.montoBs || mov.monto_bs || mov.monto || 0);
+        const valorUsdReal = parseFloat(mov.montoUsd || mov.monto_usd || mov.precio_usd || 0);
+
         return `
             <tr style="border-bottom: 1px solid #1e293b; background-color: rgba(255,255,255, 0.01);">
                 <td style="padding: 14px; color: #a855f7; font-weight: bold; font-size: 11px; font-family: monospace;">
@@ -807,14 +811,15 @@ window.ErpModulo.reinyectarFilasTabla = function() {
                         ${metodo.replace('_', ' ')}
                     </span>
                 </td>
+                <!-- 👑 COLUMNA CALIBRADA SOTO SYSTEM: Muestra la matemática real capturada de internet -->
                 <td style="padding: 14px; text-align: right; color: #00D2FF; font-size: 13px; font-family: monospace;">
-                    ${parseFloat(mov.montoBs || 0).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
-                    <span style="color: #10b981; font-size: 10px;">$${parseFloat(mov.montoUsd || 0).toFixed(2)}</span>
+                    ${valorBsReal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
+                    <span style="color: #10b981; font-size: 10px;">$${valorUsdReal.toFixed(2)}</span>
                 </td>
             </tr>
         `;
     }).join('');
-}; // 🔒 CANDADO DE CIERRE DE LA EXTENSIÓN I
+}; // 🔒 CANDADO DE CIERRE INDESTRUCTIBLE DE LA EXTENSIÓN I
 
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
