@@ -1746,25 +1746,21 @@ if (!window.PasarelaPago.estadoTransaccion) {
 window.PasarelaPago.procesarDespachoFactura = function() {
     console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
     
-    // =========================================================================
-    // 🎯 NOMENCLATURA DE VARIABLES LINEAL SOTO SYSTEM (CALIBRACIÓN SENECA)
+        // =========================================================================
+    // 🎯 CONEXIÓN ESTÁNDAR SOTO SYSTEM: Acople Simétrico de Llaves Contables
     // Ubicación: Dentro de window.PasarelaPago.procesarDespachoFactura en pasarelaPago.js
     // =========================================================================
     const tx = window.PasarelaPago?.estadoTransaccion || {};
     
     const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
     const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
-    
-    // 🧠 SINCRO MÁSTER: Jalamos los montos directamente de las llaves reales de tu cerebro fiscal
-    const dineroBsReal = parseFloat(tx.montoBs || document.getElementById('factura-total-bs')?.innerText || 0.00);
-    const dineroUsdReal = parseFloat(tx.montoUSD || tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
 
     let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
     if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
         metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
     }
 
-    // 🧱 COMPILAMOS EL OBJETO DE MOVIMIENTO DUAL (SOTO FINANCIAL ENGINE - UNIFICADO)
+    // 🧱 COMPILAMOS EL OBJETO USANDO LOS MISMOS NOMBRES QUE TU HISTORIAL DE ERP BUSCA
     const nuevoMovimientoContable = {
         ref: `TR-${Math.floor(100000 + Math.random() * 900000)}`,
         hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
@@ -1772,9 +1768,9 @@ window.PasarelaPago.procesarDespachoFactura = function() {
         productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
         metodo: metodoFinalLabel,
         
-        // 💰 ESTÁNDAR SOTO SYSTEM: Acople de nombres exacto al centavo con las columnas de tu erp.js
-        valorBsReal: dineroBsReal, 
-        valorUsdReal: dineroUsdReal, 
+        // 💰 EL PUENTE PERFECTO: Encaja de forma nativa con mov.montoBs y mov.montoUsd en erp.js
+        montoBs: parseFloat(tx.montoBs || 0.00), 
+        montoUsd: parseFloat(tx.montoUSD || 0.00),
         
         detallesPagoMovil: tx.soportePagoMovil || null
     };
@@ -1783,13 +1779,12 @@ window.PasarelaPago.procesarDespachoFactura = function() {
     const datosOrdenRemota = {
         "origen": "Electron Desktop Pasarela Master",
         "cedula_cliente": cedulaCliente,
-        "monto_bs": dineroBsReal,
-        "monto_usd": dineroUsdReal,
+        "monto_bs": parseFloat(tx.montoBs || 0.00),
+        "monto_usd": parseFloat(tx.montoUSD || 0.00),
         "metodo_pago": metodoFinalLabel,
         "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
         "soporte_pago_movil": tx.soportePagoMovil || null
     };
-
 
     // =========================================================================
     // 📊 CONEXIÓN MÁSTER (CONSUMO DE LA CONSTANTE): Alimentamos el ERP
