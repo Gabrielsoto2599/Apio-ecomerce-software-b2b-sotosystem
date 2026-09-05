@@ -163,10 +163,10 @@ const RegistroB2B = {
         return section;
     },
 
-        // =========================================================================
-// 🚀 BLOQUE 2: CAPTURA DE INPUTS, ADAPTADOR MULTIPERFIL Y EVENTO SUBMIT (CORREGIDO)
-// Ubicación: Al final de tu archivo registroB2B.js
-// =========================================================================
+    // =========================================================================
+    // 🚀 BLOQUE 2: DISPARADOR ASÍNCRONO DIRECTO HACIA RAILWAY CLOUD (CONEXIÓN PURA)
+    // Ubicación: Mapeo de entradas y evento Submit en tu archivo registroB2B.js
+    // =========================================================================
     vincularManejadoresEventos(viewContainer) {
         const self = window.RegistroB2B || this;
         const form = viewContainer.querySelector('#form-registro-bodega');
@@ -174,8 +174,8 @@ const RegistroB2B = {
 
         // Mapa de sincronización interactiva para el mostrador de la bodega
         const inputsMap = [
-            { id: '#reg-cedula', llave: 'rif' },           // Adapta cédula a tu propiedad 'rif'
-            { id: '#reg-nombre', llave: 'razonSocial' },   // Adapta nombre a tu propiedad 'razonSocial'
+            { id: '#reg-cedula', llave: 'rif' },           
+            { id: '#reg-nombre', llave: 'razonSocial' },   
             { id: '#reg-telefono', llave: 'telefono' }
         ];
 
@@ -192,22 +192,21 @@ const RegistroB2B = {
         // Escucha del selector de tipo de cliente comercial
         const selectNode = viewContainer.querySelector('#reg-tipo');
         if (selectNode) {
-            // Sembramos el valor por defecto si el cajero no toca el selector
             if (!self.datosFormulario) self.datosFormulario = {};
             self.datosFormulario.direccion = selectNode.value; 
 
             selectNode.addEventListener('change', (e) => {
-                self.datosFormulario.direccion = e.target.value; // Almacenamos el rol unificado (MINORISTA, MAYORISTA, DEUDOR)
+                self.datosFormulario.direccion = e.target.value; 
             });
         }
 
-        // Intercepción del Submit contra dobles clics y simulación asíncrona
+        // Intercepción del Submit contra dobles clics y disparo transaccional cloud
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const btnSubmit = form.querySelector('#btn-submit-registro');
             if (btnSubmit) {
                 btnSubmit.disabled = true;
-                btnSubmit.innerText = "Guardando en PostgreSQL...";
+                btnSubmit.innerText = "Transmitiendo a Railway Cloud...";
                 btnSubmit.style.background = "#475569";
             }
 
@@ -216,87 +215,87 @@ const RegistroB2B = {
                 const nombreCrudo = (self.datosFormulario?.razonSocial || '').trim();
                 const tipoPerfil = self.datosFormulario?.direccion || 'MAYORISTA';
 
-                // Validación de longitud mínima para evitar campos vacíos en el apuro de taquilla
                 if (cedulaCruda.length < 4 || nombreCrudo.length === 0) {
                     alert("⚠️ Alerta Formulario: Ingrese una Identificación y Cédula válida antes de proceder.");
                     if (btnSubmit) {
                         btnSubmit.disabled = false;
-                        btnSubmit.innerText = "Dar de Alta y Guardar en PostgreSQL";
+                        btnSubmit.innerText = "Registrar Cliente";
                         btnSubmit.style.background = "#2563EB";
                     }
                     return;
                 }
 
-                // Latencia simulada de persistencia hacia la base de datos (1.2 segundos exactos)
-                await new Promise(resolve => setTimeout(resolve, 1200));
-
-                // Estructuramos el expediente unificado multiperfil
-                const nuevoCliente = {
-                    cedula: cedulaCruda,
-                    nombre: nombreCrudo,
-                    telefono: self.datosFormulario.telefono || 'Sin Teléfono',
-                    tipo: tipoPerfil, // 🎯 ¡HOMOLOGADO! Usamos 'tipo' para hacer match directo
-                    saldoDeuda: (tipoPerfil === 'DEUDOR') ? 15.00 : 0.00, // Saldo base ficticio de prueba si se marca deudor
-                    fechaRegistro: new Date().toLocaleDateString('es-VE')
+                // 🎯 PAYLOAD MÁSTER DE INTERNET: Estructuramos el JSON nativo para tu backend en Python
+                const payloadClienteCloud = {
+                    "origen": "Electron Desktop Onboarding Master",
+                    "cedula": cedulaCruda,
+                    "nombre": nombreCrudo,
+                    "telefono": self.datosFormulario.telefono || 'Sin Teléfono',
+                    "tipo_vinculo": tipoPerfil,
+                    "saldo_inicial": (tipoPerfil === 'DEUDOR') ? 15.00 : 0.00
                 };
 
-                // 1. Insertamos al búfer local del historial de la pantalla actual
+                // 🔌 EL PUENTE CLOUD: Extirpada la promesa falsa por un fetch real a Django en Railway
+                const urlApiRegistro = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/registrar-cliente/';
+
+                const respuestaNet = await window.fetch(urlApiRegistro, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payloadClienteCloud)
+                });
+
+                if (!respuestaNet.ok) throw new Error("Rebote del servidor en Railway (Status: " + respuestaNet.status + ")");
+                const dataCloud = await respuestaNet.json();
+
+                // Estructuramos el expediente con la data real que retorna la nube
+                const nuevoCliente = {
+                    cedula: dataCloud.cedula || cedulaCruda,
+                    nombre: dataCloud.nombre || nombreCrudo,
+                    telefono: dataCloud.telefono || payloadClienteCloud.telefono,
+                    tipo: dataCloud.tipo_vinculo || tipoPerfil, 
+                    saldoDeuda: parseFloat(dataCloud.saldo_inicial || payloadClienteCloud.saldo_inicial),
+                    fechaRegistro: dataCloud.fecha_registro || new Date().toLocaleDateString('es-VE')
+                };
+
+                // Insertamos en el buffer de la jornada actual
                 if (!self.clientesRegistrados) self.clientesRegistrados = [];
-                
-                // Impedimos duplicados locales
-                if (self.clientesRegistrados.some(c => c.cedula === cedulaCruda)) {
-                    alert(`⚠️ Error: El cliente con cédula ${cedulaCruda} ya fue registrado en este turno.`);
-                    return;
-                }
-                
                 self.clientesRegistrados.unshift(nuevoCliente);
 
-                // 2. 📡 SINCRONIZACIÓN TELEMÉTRICA ATÓMICA CON LA MEMORIA GLOBAL DE LA APPS (EL CABLE DE PASARELA)
+                // 📡 SINCRO INTERACTIVA: Suministramos el espejo en la RAM global para la Pasarela de Pago
                 if (!window.App) window.App = {};
                 if (!window.App.state) window.App.state = {};
                 if (!window.App.state.carteraClientesGlobal) window.App.state.carteraClientesGlobal = [];
-
-                // Empujamos el cliente fresco a la cartera universal que leerá la Pasarela de Pago
                 window.App.state.carteraClientesGlobal.push(nuevoCliente);
                 
-                // Si el módulo de deudores secundarios está vivo en la memoria, le compartimos el espejo
                 if (window.ClientesB2B && window.ClientesB2B.state) {
                     window.ClientesB2B.state.listaClientes = window.App.state.carteraClientesGlobal;
                 }
 
-                // 💾 CANAL DE SELLADO FISCO EN EL DISCO DURO (SOLUCIÓN APAGÓN REGISTRO)
-                // Usamos la misma llave exacta de la cartera para unificar las lecturas
-                localStorage.setItem('APIO_CARTERA_CLIENTES_MANUAL', JSON.stringify(self.clientesRegistrados));
-                
-                alert(`🎉 ¡Éxito! Cliente [${nuevoCliente.nombre}] dado de alta correctamente como [${tipoPerfil}].`);
+                alert(`🎉 ¡Éxito Cloud!\n\nCliente [${nuevoCliente.nombre}] dado de alta correctamente en PostgreSQL de Railway como [${nuevoCliente.tipo}].`);
 
-                // Reseteo físico del formulario y del estado original
                 form.reset();
                 self.datosFormulario = { rif: '', razonSocial: '', telefono: '', direccion: selectNode ? selectNode.value : 'MAYORISTA' };
 
-                // 🔄 REDIBUJADO DIRECTO SEGURO SANEADO
                 if (typeof self.renderTablaClientes === 'function') {
-                    // Le pasamos el contenedor verificado de la vista
                     self.renderTablaClientes(viewContainer);
                 }
 
             } catch (error) {
-                console.error("❌ Error en persistencia de Onboarding:", error.message);
-                alert("❌ Fallo en la comunicación con el servidor contable.");
+                console.error("❌ Error en persistencia de Onboarding Cloud:", error.message);
+                alert("⚠️ Error Cloud: No se pudo conectar con Railway. Los datos no se subieron a internet.");
             } finally {
                 if (btnSubmit) {
                     btnSubmit.disabled = false;
-                    btnSubmit.innerText = "Dar de Alta y Guardar en PostgreSQL";
+                    btnSubmit.innerText = "Registrar Cliente";
                     btnSubmit.style.background = "#2563EB";
                 }
             }
         });
 
-        // Llamada de renderizado preventivo al inicializar el mostrador
         if (typeof self.renderTablaClientes === 'function') {
             self.renderTablaClientes(viewContainer);
         }
-    }, // <-- Coma de separación obligatoria para el siguiente método
+    }, // <-- Coma de separación obligatoria para enlazar de forma legal con el Bloque 3 de abajo
 
     // =========================================================================
 // 🎨 BLOQUE 3: HISTORIAL EN TIEMPO REAL MULTIPERFIL (REPARADO AL VACÍO)
