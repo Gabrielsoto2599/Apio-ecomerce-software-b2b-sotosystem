@@ -1746,21 +1746,34 @@ if (!window.PasarelaPago.estadoTransaccion) {
 window.PasarelaPago.procesarDespachoFactura = function() {
     console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
     
-        // =========================================================================
-    // 🎯 CONEXIÓN ESTÁNDAR SOTO SYSTEM: Acople Simétrico de Llaves Contables
+            // =========================================================================
+    // 🎯 SINCRO DE ENTRADA Y BYPASS TOTAL SOTO FINANCIAL (REPARACIÓN DE MONTOS)
     // Ubicación: Dentro de window.PasarelaPago.procesarDespachoFactura en pasarelaPago.js
     // =========================================================================
     const tx = window.PasarelaPago?.estadoTransaccion || {};
     
     const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
     const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
+    
+    // 👑 REPARACIÓN CORE: Declaramos exactamente las mismas constantes que tiene el ERP usando el Bypass Elástico
+    // Mapeamos de forma estricta todas las variables posibles del chasis fiscal unificado
+    const valorBsReal = parseFloat(tx.montoBs || document.getElementById('factura-total-bs')?.innerText || 0.00);
+    const valorUsdReal = parseFloat(tx.montoUSD || tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
 
-    let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
+    // 📊 RECONOCIMIENTO SIMÉTRICO DE CANALES: Integramos Cashea, Biopago, Pago Móvil, Punto y Efectivo
+    let metodoFinalLabel = (tx.metodoSeleccionado || "EFECTIVO").toUpperCase().trim();
+    
     if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
-        metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
+        metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta.toUpperCase()})`;
+    } else if (metodoFinalLabel === "BIOPAGO") {
+        metodoFinalLabel = "BIOPAGO BDV";
+    } else if (metodoFinalLabel === "CASHEA") {
+        metodoFinalLabel = "CASHEA (CUOTAS)";
+    } else if (metodoFinalLabel === "PAGO_MOVIL" || metodoFinalLabel === "PAGO_MOVIL_QR" || metodoFinalLabel === "PAGO MOVIL") {
+        metodoFinalLabel = "PAGO MÓVIL";
     }
 
-    // 🧱 COMPILAMOS EL OBJETO USANDO LOS MISMOS NOMBRES QUE TU HISTORIAL DE ERP BUSCA
+    // Compilamos el objeto de movimiento con las constantes simétricas acopladas a tu erp.js
     const nuevoMovimientoContable = {
         ref: `TR-${Math.floor(100000 + Math.random() * 900000)}`,
         hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
@@ -1768,9 +1781,11 @@ window.PasarelaPago.procesarDespachoFactura = function() {
         productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
         metodo: metodoFinalLabel,
         
-        // 💰 EL PUENTE PERFECTO: Encaja de forma nativa con mov.montoBs y mov.montoUsd en erp.js
-        montoBs: parseFloat(tx.montoBs || 0.00), 
-        montoUsd: parseFloat(tx.montoUSD || 0.00),
+        // 💰 CANDADO TOTAL: Inyectamos los montos limpios y las variables relacionales calculadas arriba
+        montoBs: valorBsReal, 
+        montoUsd: valorUsdReal,
+        valorBsReal: valorBsReal,
+        valorUsdReal: valorUsdReal,
         
         detallesPagoMovil: tx.soportePagoMovil || null
     };
@@ -1779,8 +1794,8 @@ window.PasarelaPago.procesarDespachoFactura = function() {
     const datosOrdenRemota = {
         "origen": "Electron Desktop Pasarela Master",
         "cedula_cliente": cedulaCliente,
-        "monto_bs": parseFloat(tx.montoBs || 0.00),
-        "monto_usd": parseFloat(tx.montoUSD || 0.00),
+        "monto_bs": valorBsReal,
+        "monto_usd": valorUsdReal,
         "metodo_pago": metodoFinalLabel,
         "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
         "soporte_pago_movil": tx.soportePagoMovil || null
