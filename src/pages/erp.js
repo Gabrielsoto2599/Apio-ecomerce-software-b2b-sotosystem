@@ -569,42 +569,69 @@ window.ErpModulo.ingresarMercanciaNuevaManual = async function() {
 
 
  // =========================================================================
-// 💳 EXTENSIÓN E: CONCILIADOR DE RECAUDACIÓN EN CALIENTE (SOTO FINANCIAL ENGINE)
-// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// 💳 EXTENSIÓN E: CONCILIADOR DE RECAUDACIÓN EN CALIENTE REAL CLOUD (SOTO ENGINE)
+// Ubicación: src/pages/erp.js -> Sincronizado de Bajada Directa con Railway
 // =========================================================================
-window.ErpModulo.calcularConciliacionCobranzasTurno = function() {
-    console.log("📡 [SOTO FINANCIAL]: Ejecutando auditoría de flujos en caja...");
+window.ErpModulo.calcularConciliacionCobranzasTurno = async function() {
+    console.log("📡 [SOTO FINANCIAL CLOUD]: Descargando libro diario de Railway para auditoría...");
     
-    // Accedemos de forma segura a la RAM del objeto de la ventana
-    const movimientos = window.ErpModulo.state?.movimientosDiarios || [];
+    const txtPM = document.getElementById('cobranza-pago-movil');
+    const txtBio = document.getElementById('cobranza-biopago');
+    const txtEfe = document.getElementById('cobranza-efectivo');
 
+    if (txtPM) txtPM.innerText = "Calculando...";
+    if (txtBio) txtBio.innerText = "Calculando...";
+    if (txtEfe) txtEfe.innerText = "Calculando...";
+
+    let movimientos = [];
+
+    try {
+        // 🔌 EL PUENTE CLOUD DE BAJADA: Endpoint universal de transacciones en Railway
+        const urlApiHistorial = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+
+        // Disparamos un GET directo a internet para traernos lo guardado en PostgreSQL Cloud
+        const respuestaNet = await window.fetch(urlApiHistorial, { method: 'GET' });
+        
+        if (!respuestaNet.ok) throw new Error("Rebote de red en la nube (Status: " + respuestaNet.status + ")");
+        
+        const dataCloud = await respuestaNet.json();
+        
+        // Django nos devuelve el arreglo de ventas vivas en 'transacciones' o directamente la lista
+        movimientos = dataCloud.transacciones || dataCloud || [];
+        
+        // Sincronizamos la RAM local por si otros componentes estáticos la leen
+        if (window.ErpModulo.state) window.ErpModulo.state.movimientosDiarios = movimientos;
+
+    } catch (error) {
+        console.error("❌ [SOTO CONTABLE ERROR]: Fallo al descargar flujos de caja:", error.message);
+        // Fallback elástico: si internet falla temporalmente, recurrimos al caché de la RAM
+        movimientos = window.ErpModulo.state?.movimientosDiarios || [];
+    }
+
+    // 🧱 MATEMÁTICA FISCAL INMUTABLE (Tu algoritmo original purificado)
     let acumuladoPagoMovil = 0.00;
     let acumuladoBiopago = 0.00;
     let acumuladoEfectivoUsd = 0.00;
 
     movimientos.forEach(mov => {
         const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
-        const montoBs = parseFloat(mov.montoBs || mov.total_bs || 0.00);
-        const montoUsd = parseFloat(mov.montoUsd || mov.total_usd || 0.00);
+        const montoBs = parseFloat(mov.montoBs || mov.monto_bs || mov.total_bs || 0.00);
+        const montoUsd = parseFloat(mov.montoUsd || mov.monto_usd || mov.total_usd || 0.00);
 
-        // CORE REPAIR: Barrido elástico con y sin acentos para evitar pérdidas contables en taquilla
         if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGO MOVIL") || metodo.includes("PAGOMOVIL")) {
             acumuladoPagoMovil += montoBs;
-        } else if (metodo.includes("BIOPAGO") || metodo.includes("TARJETA")) {
+        } else if (metodo.includes("BIOPAGO") || metodo.includes("TARJETA") || metodo.includes("PUNTO")) {
             acumuladoBiopago += montoBs;
         } else if (metodo.includes("EFECTIVO")) {
             acumuladoEfectivoUsd += montoUsd;
         }
     });
 
-    const txtPM = document.getElementById('cobranza-pago-movil');
-    const txtBio = document.getElementById('cobranza-biopago');
-    const txtEfe = document.getElementById('cobranza-efectivo');
-
+    // Inyección en caliente con formateo regional venezolano nativo
     if (txtPM) txtPM.innerText = `${acumuladoPagoMovil.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
     if (txtBio) txtBio.innerText = `${acumuladoBiopago.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
     if (txtEfe) txtEfe.innerText = `$${acumuladoEfectivoUsd.toFixed(2)}`;
-}; // 🔒 Cierre legal con llave y punto y coma, sin comas sueltas inter-bloques.
+};
 
 // =========================================================================
 // 👤 EXTENSIÓN F: MÁNAGER DE VENDEDORES Y OPERADORES DE TAQUILLA
