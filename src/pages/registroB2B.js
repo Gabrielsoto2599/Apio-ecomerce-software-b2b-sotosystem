@@ -235,7 +235,7 @@ const RegistroB2B = {
                     "saldo_inicial": (tipoPerfil === 'DEUDOR') ? 15.00 : 0.00
                 };
 
-                // 🔌 EL PUENTE CLOUD: Extirpada la promesa falsa por un fetch real a Django en Railway
+                // 🔌 EL PUENTE CLOUD FIJO: Nos aseguramos de clavar la barra diagonal (/) al final para que Django lo asimile
                 const urlApiRegistro = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/registrar-cliente/';
 
                 const respuestaNet = await window.fetch(urlApiRegistro, {
