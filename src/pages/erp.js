@@ -468,10 +468,10 @@ window.ErpModulo.ejecutarCierreMensualPdf = function() {
 }; // 🔒 Cierre legal con punto y coma
 
 // =========================================================================
-// 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE (PROVEEDORES POLAR/TUNAL)
-// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// 📦 EXTENSIÓN C: INYECTOR DE MERCANCÍA NUEVA PERSISTENTE CLOUD (POLAR/TUNAL)
+// Ubicación: src/pages/erp.js -> Conectado a la API Remota de Railway
 // =========================================================================
-window.ErpModulo.ingresarMercanciaNuevaManual = function() {
+window.ErpModulo.ingresarMercanciaNuevaManual = async function() {
     const txtSku = document.getElementById('inv-sku');
     const txtNombre = document.getElementById('inv-nombre');
     const selProveedor = document.getElementById('inv-proveedor');
@@ -480,42 +480,93 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 
     if (!txtSku || !txtNombre || !selProveedor || !numPrecio || !numStock) return;
 
-    // SANEAMIENTO CORE: Forzamos mayúsculas para evitar duplicaciones accidentales por tipeo
+    // SANEAMIENTO CORE: Forzamos mayúsculas para evitar duplicaciones por tipeo
     const skuLimpio = txtSku.value.trim().toUpperCase();
     const nombreLimpio = txtNombre.value.trim();
     const proveedor = selProveedor.value;
     const costoUsd = parseFloat(numPrecio.value) || 1.00;
     const stockIngresado = parseInt(numStock.value) || 0;
 
-    let inventarioVivo = JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) 
-        || window.App?.state?.listaProductosOriginal 
-        || window.CatalogoB2B?.productos 
-        || [];
-
-    // Verificamos colisión de llaves primarias en la memoria persistente antes de inyectar
-    if (inventarioVivo.some(p => p.sku === skuLimpio)) {
-        alert(`⚠️ Error: El SKU ${skuLimpio} ya existe en el catálogo.`);
+    if (skuLimpio.length < 3 || nombreLimpio.length === 0) {
+        alert("⚠️ Operación Detenida: Ingrese un SKU y Nombre de producto válido.");
         return;
     }
 
-    const nuevoItem = { sku: skuLimpio, nombre: nombreLimpio, precio_usd: costoUsd, stock: stockIngresado, categoria: proveedor };
-    inventarioVivo.push(nuevoItem);
-
-    // Sincronizamos simétricamente todas las capas de memoria RAM y almacenamiento local
-    if (window.App && window.App.state) window.App.state.listaProductosOriginal = inventarioVivo;
-    localStorage.setItem('APIO_INVENTARIO_PERSISTENTE', JSON.stringify(inventarioVivo));
-    
-    if (window.CatalogoB2B) window.CatalogoB2B.productos = inventarioVivo;
-    
-    if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
-        window.recalcularGrillaCatalogoB2BEnCaliente();
+    // Levantamos visualmente la cortina de carga en la taquilla del ERP
+    const btnGuardar = document.getElementById('btn-submit-inventario') || document.querySelector('[onclick*="ingresarMercanciaNuevaManual"]');
+    const textoOriginalBoton = btnGuardar ? btnGuardar.innerText : "Ingresar Mercancía";
+    if (btnGuardar) {
+        btnGuardar.disabled = true;
+        btnGuardar.innerText = "Sincronizando con Railway Cloud...";
     }
 
-    const formularioIngreso = document.getElementById('form-ingreso-inventario-nuevo');
-    if (formularioIngreso) formularioIngreso.reset();
-    
-    alert(`🏆 ¡Inventario Actualizado!\n\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
-}; // 🔒 Cierre legal con punto y coma
+    try {
+        // 🎯 PAYLOAD CONTABLE: Empaquetamos el JSON con los nombres exactos que lee tu backend en Python
+        const payloadProductoCloud = {
+            "origen": "Electron Desktop ERP Inyector",
+            "sku": skuLimpio,
+            "nombre": nombreLimpio,
+            "proveedor_categoria": proveedor,
+            "precio_usd": costoUsd,
+            "stock_inicial": stockIngresado
+        };
+
+        // 🔌 EL ENLACE CLOUD: Apuntamos formalmente a tu compuerta universal de productos en Railway
+        const urlApiProductos = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/productos/';
+
+        const respuestaNet = await window.fetch(urlApiProductos, {
+            method: 'POST', // Usamos POST para crear el registro nuevo en internet
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadProductoCloud)
+        });
+
+        if (!respuestaNet.ok) {
+            if (respuestaNet.status === 400) {
+                throw new Error("El SKU ya existe en la base de datos de Railway.");
+            }
+            throw new Error("Rebote del servidor en Railway (Status: " + respuestaNet.status + ")");
+        }
+        
+        const dataCloud = await respuestaNet.json();
+
+        // 🔄 SINCRONIZACIÓN INMEDIATA DE LA RAM LOCAL: El catálogo se entera al milisegundo
+        let inventarioVivo = window.App?.state?.listaProductosOriginal || window.CatalogoB2B?.productos || [];
+        
+        const itemSincronizado = {
+            sku: dataCloud.sku || skuLimpio,
+            nombre: dataCloud.nombre || nombreLimpio,
+            precio_usd: parseFloat(dataCloud.precio_usd || costoUsd),
+            stock: parseInt(dataCloud.stock || stockIngresado),
+            categoria: dataCloud.proveedor_categoria || proveedor
+        };
+        
+        inventarioVivo.push(itemSincronizado);
+
+        if (window.App && window.App.state) window.App.state.listaProductosOriginal = inventarioVivo;
+        if (window.CatalogoB2B) window.CatalogoB2B.productos = inventarioVivo;
+        localStorage.setItem('APIO_INVENTARIO_PERSISTENTE', JSON.stringify(inventarioVivo));
+
+        // Refrescamos visualmente las tarjetas del catálogo si el usuario está en esa pestaña
+        if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
+            window.recalcularGrillaCatalogoB2BEnCaliente();
+        }
+
+        const formularioIngreso = document.getElementById('form-ingreso-inventario-nuevo');
+        if (formularioIngreso) formularioIngreso.reset();
+        
+        alert(`🏆 ¡Éxito Cloud!\n\n• Producto: ${nombreLimpio}\n• Proveedor: ${proveedor}\n• Estado: Guardado en PostgreSQL de Railway.`);
+
+    } catch (error) {
+        console.error("❌ [SOTO ERP ERROR]: Fallo en inyección de inventario:", error.message);
+        alert(`⚠️ Error Cloud: ${error.message}`);
+    } finally {
+        if (btnGuardar) {
+            btnGuardar.disabled = false;
+            btnGuardar.innerText = textoOriginalBoton;
+        }
+    }
+};
+
 
  // =========================================================================
 // 💳 EXTENSIÓN E: CONCILIADOR DE RECAUDACIÓN EN CALIENTE (SOTO FINANCIAL ENGINE)
@@ -750,7 +801,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = function() {
 
 // =========================================================================
 // 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES CON DETALLES DE PAGO MÓVIL EXTENDIDO
-// Ubicación: src/pages/erp.js -> SANEADO CON BYPASS ELÁSTICO SOTO SYSTEM
+// Ubicación: src/pages/erp.js -> SANEADO Y SINCRO CON PASARELA SOTO SYSTEM
 // =========================================================================
 window.ErpModulo.reinyectarFilasTabla = function() {
     const tbody = document.getElementById('erp-movimientos-diarios-rows');
@@ -792,9 +843,10 @@ window.ErpModulo.reinyectarFilasTabla = function() {
             `;
         }
 
-        // 🎯 BYPASS ELÁSTICO SOTO SYSTEM: Pescamos el valor real sin importar si viene de Railway (_bs) o de la RAM (Bs)
-        const valorBsReal = parseFloat(mov.montoBs || mov.monto_bs || mov.monto || 0);
-        const valorUsdReal = parseFloat(mov.montoUsd || mov.monto_usd || mov.precio_usd || 0);
+        // 🎯 BYPASS ULTRA-SEGURO SOTO FINANCIAL: Buscamos primero las constantes inyectadas por la pasarela, 
+        // y si no, caemos en las llaves del JSON de Railway o fallbacks de la RAM.
+        const valorBsReal = parseFloat(mov.valorBsReal || mov.montoBs || mov.monto_bs || mov.monto || mov.montoBS || 0);
+        const valorUsdReal = parseFloat(mov.valorUsdReal || mov.montoUsd || mov.monto_usd || mov.montoUSD || mov.precio_usd || mov.precioUSD || 0);
 
         return `
             <tr style="border-bottom: 1px solid #1e293b; background-color: rgba(255,255,255, 0.01);">
@@ -811,11 +863,12 @@ window.ErpModulo.reinyectarFilasTabla = function() {
                         ${metodo.replace('_', ' ')}
                     </span>
                 </td>
-                <!-- 👑 COLUMNA CALIBRADA SOTO SYSTEM: Muestra la matemática real capturada de internet -->
+                <!-- 👑 COLUMNA CALIBRADA INDESTRUCTIBLE SOTO SYSTEM -->
                 <td style="padding: 14px; text-align: right; color: #00D2FF; font-size: 13px; font-family: monospace;">
-                    ${valorBsReal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
-                    <span style="color: #10b981; font-size: 10px;">$${valorUsdReal.toFixed(2)}</span>
+                    ${(parseFloat(valorBsReal || mov.montoBs || mov.monto_bs || mov.monto || 0)).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
+                    <span style="color: #10b981; font-size: 10px;">$${(parseFloat(valorUsdReal || mov.montoUsd || mov.monto_usd || mov.montoUSD || 0)).toFixed(2)}</span>
                 </td>
+
             </tr>
         `;
     }).join('');
