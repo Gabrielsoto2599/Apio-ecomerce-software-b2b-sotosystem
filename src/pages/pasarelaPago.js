@@ -239,8 +239,8 @@ const PasarelaPago = {
         contenedorInterno.appendChild(moduloIdentificacion);
 
 // =========================================================================
-// 📡 MÓDULO INTERACTIVO DE ASIGNACIÓN MULTI-TARIFA INTEGRAL (MVP 2026)
-// Ubicación: Evento click del botón validar en pasarelaPago.js
+// 📡 MÓDULO INTERACTIVO DE VALIDACIÓN CLOUD INTEGRAL (SOTO SYSTEM v2.0)
+// Ubicación: Evento click del botón validar en pasarelaPago.js -> PARTE 1
 // =========================================================================
         setTimeout(() => {
             const btnValidar = document.getElementById('btn-validate');
@@ -250,96 +250,123 @@ const PasarelaPago = {
             const txtNombreVerificado = document.getElementById('verified-name');
 
             if (btnValidar && inputCedula) {
-                btnValidar.onclick = () => {
+                // 👑 CONEXIÓN CLOUD: Transformamos el clic en asíncrono para colgar la red
+                btnValidar.onclick = async () => {
                     const cedulaBuscar = inputCedula.value.trim().toUpperCase();
                     if (cedulaBuscar === "") {
                         alert("⚠️ Operación Detenida: Ingrese una cédula o RIF para validar en taquilla.");
                         return;
                     }
 
-                    console.log(`📡 [SOTO PASARELA]: Evaluando Perfil Contable -> ${cedulaBuscar}`);
+                    console.log(`📡 [SOTO PASARELA]: Consultando Perfil Contable en Railway -> ${cedulaBuscar}`);
 
-                    // Jalamos la base de datos viva desde la RAM unificada de la Single Page Application
-                    const carteraGlobal = window.App?.state?.carteraClientesGlobal 
-                        || window.ClientesB2B?.state?.listaClientes 
-                        || window.RegistroB2B?.clientesRegistrados
-                        || [];
+                    // Levantamos la cortina de carga visual pasiva en el mostrador
+                    btnValidar.disabled = true;
+                    const textoOriginalBoton = btnValidar.innerText;
+                    btnValidar.innerText = "Buscando...";
+                    if (statusLabel) statusLabel.innerText = "VERIFICANDO EN LA NUBE...";
 
-                    const clienteEncontrado = carteraGlobal.find(cli => cli.cedula === cedulaBuscar);
+                    try {
+                        // 🔌 EL PUENTE CLOUD: Apuntamos formalmente a tu compuerta universal de clientes
+                        const urlApiValidar = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/clientes/';
 
-                    if (!this.estadoTransaccion) this.estadoTransaccion = {};
-                    this.estadoTransaccion.rifCliente = cedulaBuscar;
+                        // Disparamos la ráfaga pasando la cédula de forma hermética en el body
+                        const respuestaNet = await window.fetch(urlApiValidar, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ "cedula_buscar": cedulaBuscar })
+                        });
 
-                    // 1. Reseteamos el cascarón visual para purgar colores viejos de la sesión anterior
-                    if (perfilBox) {
-                        perfilBox.style.display = 'flex';
-                        perfilBox.style.borderColor = 'rgba(16, 185, 129, 0.2)';
-                        perfilBox.style.backgroundColor = 'rgba(3, 7, 18, 0.6)';
-                    }
+                        if (!respuestaNet.ok) throw new Error("Rebote de validación en Railway (Status: " + respuestaNet.status + ")");
+                        const dataCloud = await respuestaNet.json();
 
-                    // 2. ──► COMPORTAMIENTO CASO A: EL CLIENTE YA EXISTE EN EL REGISTRO
-                    if (clienteEncontrado) {
-                        const perfilReal = clienteEncontrado.tipo || clienteEncontrado.tipoCliente || 'MINORISTA';
-                        this.estadoTransaccion.perfilClienteTipo = perfilReal;
-                        const deudaReal = parseFloat(clienteEncontrado.saldoDeuda || 0);
+                        // 🎯 MAPEO EN VIVO: Extraemos los datos reales que bajan de PostgreSQL Cloud
+                        const clienteEncontrado = dataCloud.existe ? {
+                            cedula: dataCloud.cedula,
+                            nombre: dataCloud.nombre,
+                            telefono: dataCloud.telefono,
+                            tipo: dataCloud.tipo_vinculo, // 'MINORISTA', 'DEUDOR', 'MAYORISTA'
+                            saldoDeuda: parseFloat(dataCloud.saldo_deuda || 0)
+                        } : null;
 
-                        // 🔴 SUB-CASO A.1: ¡ES UN DEUDOR MANUAL CON CUENTA PENDIENTE! (ALERTA ROJA)
-                        if (perfilReal === 'DEUDOR' || deudaReal > 0) {
-                            if (statusLabel) {
-                                statusLabel.innerText = "MORA FIADO";
-                                statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; letter-spacing: 0.05em; text-transform: uppercase;";
+                        if (!this.estadoTransaccion) this.estadoTransaccion = {};
+                        this.estadoTransaccion.rifCliente = cedulaBuscar;
+
+                        // Reseteamos el cascarón visual para purgar colores viejos de la sesión anterior
+                        if (perfilBox) {
+                            perfilBox.style.display = 'flex';
+                            perfilBox.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                            perfilBox.style.backgroundColor = 'rgba(3, 7, 18, 0.6)';
+                        }
+                        // ──► COMPORTAMIENTO CASO A: EL CLIENTE SÍ EXISTE EN POSTGRESQL CLOUD
+                        if (clienteEncontrado) {
+                            const perfilReal = clienteEncontrado.tipo || 'MINORISTA';
+                            this.estadoTransaccion.perfilClienteTipo = perfilReal;
+                            const deudaReal = parseFloat(clienteEncontrado.saldoDeuda || 0);
+
+                            // 🔴 SUB-CASO A.1: ¡ES UN DEUDOR MANUAL CON CUENTA PENDIENTE! (ALERTA ROJA)
+                            if (perfilReal === 'DEUDOR' || deudaReal > 0) {
+                                if (statusLabel) {
+                                    statusLabel.innerText = "MORA FIADO";
+                                    statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; letter-spacing: 0.05em; text-transform: uppercase;";
+                                }
+                                if (perfilBox) {
+                                    perfilBox.style.borderColor = "#ef4444";
+                                    perfilBox.style.backgroundColor = "rgba(239, 68, 68, 0.05)";
+                                }
+                                if (txtNombreVerificado) {
+                                    txtNombreVerificado.innerHTML = `<span style="color: #ffffff;">${clienteEncontrado.nombre}</span><br><span style="color: #ef4444; font-size: 11px; font-weight: 800; font-family: monospace; display: block; margin-top: 4px;">🛑 ALERTA: Saldo pendiente de $${deudaReal.toFixed(2)} USD</span>`;
+                                }
+                                alert(`🚨 Control de Riesgo Contable: El cliente ${clienteEncontrado.nombre} tiene una deuda activa de $${deudaReal.toFixed(2)} USD.`);
                             }
-                            if (perfilBox) {
-                                perfilBox.style.borderColor = "#ef4444";
-                                perfilBox.style.backgroundColor = "rgba(239, 68, 68, 0.05)";
+                            // 🟢 SUB-CASO A.2: MINORISTA REGISTRADO SOLVENTE (TARJETA CIAN)
+                            else if (perfilReal === 'MINORISTA') {
+                                if (statusLabel) {
+                                    statusLabel.innerText = "PÚBLICO DETAL";
+                                    statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; letter-spacing: 0.05em; text-transform: uppercase;";
+                                }
+                                if (txtNombreVerificado) {
+                                    txtNombreVerificado.innerHTML = `<span style="color: #ffffff;">${clienteEncontrado.nombre}</span><br><span style="color: #38bdf8; font-size: 11px; font-weight: 600; display: block; margin-top: 2px;">📋 Estatus: Solvente | Precio Detal</span>`;
+                                }
                             }
-                            if (txtNombreVerificado) {
-                                // 🎯 SOBREESCRIBIMOS EL TEXTO QUEMADO PARA DEUDORES
-                                txtNombreVerificado.innerHTML = `<span style="color: #ffffff;">${clienteEncontrado.nombre}</span><br><span style="color: #ef4444; font-size: 11px; font-weight: 800; font-family: monospace; display: block; margin-top: 4px;">🛑 ALERTA: Saldo pendiente de $${deudaReal.toFixed(2)} USD</span>`;
+                            // 🔒 SUB-CASO A.3: MAYORISTA REGISTRADO 
+                            else {
+                                if (statusLabel) {
+                                    statusLabel.innerText = "VERIFICADO";
+                                    statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; letter-spacing: 0.05em; text-transform: uppercase;";
+                                }
+                                if (perfilBox) perfilBox.style.display = 'none'; 
                             }
-                            alert(`🚨 Control de Riesgo Contable: El cliente ${clienteEncontrado.nombre} tiene una deuda activa de $${deudaReal.toFixed(2)} USD.`);
                         } 
-                        
-                        // 🟢 SUB-CASO A.2: MINORISTA REGISTRADO SOLVENTE (TARJETA CIAN)
-                        else if (perfilReal === 'MINORISTA') {
+                        // 🔵 COMPORTAMIENTO CASO B: CONSUMIDOR FINAL NUEVO / NO INDEXADO EN LA NUBE
+                        else {
+                            this.estadoTransaccion.perfilClienteTipo = 'MINORISTA';
                             if (statusLabel) {
                                 statusLabel.innerText = "PÚBLICO DETAL";
                                 statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; letter-spacing: 0.05em; text-transform: uppercase;";
                             }
                             if (txtNombreVerificado) {
-                                // 🎯 SOBREESCRIBIMOS EL TEXTO QUEMADO PARA MINORISTAS GUARDADOS
-                                txtNombreVerificado.innerHTML = `<span style="color: #ffffff;">${clienteEncontrado.nombre}</span><br><span style="color: #38bdf8; font-size: 11px; font-weight: 600; display: block; margin-top: 2px;">📋 Estatus: Solvente | Precio Detal</span>`;
+                                txtNombreVerificado.innerHTML = `<span style="color: #ffffff;">Consumidor Final Regular</span><br><span style="color: #64748b; font-size: 11px; font-weight: 500; display: block; margin-top: 2px;">Venta al detal estándar libre de deudas.</span>`;
                             }
                         }
 
-                        // 🔒 SUB-CASO A.3: MAYORISTA REGISTRADO (QUEDAN OCULTOS EN ESTA FACHADA PARA PRECIO BASE)
-                        else {
-                            if (statusLabel) statusLabel.innerText = "VERIFICADO";
-                            if (statusLabel) statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; letter-spacing: 0.05em; text-transform: uppercase;";
-                            if (perfilBox) perfilBox.style.display = 'none'; // Se apaga la caja
+                        // Forzamos el recalculo matemático en caliente según las tarifas del cliente
+                        if (typeof this.calcularSubtotalesYTotales === 'function') {
+                            this.calcularSubtotalesYTotales();
                         }
-                    } 
-                    
-                    // 🔵 COMPORTAMIENTO CASO B: CONSUMIDOR FINAL NUEVO / NO INDEXADO (TARJETA CIAN BASE DE ESTRENAR)
-                    else {
-                        this.estadoTransaccion.perfilClienteTipo = 'MINORISTA';
-                        if (statusLabel) {
-                            statusLabel.innerText = "PÚBLICO DETAL";
-                            statusLabel.style.cssText = "font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px; background-color: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; letter-spacing: 0.05em; text-transform: uppercase;";
-                        }
-                        if (txtNombreVerificado) {
-                            // 🎯 EXTERMINADO EL TEXTO VIEJO MAYORISTA: Forzamos la inyección del consumidor final
-                            txtNombreVerificado.innerHTML = `<span style="color: #ffffff;">Consumidor Final Regular</span><br><span style="color: #64748b; font-size: 11px; font-weight: 500; display: block; margin-top: 2px;">Venta al detal estándar libre de deudas.</span>`;
-                        }
-                    }
 
-                    if (typeof this.calcularSubtotalesYTotales === 'function') {
-                        this.calcularSubtotalesYTotales();
+                    } catch (error) {
+                        console.error("❌ [SOTO PASARELA ERROR]: Fallo en validación cloud:", error.message);
+                        alert("⚠️ Alerta Pasarela: No se pudo verificar la cédula en Railway. El servidor remoto no respondió.");
+                    } finally {
+                        // Liberamos el botón devolviéndole su estado para la próxima consulta
+                        btnValidar.disabled = false;
+                        btnValidar.innerText = textoOriginalBoton;
                     }
-                };
+                }; // 🔒 CIERRE SEGURO DEL ASYNC CLICK DEL BOTÓN
             }
         }, 50);
-
+              
 // =========================================================================
 // BLOQUE 2 - PARTE 1: MAPEO DE INSTRUCCIONES BANCARIAS EXCLUSIVAS DE VENEZUELA
 // =========================================================================
