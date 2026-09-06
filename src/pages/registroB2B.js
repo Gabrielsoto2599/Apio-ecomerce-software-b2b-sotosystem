@@ -236,7 +236,7 @@ const RegistroB2B = {
                 };
 
                 // 🔌 EL PUENTE CLOUD FIJO: Nos aseguramos de clavar la barra diagonal (/) al final para que Django lo asimile
-                const urlApiRegistro = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/registrar-cliente/';
+                const urlApiRegistro = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/clientes/';
 
                 const respuestaNet = await window.fetch(urlApiRegistro, {
                     method: 'POST',
