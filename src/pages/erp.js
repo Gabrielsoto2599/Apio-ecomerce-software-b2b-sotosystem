@@ -803,15 +803,30 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
         
         if (!respuestaNet.ok) throw new Error("Rebote de red en el servidor (Status: " + respuestaNet.status + ")");
         
-        const dataCloud = await respuestaNet.json();
+                const dataCloud = await respuestaNet.json();
         
-        // Saneamos la respuesta: Django suele entregar las ventas vivas en 'transacciones' o directamente el array
-        lista = dataCloud.transacciones || dataCloud.movimientos || dataCloud || [];
+        // 🧠 DEPURADOR ELÁSTICO SOTO SYSTEM: Buscamos el array en todas las llaves posibles de tu Django Views
+        let datosLimpios = [];
+        
+        if (Array.isArray(dataCloud)) {
+            datosLimpios = dataCloud;
+        } else if (dataCloud && typeof dataCloud === 'object') {
+            datosLimpios = dataCloud.transacciones 
+                || dataCloud.movimientos 
+                || dataCloud.movimientos_diarios 
+                || dataCloud.historial 
+                || dataCloud.data 
+                || [];
+        }
+        
+        // Asignamos el arreglo purificado de forma inmutable
+        lista = datosLimpios;
         
         if (window.ErpModulo.state) window.ErpModulo.state.movimientosDiarios = lista;
 
     } catch (error) {
         console.error("❌ [SOTO HISTORIAL CLOUD ERROR]: Fallo al descargar ventas:", error.message);
+        // Fallback elástico en caso de pérdida extrema de señal
         lista = window.ErpModulo.state?.movimientosDiarios || [];
     }
 
@@ -826,7 +841,7 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
         return;
     }
 
-    // 👑 AQUÍ ABRE EL MAP (Llave número 2 abierta)
+    // 👑 REINYECCIÓN INDESTRUCTIBLE: Recorremos las ventas mapeadas desde internet
     tbody.innerHTML = lista.map(mov => {
         const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
         let metadatosPagoMovilHtml = "";
