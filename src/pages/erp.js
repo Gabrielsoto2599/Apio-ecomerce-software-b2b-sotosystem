@@ -570,7 +570,7 @@ window.ErpModulo.ingresarMercanciaNuevaManual = async function() {
 
  // =========================================================================
 // 💳 EXTENSIÓN E: CONCILIADOR DE RECAUDACIÓN EN CALIENTE REAL CLOUD (SOTO ENGINE)
-// Ubicación: src/pages/erp.js -> Sincronizado de Bajada Directa con Railway
+// Ubicación: src/pages/erp.js -> Sincronizado de Bajada Directa con Railway (POST)
 // =========================================================================
 window.ErpModulo.calcularConciliacionCobranzasTurno = async function() {
     console.log("📡 [SOTO FINANCIAL CLOUD]: Descargando libro diario de Railway para auditoría...");
@@ -589,15 +589,31 @@ window.ErpModulo.calcularConciliacionCobranzasTurno = async function() {
         // 🔌 EL PUENTE CLOUD DE BAJADA: Endpoint universal de transacciones en Railway
         const urlApiHistorial = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
-        // Disparamos un GET directo a internet para traernos lo guardado en PostgreSQL Cloud
-        const respuestaNet = await window.fetch(urlApiHistorial, { method: 'GET' });
+        // 🎯 CORRECCIÓN CORE: Cambiamos de GET a POST para calzar con la directiva estricta de tu Django
+        const respuestaNet = await window.fetch(urlApiHistorial, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ "accion": "CONCILIAR_RECAUDACION" }) // Payload plano para compatibilidad de red
+        });
         
         if (!respuestaNet.ok) throw new Error("Rebote de red en la nube (Status: " + respuestaNet.status + ")");
         
         const dataCloud = await respuestaNet.json();
         
-        // Django nos devuelve el arreglo de ventas vivas en 'transacciones' o directamente la lista
-        movimientos = dataCloud.transacciones || dataCloud || [];
+        // 🧠 DEPURADOR ELÁSTICO SOTO SYSTEM: Buscamos el array en todas las llaves posibles de tu Django Views
+        let datosLimpios = [];
+        if (Array.isArray(dataCloud)) {
+            datosLimpios = dataCloud;
+        } else if (dataCloud && typeof dataCloud === 'object') {
+            datosLimpios = dataCloud.transacciones 
+                || dataCloud.movimientos 
+                || dataCloud.movimientos_diarios 
+                || dataCloud.historial 
+                || dataCloud.data 
+                || [];
+        }
+        
+        movimientos = datosLimpios;
         
         // Sincronizamos la RAM local por si otros componentes estáticos la leen
         if (window.ErpModulo.state) window.ErpModulo.state.movimientosDiarios = movimientos;
@@ -613,19 +629,24 @@ window.ErpModulo.calcularConciliacionCobranzasTurno = async function() {
     let acumuladoBiopago = 0.00;
     let acumuladoEfectivoUsd = 0.00;
 
-    movimientos.forEach(mov => {
-        const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
-        const montoBs = parseFloat(mov.montoBs || mov.monto_bs || mov.total_bs || 0.00);
-        const montoUsd = parseFloat(mov.montoUsd || mov.monto_usd || mov.total_usd || 0.00);
+    // Verificamos de forma estricta que tengamos un arreglo antes de ejecutar el forEach
+    if (Array.isArray(movimientos)) {
+        movimientos.forEach(mov => {
+            const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
+            
+            // Barrido elástico multivariable contable para no perder ni un centavo
+            const montoBs = parseFloat(mov.valorBsReal || mov.montoBs || mov.monto_bs || mov.total_bs || 0.00);
+            const montoUsd = parseFloat(mov.valorUsdReal || mov.montoUsd || mov.monto_usd || mov.total_usd || mov.precio_usd || 0.00);
 
-        if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGO MOVIL") || metodo.includes("PAGOMOVIL")) {
-            acumuladoPagoMovil += montoBs;
-        } else if (metodo.includes("BIOPAGO") || metodo.includes("TARJETA") || metodo.includes("PUNTO")) {
-            acumuladoBiopago += montoBs;
-        } else if (metodo.includes("EFECTIVO")) {
-            acumuladoEfectivoUsd += montoUsd;
-        }
-    });
+            if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGO MOVIL") || metodo.includes("PAGOMOVIL")) {
+                acumuladoPagoMovil += montoBs;
+            } else if (metodo.includes("BIOPAGO") || metodo.includes("TARJETA") || metodo.includes("PUNTO")) {
+                acumuladoBiopago += montoBs;
+            } else if (metodo.includes("EFECTIVO")) {
+                acumuladoEfectivoUsd += montoUsd;
+            }
+        });
+    }
 
     // Inyección en caliente con formateo regional venezolano nativo
     if (txtPM) txtPM.innerText = `${acumuladoPagoMovil.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
