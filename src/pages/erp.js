@@ -188,7 +188,7 @@ ErpModulo.render = function() {
             </div>
         </div>
 
-        <!-- 📦 EXTENSIÓN H: CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
+        <!-- 📦 EXTENSIÓN C: CONSOLA DE INGRESO DE MERCANCÍA NUEVA (LIBRO CONTABLE DE PROVEEDORES) -->
         <div id="inventario-card-container" style="margin-bottom: 30px; font-family: 'Inter', sans-serif; width: 100%; box-sizing: border-box;">
             
             <div style="background-color: #030712; padding: 20px; border-radius: 8px; border: 1px solid #1e293b; font-family: 'Inter', sans-serif;">
@@ -774,86 +774,63 @@ window.ErpModulo.descargarGastosMesPdf = function() {
 }; // 🔒 CIERRE DE LA EXTENSIÓN G Y DE TODA TU CAPA LÓGICA TRANSACCIONAL DE EGRESOS
 
 // =========================================================================
-// 📦 EXTENSIÓN H: CONSOLA DE INGRESO DE MERCANCÍA NUEVA PERSISTENTE
-// Ubicación: src/pages/erp.js -> Siguiente procesador del Bloque 2 en línea
+// 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES CLOUD (SOTO SYSTEM v2.0)
+// Ubicación: src/pages/erp.js -> BALANCEADO AL 100% SIN ERRORES DE SINTAXIS
 // =========================================================================
-window.ErpModulo.ingresarMercanciaNuevaManual = function() {
-    const txtSku = document.getElementById('inv-sku');
-    const txtNombre = document.getElementById('inv-nombre');
-    const selProveedor = document.getElementById('inv-proveedor');
-    const numPrecio = document.getElementById('inv-precio');
-    const numStock = document.getElementById('inv-stock');
-
-    if (!txtSku || !txtNombre || !selProveedor || !numPrecio || !numStock) return;
-
-    // SANEAMIENTO: Forzamos el SKU a mayúsculas sostenidas para evitar duplicaciones
-    const skuLimpio = txtSku.value.trim().toUpperCase();
-    const nombreLimpio = txtNombre.value.trim();
-    const proveedor = selProveedor.value;
-    const costoUsd = parseFloat(numPrecio.value) || 1.00;
-    const stockIngresado = parseInt(numStock.value) || 0;
-
-    if (!window.App) window.App = {};
-    if (!window.App.state) window.App.state = {};
-    
-    let inventarioVivo = JSON.parse(localStorage.getItem('APIO_INVENTARIO_PERSISTENTE')) 
-        || window.App.state.listaProductosOriginal 
-        || window.CatalogoB2B?.productos 
-        || [];
-
-    // Verificamos colisión de llaves primarias (SKU) en la RAM local
-    if (inventarioVivo.some(p => p.sku === skuLimpio)) {
-        alert(`⚠️ Error: El SKU ${skuLimpio} ya existe en el catálogo.`);
-        return;
-    }
-
-    const nuevoItem = { sku: skuLimpio, nombre: nombreLimpio, precio_usd: costoUsd, stock: stockIngresado, categoria: proveedor };
-    inventarioVivo.push(nuevoItem);
-
-    // Sincronizamos todas las capas de memoria de la SPA en caliente
-    window.App.state.listaProductosOriginal = inventarioVivo;
-    localStorage.setItem('APIO_INVENTARIO_PERSISTENTE', JSON.stringify(inventarioVivo));
-    
-    if (window.CatalogoB2B) window.CatalogoB2B.productos = inventarioVivo;
-    
-    if (typeof window.recalcularGrillaCatalogoB2BEnCaliente === 'function') {
-        window.recalcularGrillaCatalogoB2BEnCaliente();
-    }
-
-    const formularioIngreso = document.getElementById('form-ingreso-inventario-nuevo');
-    if (formularioIngreso) formularioIngreso.reset();
-    
-    alert(`🏆 ¡Inventario Actualizado!\n\n• Producto: ${nombreLimpio}\n• Cantidad: +${stockIngresado} Unidades.`);
-}; // 🔒 Cierre lineal con punto y coma
-
-// =========================================================================
-// 📊 EXTENSIÓN I: HISTORIAL DE TRANSACCIONES CON DETALLES DE PAGO MÓVIL EXTENDIDO
-// Ubicación: src/pages/erp.js -> SANEADO Y SINCRO CON PASARELA SOTO SYSTEM
-// =========================================================================
-window.ErpModulo.reinyectarFilasTabla = function() {
+window.ErpModulo.reinyectarFilasTabla = async function() {
     const tbody = document.getElementById('erp-movimientos-diarios-rows');
     if (!tbody) return;
 
-    // Pescamos la RAM actualizada de las ventas de la jornada
-    const lista = window.ErpModulo.state.movimientosDiarios || [];
-    
+    // Levantamos un aviso de carga en la grilla mientras internet responde
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="5" style="padding: 40px; text-align: center; color: #38bdf8; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0.05em;">
+                🔄 Consultando libro diario en Railway Cloud...
+            </td>
+        </tr>
+    `;
+
+    let lista = [];
+
+    try {
+        const urlApiHistorial = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
+        // 🎯 CORRECCIÓN CORE: Cambiamos de GET a POST para calzar con la directiva de tu Django Views
+        const respuestaNet = await window.fetch(urlApiHistorial, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ "accion": "LISTAR_HISTORIAL" }) // Le mandamos un JSON plano por compatibilidad
+        });
+        
+        if (!respuestaNet.ok) throw new Error("Rebote de red en el servidor (Status: " + respuestaNet.status + ")");
+        
+        const dataCloud = await respuestaNet.json();
+        
+        // Saneamos la respuesta: Django suele entregar las ventas vivas en 'transacciones' o directamente el array
+        lista = dataCloud.transacciones || dataCloud.movimientos || dataCloud || [];
+        
+        if (window.ErpModulo.state) window.ErpModulo.state.movimientosDiarios = lista;
+
+    } catch (error) {
+        console.error("❌ [SOTO HISTORIAL CLOUD ERROR]: Fallo al descargar ventas:", error.message);
+        lista = window.ErpModulo.state?.movimientosDiarios || [];
+    }
+
     if (lista.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" style="padding: 60px; text-align: center; color: #475569; font-style: italic; font-family: 'Inter', sans-serif; font-size: 13px;">
-                    No se registran movimientos en la jornada actual. Las transacciones de la pasarela se listarán aquí en tiempo real.
+                    No se registran transacciones en la base de datos cloud de Railway.
                 </td>
             </tr>
         `;
         return;
     }
 
-    // Mapeamos los checkouts a filas del DOM usando formateo regional nativo de Venezuela
+    // 👑 AQUÍ ABRE EL MAP (Llave número 2 abierta)
     tbody.innerHTML = lista.map(mov => {
         const metodo = (mov.metodo || mov.metodo_pago || "").toUpperCase().trim();
         let metadatosPagoMovilHtml = "";
 
-        // 🧠 AUDITORÍA EXTENDIDA SOTO FINANCIAL: Si es Pago Móvil, extraemos y pintamos sus variables
         if (metodo.includes("PAGO MÓVIL") || metodo.includes("PAGO MOVIL") || metodo.includes("PAGOMOVIL")) {
             const banco = mov.banco || mov.detallesPagoMovil?.banco || "BANCO N/A";
             const tlf = mov.telefono || mov.detallesPagoMovil?.telefono || "04XX-XXXXXXX";
@@ -870,8 +847,6 @@ window.ErpModulo.reinyectarFilasTabla = function() {
             `;
         }
 
-        // 🎯 BYPASS ULTRA-SEGURO SOTO FINANCIAL: Buscamos primero las constantes inyectadas por la pasarela, 
-        // y si no, caemos en las llaves del JSON de Railway o fallbacks de la RAM.
         const valorBsReal = parseFloat(mov.valorBsReal || mov.montoBs || mov.monto_bs || mov.monto || mov.montoBS || 0);
         const valorUsdReal = parseFloat(mov.valorUsdReal || mov.montoUsd || mov.monto_usd || mov.montoUSD || mov.precio_usd || mov.precioUSD || 0);
 
@@ -890,16 +865,17 @@ window.ErpModulo.reinyectarFilasTabla = function() {
                         ${metodo.replace('_', ' ')}
                     </span>
                 </td>
-                <!-- 👑 COLUMNA CALIBRADA INDESTRUCTIBLE SOTO SYSTEM -->
                 <td style="padding: 14px; text-align: right; color: #00D2FF; font-size: 13px; font-family: monospace;">
-                    ${(parseFloat(valorBsReal || mov.montoBs || mov.monto_bs || mov.monto || 0)).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
-                    <span style="color: #10b981; font-size: 10px;">$${(parseFloat(valorUsdReal || mov.montoUsd || mov.monto_usd || mov.montoUSD || 0)).toFixed(2)}</span>
+                    ${(parseFloat(valorBsReal || 0)).toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
+                    <span style="color: #10b981; font-size: 10px;">$${(parseFloat(valorUsdReal || 0)).toFixed(2)}</span>
                 </td>
-
             </tr>
         `;
-    }).join('');
-}; // 🔒 CANDADO DE CIERRE INDESTRUCTIBLE DE LA EXTENSIÓN I
+    }).join(''); // 🔒 CIERRE 1: Cierra el .map() de la línea 40
+}; // 🔒 CIERRE 2: Cierra la función asíncrona principal
+
+// Registro definitivo en el mostrador global
+window.ErpModulo = window.ErpModulo || {};
 
 window.ErpModulo = ErpModulo;
 export { ErpModulo };
