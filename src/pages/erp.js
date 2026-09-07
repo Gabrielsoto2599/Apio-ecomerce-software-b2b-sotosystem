@@ -815,21 +815,20 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
 
     try {
         const urlApiHistorial = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
-                // 🎯 INTERRUPTOR CLOUD: Le mandamos en el body el parámetro exacto para que Django salte al bloque de "LISTAR" en Python
+       // Disparamos la consulta indicando que queremos el historial de movimientos de las cuentas
         const respuestaNet = await window.fetch(urlApiHistorial, { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ "accion": "GET_HISTORIAL", "consultar": "todos" }) 
+            body: JSON.stringify({ "accion": "GET_MOVIMIENTOS_DIARIOS" }) 
         });
         
         if (!respuestaNet.ok) throw new Error("Rebote de red en el servidor (Status: " + respuestaNet.status + ")");
         
         const dataCloud = await respuestaNet.json();
         
-        // 🚨 CONTROL DE DAÑOS SOTO SYSTEM: Imprimimos en la consola el cargamento crudo de Railway
-        console.log("🛰️ [SOTO AUDIT BACKEND DATA]: Django nos está respondiendo esto exactamente ->", dataCloud);
-    
-        // 🧠 DEPURADOR ELÁSTICO SOTO SYSTEM: Buscamos el array en todas las llaves posibles de tu Django Views
+        // 🚨 DEPURADOR COMPLETO: Capturamos la lista viva de internet
+        console.log("🛰️ [SOTO AUDIT HISTORIAL REAL]: Data que baja de la compuerta ->", dataCloud);
+
         let datosLimpios = [];
         
         if (Array.isArray(dataCloud)) {
@@ -840,12 +839,9 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
                 || dataCloud.movimientos_diarios 
                 || dataCloud.historial 
                 || dataCloud.data 
-                || dataCloud.lista_ventas
-                || (Array.isArray(dataCloud.data) ? dataCloud.data : [])
                 || [];
         }
         
-        // Asignamos el arreglo purificado de forma inmutable
         lista = datosLimpios;
         
         if (window.ErpModulo.state) window.ErpModulo.state.movimientosDiarios = lista;
