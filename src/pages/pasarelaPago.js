@@ -66,15 +66,17 @@ const PasarelaPago = {
             metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
         }
 
+        // 🎯 DISPARADOR CLOUD INTEGRADO SOTO SYSTEM: Sincronización exacta con las llaves de Django Views
         const datosOrden = {
-            "origen": "Electron Desktop Pasarela Master",
-            "cedula_cliente": cedulaCliente,
-            "monto_bs": totalBs,
-            "monto_usd": totalUsd,
-            "metodo_pago": metodoFinalLabel,
-            "productos_lista": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
+            "accion": "CREAR_VENTA", // 👑 EL INTERRUPTOR: Obliga a Django a procesar esto como una inserción nueva
+            "cliente_identificacion": cedulaCliente,
+            "tasa_bcv": tx.tasaActivaBCV || window.TasaCambioModulo?.state?.precio_bcv || 780.00,
+            "total_usd": totalUsd,
+            "metodo_pago": metodoFinalLabel === "PAGO_MOVIL_QR" ? "PAGO_MOVIL" : metodoFinalLabel, // Homologamos a la palabra de Django
+            "articulos": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
             "soporte_pago_movil": tx.soportePagoMovil || null
         };
+
 
         // Conexión limpia y directa a tu urls.py en la nube de Railway
         const urlApiTransaccion = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
