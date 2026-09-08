@@ -8,13 +8,13 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse # 🎯 Agregamos FileResponse para los PDF
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction, models 
-from .models import Producto, Factura, DetalleFactura, TasaCambio, Cliente
+# 🎯 REPARACIÓN DE IMPORTACIONES: Añadimos TransaccionFactura para extinguir el Error 500 y liberar el buscador
+from .models import Producto, Factura, DetalleFactura, TasaCambio, Cliente, TransaccionFactura
 
 # 🖨️ DEPENDENCIAS CRÍTICAS DE REPORTLAB PARA ADAPTACIÓN SENIAT 2026
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-
 
 # =====================================================================
 # 🚀 FUNCIÓN COMPAÑERA SOTO SYSTEM: TRADUCTOR CONTABLE DE ACENTOS
@@ -204,57 +204,107 @@ def detalle_producto_api(request, id_qr):
 @csrf_exempt
 def metricas_analitica_api(request):
     """
-    📊 DISPARADOR DE ANALÍTICA GERENCIAL:
-    Calcula el producto estrella más vendido del mes moliendo los JSON de la tabla Factura.
+    📊 GENERADOR DE BALANCES DE ROTACIÓN Y RENDIMIENTO COMERCIAL EN PDF (SOTO ANALYTICS)
+    Ubicación: bodega/views.py -> Transmutado de métrica estática a Reporte PDF real
     """
-    if request.method != 'GET':
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
-    
+    if request.method != 'POST':
+        return HttpResponse("Método no permitido", status=405)
+        
     try:
-        from .models import Factura
+        from .models import TransaccionFactura
+        import io
         
-        hoy = datetime.date.today()
-        # Filtramos las facturas del mes en curso
-        facturas_mes = Factura.objects.filter(fecha__year=hoy.year, fecha__month=hoy.month)
+        # 1. Rango dinámico operacional de los últimos 30 días para la gerencia de Lara
+        fecha_final = timezone.now()
+        fecha_inicial = fecha_final - datetime.timedelta(days=30)
         
-        conteo_skus = {}
+        # Jalamos las órdenes reales directo de tu tabla relacional PostgreSQL Cloud
+        ventas_periodo = TransaccionFactura.objects.filter(fecha_registro__range=(fecha_inicial, fecha_final))
         
-        # Molienda de datos: recorremos las facturas y extraemos los artículos
-        for fac in facturas_mes:
+        conteo_productos = {}
+        total_articulos_despachados = 0
+        
+        # 🧪 MOLIENDA CONTABLE: Extraemos la cantidad de harinas, jugos o víveres de la tabla
+        for venta in ventas_periodo:
             try:
-                # 🎯 REPARACIÓN MÁSTER: La librería json ya se encuentra importada arriba de forma global
-                articulos = json.loads(fac.productos_despachados) if isinstance(fac.productos_despachados, str) else fac.productos_despachados
+                # Intentamos decodificar la lista de artículos guardada en el JSON o texto
+                articulos = json.loads(venta.articulos_json) if isinstance(venta.articulos_json, str) else venta.articulos_json
                 if isinstance(articulos, list):
                     for art in articulos:
-                        sku = art.get('sku', 'Desconocido')
-                        nombre = art.get('nombre', 'Mercancía General')
+                        sku = art.get('sku', 'GENERICO').strip().upper()
+                        nombre = art.get('nombre', 'Mercancía General Mostrador').strip()
                         cantidad = int(art.get('cantidad', 1))
                         
-                        if sku not in conteo_skus:
-                            conteo_skus[sku] = {"nombre": nombre, "total_unidades": 0}
-                        conteo_skus[sku]["total_unidades"] += cantidad
+                        if sku not in conteo_productos:
+                            conteo_productos[sku] = {"nombre": nombre, "unidades": 0}
+                        conteo_productos[sku]["unidades"] += cantidad
+                        total_articulos_despachados += cantidad
             except Exception:
+                # Si algún JSON viejo o mal formateado rompe, saltamos de forma elástica
                 pass
 
-        # Encontramos el líder de la tabla
-        if conteo_skus:
-            producto_estrella_sku = max(conteo_skus, key=lambda k: conteo_skus[k]["total_unidades"])
-            producto_estrella = {
-                "sku": producto_estrella_sku,
-                "nombre": conteo_skus[producto_estrella_sku]["nombre"],
-                "unidades": conteo_skus[producto_estrella_sku]["total_unidades"]
-            }
+        # 🖨️ 2. Estructuramos el flujo binario para ReportLab
+        buffer_memoria = io.BytesIO()
+        pdf = canvas.Canvas(buffer_memoria, pagesize=letter)
+        pdf.setTitle("SOTO SYSTEM - BALANCE GERENCIAL DE ROTACIÓN")
+        
+        # Encabezado Premium Dark con Look Turquesa Corporativo (#065f46)
+        pdf.setFillColor(colors.HexColor("#065f46"))
+        pdf.rect(0, 700, 612, 100, fill=True, stroke=False)
+        
+        pdf.setFillColor(colors.white)
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(30, 750, "APIO ERPS SOFTWARE - AUDIT DE ROTACIÓN DE INVENTARIO")
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(30, 730, f"Rango de Análisis: {fecha_inicial.date()} hasta {fecha_final.date()} | Últimos 30 Días")
+        pdf.drawString(30, 715, "-------------------------------------------------------------------------")
+        
+        # Resumen del Flujo de Bodega
+        pdf.setFillColor(colors.black)
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(30, 670, f"Total de Unidades Movidas en Mostrador: {total_articulos_despachados} Unds")
+        pdf.drawString(30, 650, f"Productos Diferentes Vendidos en el Turno: {len(conteo_productos)}")
+        pdf.line(30, 635, 580, 635)
+        
+        # Tabla de Desglose de Líderes de Ventas
+        pdf.setFont("Courier-Bold", 10)
+        pdf.drawString(30, 615, "SKU         | PRODUCTO / DESCRIPCIÓN               | VOLUMEN DESPACHADO")
+        pdf.setFont("Courier", 9)
+        pdf.line(30, 605, 580, 605)
+        
+        y_position = 585
+        
+        # Ordenamos el diccionario para listar los productos de mayor a menor venta
+        productos_ordenados = sorted(conteo_productos.items(), key=lambda x: x[1]["unidades"], reverse=True)
+        
+        if productos_ordenados:
+            for sku, info in productos_ordenados[:20]:  # Limitamos a los 20 artículos estrella
+                if y_position < 50:  # Salto de página preventivo para ReportLab
+                    pdf.showPage()
+                    y_position = 750
+                    
+                sku_txt = sku.ljust(11)
+                nombre_txt = info["nombre"][:35].ljust(35)
+                unidades_txt = f"{info['unidades']} Unidades".rjust(12)
+                
+                pdf.drawString(30, y_position, f"{sku_txt} | {nombre_txt} | {unidades_txt}")
+                y_position -= 18
         else:
-            producto_estrella = {"sku": "N/A", "nombre": "Sin transacciones este mes", "unidades": 0}
-            
-        response = JsonResponse({"status": "success", "producto_mas_vendido": producto_estrella})
-        response["Access-Control-Allow-Origin"] = "*"
-        return response
+            pdf.setFont("Helvetica-Oblique", 10)
+            pdf.setFillColor(colors.HexColor("#ef4444"))
+            pdf.drawString(30, y_position, "⚠️ Sin estadísticas de rotación registradas en PostgreSQL Cloud durante este mes.")
+
+        # Sellado y cierre del archivo binario
+        pdf.showPage()
+        pdf.save()
+        buffer_memoria.seek(0)
+        
+        nombre_reporte = f"Balance_Rotacion_SotoSystem_{fecha_final.date()}.pdf"
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
         
     except Exception as e:
-        print(f"❌ [CRASH METRICAS API]: {str(e)}")
-        return JsonResponse({"status": "error", "message": str(e)}, status=500)
-
+        print(f"❌ [SOTO CRITICAL ROTACION PDF]: Fallo al procesar ReportLab: {str(e)}")
+        return HttpResponse(f"Error Analítica: {str(e)}", status=500, content_type="text/plain")
 
 # =========================================================================
 # 📊 CONTROLADOR INTEGRAL DE ONBOARDING DE CLIENTES POSTGRESQL (BUILD 2026)
@@ -435,37 +485,79 @@ from .models import TransaccionFactura  # 🎯 Aseguramos tu matriz real del mod
 
 @csrf_exempt
 def procesar_transaccion(request):
+    """
+    LA PUERTA EXCLUSIVA DE LA PASARELA DE PAGO (SUBIDA - POST)
+    Mantiene el mostrador fluido y graba directamente en PostgreSQL de Railway.
+    """
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
         
     try:
-        # 🧪 1. Masticamos el JSON enviado desde tu aplicación Electron
+        # 🧪 1. Masticamos el JSON masivo de la compra enviado por Electron
         datos = json.loads(request.body)
-        accion = datos.get('accion', '').upper().strip()
+        
+        # Generamos un correlativo interno de respaldo si el JSON no trae número físico
+        nro_factura = datos.get('numero_factura') or datos.get('ref') or f"FAC-{random.randint(10000, 99999)}"
+        cliente_id = datos.get('cliente_identificacion') or datos.get('cedula_cliente') or "V-99999999 (Consumidor Final)"
+        tasa_oficial = float(datos.get('tasa_bcv') or 0.00)
+        subtotal_usd = float(datos.get('total_usd') or datos.get('monto_usd') or 0.00)
+        
+        # Si la pasarela ya manda el monto calculado en Bs lo usamos, si no aplicamos la matemática del IVA
+        total_bs_calculado = datos.get('monto_bs') or ((subtotal_usd * tasa_oficial) * 1.16)
+        total_bs_calculado = float(total_bs_calculado)
 
-        # =========================================================================
-        # 👑 COMPORTAMIENTO A: EL ERP PIDE EL LISTADO EN VIVO PARA EL HISTORIAL Y CAJA
-        # =========================================================================
-        if accion in ["GET_HISTORIAL", "CONCILIAR_RECAUDACION", "LISTAR_HISTORIAL"]:
-            # Jalamos los movimientos guardados en PostgreSQL ordenados del más nuevo al más viejo
-            movimientos_qs = TransaccionFactura.objects.all().order_by('-id')[:50]
-            
-            lista_final = []
-            for mov in movimientos_qs:
-                lista_final.append({
-                    "ref": mov.numero_factura,
-                    "hora": mov.fecha_registro.strftime('%I:%M %p') if hasattr(mov, 'fecha_registro') and mov.fecha_registro else "12:00 PM",
-                    "cedula": mov.cliente_identificacion,
-                    "productos": mov.productos_despachados,
-                    "metodo": mov.metodo_pago,
-                    "montoBs": float(mov.total_bs or 0.00),
-                    "montoUsd": float(mov.total_usd or 0.00),
-                    "valorBsReal": float(mov.total_bs or 0.00),
-                    "valorUsdReal": float(mov.total_usd or 0.00)
-                })
-                
-            return JsonResponse(lista_final, safe=False, status=200)
+        # Extraemos y compactamos la lista de artículos para el historial plano
+        articulos_lista = datos.get('articulos') or datos.get('productos_lista') or []
+        
+        if isinstance(articulos_lista, list) and len(articulos_lista) > 0:
+            string_productos = ", ".join([f"{item.get('nombre', 'Víveres').strip()} (x{item.get('cantidad', 1)})" for item in articulos_lista])
+        else:
+            string_productos = datos.get('productos') or "Mercancía General Mostrador"
 
+        # 🚀 EL ASENTAMIENTO ATÓMICO: Grabamos de forma inmutable en PostgreSQL Cloud de Railway
+        nueva_venta = TransaccionFactura.objects.create(
+            numero_factura=nro_factura,
+            cliente_identificacion=cliente_id,
+            productos_despachados=string_productos[:250] if string_productos else "Mercancía General",
+            metodo_pago=datos.get('metodo_pago') or datos.get('metodo') or 'BIOPAGO',
+            tasa_bcv=tasa_oficial,
+            total_usd=subtotal_usd,
+            total_bs=total_bs_calculado,
+            articulos_json=json.dumps(articulos_lista) if isinstance(articulos_lista, list) else str(articulos_lista)
+        )
+
+        print(f"🟢 [SOTO CLOUD SUCCESS]: Venta {nro_factura} guardada con éxito en la tabla TransaccionFactura.")
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Transacción contable procesada con éxito.',
+            'numero_factura': nueva_venta.numero_factura
+        }, status=200)
+
+    except Exception as e:
+        print(f"❌ [SOTO CRITICAL ERROR]: Fallo en procesar_transaccion: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': f"Error interno del servidor: {str(e)}"}, status=500)
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import random
+from .models import TransaccionFactura  # 🎯 Aseguramos tu matriz real del modelo relacional
+
+@csrf_exempt
+def procesar_transaccion(request):
+    """
+    LA PUERTA EXCLUSIVA DE LA PASARELA DE PAGO (SUBIDA - POST)
+    Mantiene el mostrador fluido y graba directamente en PostgreSQL de Railway.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+        
+    try:
+        # 🧪 1. Masticamos el JSON masivo de la compra enviado por Electron
+        datos = json.loads(request.body)
+        
         # =========================================================================
         # 👑 COMPORTAMIENTO B: LA PASARELA ENVÍA UNA COMPRA NUEVA PARA ASENTAR
         # =========================================================================
@@ -487,7 +579,7 @@ def procesar_transaccion(request):
         else:
             string_productos = datos.get('productos') or "Mercancía General Mostrador"
 
-        # 🚀 EL ASENTAMIENTO ATÓMICO: Corregimos 'Factura' usando el modelo real 'TransaccionFactura'
+        # 🚀 EL ASENTAMIENTO ATÓMICO: Grabamos de forma inmutable en PostgreSQL Cloud de Railway
         nueva_venta = TransaccionFactura.objects.create(
             numero_factura=nro_factura,
             cliente_identificacion=cliente_id,
@@ -513,51 +605,70 @@ def procesar_transaccion(request):
 
 
 # =========================================================================
-# 📊 GENERADOR DE PDF ADAPTATIVO CON CARGA INYECTADA EN VIVO (BUILD 2026)
-# Ubicación: Al puro final de bodega/views.py (COMPLETO, SANADO Y UNIFICADO)
+# 📊 LA AUTOPISTA EXCLUSIVA DEL ERP (BAJADA - POST) - SANADA Y CORREGIDA
+# Ubicación: bodega/views.py -> Sincronizada con el campo 'fecha' de tu modelo
 # =========================================================================
-from django.http import HttpResponse, JsonResponse, FileResponse  # 🎯 REPAIR: Inyectado FileResponse y JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
-from .models import TransaccionFactura  # 🎯 UNIFICADO: Usamos únicamente tu modelo transaccional real
-import json
-import io
-import datetime
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-
 @csrf_exempt
-def ejecutar_cierre_pdf_api(request):
-    """
-    Recopila las ventas de las últimas 24 horas desde el modelo unificado TransaccionFactura
-    y genera el balance fiscal premium en PDF usando ReportLab.
-    """
+def listado_historial_movimientos_api(request):
     if request.method != 'POST':
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
+        return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
         
     try:
-        # 📊 1. Rango de tiempo absoluto compatible con PostgreSQL Railway
+        # Jalamos los últimos 50 movimientos directamente de PostgreSQL Cloud usando tu modelo real
+        movimientos_qs = TransaccionFactura.objects.all().order_by('-id')[:50]
+        
+        lista_final = []
+        for mov in movimientos_qs:
+            # 📅 CORRECCIÓN: Leemos el campo real 'fecha' de tu base de datos
+            hora_formateada = "12:00 PM"
+            if mov.fecha:
+                try:
+                    hora_formateada = mov.fecha.strftime('%I:%M %p')
+                except:
+                    pass
+
+            lista_final.append({
+                "ref": mov.numero_factura,
+                "hora": hora_formateada,
+                "cedula": mov.cliente_identificacion,
+                "productos": mov.productos_despachados,
+                "metodo": mov.metodo_pago,
+                "montoBs": float(mov.total_bs or 0.00),
+                "montoUsd": float(mov.total_usd or 0.00),
+                "valorBsReal": float(mov.total_bs or 0.00),
+                "valorUsdReal": float(mov.total_usd or 0.00)
+            })
+            
+        return JsonResponse(lista_final, safe=False, status=200)
+
+    except Exception as e:
+        print(f"❌ [SOTO CRITICAL HISTORIAL ERROR]: Fallo en listado: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# =========================================================================
+# 🔒 GENERADORES DE PDF FISCALES - CORREGIDOS CON EL CAMPO 'FECHA' REAL
+# =========================================================================
+@csrf_exempt
+def ejecutar_cierre_pdf_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    try:
         inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
         
-        # Filtramos de forma inmutable en tu tabla real unificada de transacciones
-        ventas_hoy = TransaccionFactura.objects.filter(fecha_registro__range=(inicio_dia, fin_dia))
-        
-        # Computamos los totales en caliente usando Python
+        # 🎯 CORRECCIÓN: Filtramos por 'fecha' en vez de 'fecha_registro'
+        ventas_hoy = TransaccionFactura.objects.filter(fecha__range=(inicio_dia, fin_dia))
         total_usd = sum(float(v.total_usd or 0.00) for v in ventas_hoy)
         total_bs = sum(float(v.total_bs or 0.00) for v in ventas_hoy)
         conteo_transacciones = ventas_hoy.count()
 
-        # 🖨️ 2. Construimos el flujo binario para ReportLab
         buffer_memoria = io.BytesIO()
         p = canvas.Canvas(buffer_memoria, pagesize=letter)
         p.setTitle("SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
         
-        # Encabezado Estético Institucional Premium Dark
         p.setFillColor(colors.HexColor("#0b0f19"))
         p.rect(0, 700, 612, 100, fill=True, stroke=False)
-        
         p.setFillColor(colors.white)
         p.setFont("Helvetica-Bold", 16)
         p.drawString(30, 750, "APIO E-COMMERCE SOFTWARE - REPORTE DE CIERRE")
@@ -565,7 +676,6 @@ def ejecutar_cierre_pdf_api(request):
         p.drawString(30, 730, f"Fecha de Emisión: {timezone.now().date()} | Balance Compilado Cloud")
         p.drawString(30, 715, "-------------------------------------------------------------------------")
         
-        # Cuerpo del Balance Contable
         p.setFillColor(colors.black)
         p.setFont("Helvetica-Bold", 12)
         p.drawString(30, 670, f"Transacciones Procesadas hoy: {conteo_transacciones}")
@@ -573,21 +683,91 @@ def ejecutar_cierre_pdf_api(request):
         p.drawString(30, 630, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
         p.line(30, 615, 580, 615)
         
-        # Desglose de canales tipo Impresora Fiscal
         p.setFont("Courier", 8)
         y_position = 590
         
         if ventas_hoy.exists():
             for v in ventas_hoy:
-                if y_position < 50:  # Salto de página básico
+                if y_position < 50:
                     p.showPage()
                     y_position = 750
-                
                 ref = (v.numero_factura or 'TR-N/A').ljust(12)
                 cedula = (v.cliente_identificacion or 'V-99999999').ljust(15)
                 metodo = (v.metodo_pago or 'BIOPAGO').ljust(12)
                 monto = f"${float(v.total_usd or 0.00):.2f}"
-                
+                p.drawString(30, y_position, f"DOC: {ref} | RIF: {cedula} | PAGO: {metodo} | TOTAL: {monto}")
+                y_position -= 15
+        else:
+            p.drawString(30, y_position, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
+
+        p.showPage()
+        p.save()
+        buffer_memoria.seek(0)
+        
+        nombre_reporte = f"Cierre_Diario_SotoSystem_{timezone.now().date()}.pdf"
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+# =========================================================================
+# 📊 GENERADORES DE PDF FISCALES EN VIVO - SOTO FINANCIAL (BUILD 2026)
+# Ubicación: Al puro final de bodega/views.py (COMPLETO, SANADO Y UNIFICADO)
+# =========================================================================
+from django.http import JsonResponse, FileResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from .models import TransaccionFactura  # 🎯 UNIFICADO: Usamos únicamente tu modelo transaccional real
+import io
+import datetime
+
+@csrf_exempt
+def ejecutar_cierre_pdf_api(request):
+    """
+    1. BALANCE FISCAL DIARIO PREMIUM (24 HORAS)
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    try:
+        inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+        
+        ventas_hoy = TransaccionFactura.objects.filter(fecha_registro__range=(inicio_dia, fin_dia))
+        total_usd = sum(float(v.total_usd or 0.00) for v in ventas_hoy)
+        total_bs = sum(float(v.total_bs or 0.00) for v in ventas_hoy)
+        conteo_transacciones = ventas_hoy.count()
+
+        buffer_memoria = io.BytesIO()
+        p = canvas.Canvas(buffer_memoria, pagesize=letter)
+        p.setTitle("SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
+        
+        p.setFillColor(colors.HexColor("#0b0f19"))
+        p.rect(0, 700, 612, 100, fill=True, stroke=False)
+        p.setFillColor(colors.white)
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(30, 750, "APIO E-COMMERCE SOFTWARE - REPORTE DE CIERRE")
+        p.setFont("Helvetica", 10)
+        p.drawString(30, 730, f"Fecha de Emisión: {timezone.now().date()} | Balance Compilado Cloud")
+        p.drawString(30, 715, "-------------------------------------------------------------------------")
+        
+        p.setFillColor(colors.black)
+        p.setFont("Helvetica-Bold", 12)
+        p.drawString(30, 670, f"Transacciones Procesadas hoy: {conteo_transacciones}")
+        p.drawString(30, 650, f"Total Facturado (USD): ${total_usd:,.2f}")
+        p.drawString(30, 630, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
+        p.line(30, 615, 580, 615)
+        
+        p.setFont("Courier", 8)
+        y_position = 590
+        
+        if ventas_hoy.exists():
+            for v in ventas_hoy:
+                if y_position < 50:
+                    p.showPage()
+                    y_position = 750
+                ref = (v.numero_factura or 'TR-N/A').ljust(12)
+                cedula = (v.cliente_identificacion or 'V-99999999').ljust(15)
+                metodo = (v.metodo_pago or 'BIOPAGO').ljust(12)
+                monto = f"${float(v.total_usd or 0.00):.2f}"
                 p.drawString(30, y_position, f"DOC: {ref} | RIF: {cedula} | PAGO: {metodo} | TOTAL: {monto}")
                 y_position -= 15
         else:
@@ -595,20 +775,111 @@ def ejecutar_cierre_pdf_api(request):
             p.setFillColor(colors.HexColor("#ef4444"))
             p.drawString(30, y_position, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
 
-        # Cierre y sellado del archivo binario
         p.showPage()
         p.save()
         buffer_memoria.seek(0)
         
-        # 🚀 Retornamos el archivo PDF directamente como un flujo de bytes nativo sin trabas
         nombre_reporte = f"Cierre_Diario_SotoSystem_{timezone.now().date()}.pdf"
         return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
-
     except Exception as e:
         print(f"❌ [SOTO CRITICAL PDF]: Fallo al compilar ReportLab: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+@csrf_exempt
+def ejecutar_cierre_semanal_pdf_api(request):
+    """
+    2. BALANCE FISCAL SEMANAL PREMIUM (ÍNDIGO - ÚLTIMOS 7 DÍAS)
+    """
+    if request.method != 'POST':
+        return HttpResponse("Método no permitido", status=405)
+    try:
+        buffer_memoria = io.BytesIO()
+        pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
+        pdf_lienzo.setTitle("APIO SAAS - REPORTE SEMANAL")
 
+        pdf_lienzo.setFillColor(colors.HexColor("#1e1b4b"))
+        pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
+        pdf_lienzo.setFillColor(colors.white)
+        pdf_lienzo.setFont("Helvetica-Bold", 16)
+        pdf_lienzo.drawString(30, 740, "APIO ERPS SOFTWARE - BALANCE CONSOLIDADO SEMANAL")
+        pdf_lienzo.setFont("Helvetica", 10)
+        
+        fecha_final = timezone.now().date()
+        fecha_inicial = fecha_final - datetime.timedelta(days=7)
+        pdf_lienzo.drawString(30, 720, f"Rango Auditoría: {fecha_inicial} hasta {fecha_final} | Últimos 7 Días")
+
+        hace_una_semana = timezone.now() - datetime.timedelta(days=7)
+        facturas_semana = TransaccionFactura.objects.filter(fecha_registro__gte=hace_una_semana)
+
+        total_bs = sum(float(f.total_bs or 0.00) for f in facturas_semana)
+        total_usd = sum(float(f.total_usd or 0.00) for f in facturas_semana)
+
+        pdf_lienzo.setFillColor(colors.black)
+        pdf_lienzo.setFont("Helvetica-Bold", 12)
+        pdf_lienzo.drawString(30, 640, "MÉTRICAS ACUMULADAS EN LA COLA DE ATENCIÓN:")
+        
+        pdf_lienzo.setFont("Courier-Bold", 11)
+        pdf_lienzo.drawString(40, 600, f"• FACTURAS PROCESADAS EN LA SEMANA: {facturas_semana.count()} Docs")
+        pdf_lienzo.drawString(40, 580, f"• TOTAL ACUMULADO EN BOLÍVARES:     {total_bs:,.2f} Bs.")
+        pdf_lienzo.drawString(40, 560, f"• TOTAL ACUMULADO EN DÓLARES:       $ {total_usd:,.2f} USD")
+
+        pdf_lienzo.showPage()
+        pdf_lienzo.save()
+        buffer_memoria.seek(0)
+        
+        nombre_archivo = f"Cierre_Semanal_SotoSystem_{fecha_final}.pdf"
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_archivo, content_type='application/pdf')
+    except Exception as e:
+        print(f"❌ [SOTO CRITICAL WEEKLY PDF]: {str(e)}")
+        return HttpResponse(f"Fallo Semanal: {str(e)}", status=500, content_type="text/plain")
+
+@csrf_exempt
+def ejecutar_cierre_mensual_pdf_api(request):
+    """
+    3. BALANCE FISCAL MENSUAL PREMIUM (BRONCE/DORADO - ÚLTIMOS 30 DÍAS)
+    """
+    if request.method != 'POST':
+        return HttpResponse("Método no permitido", status=405)
+    try:
+        buffer_memoria = io.BytesIO()
+        pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
+        pdf_lienzo.setTitle("APIO SAAS - REPORTE MENSUAL")
+
+        pdf_lienzo.setFillColor(colors.HexColor("#7c2d12"))
+        pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
+        pdf_lienzo.setFillColor(colors.white)
+        pdf_lienzo.setFont("Helvetica-Bold", 16)
+        pdf_lienzo.drawString(30, 740, "APIO ERPS SOFTWARE - BALANCE CONSOLIDADO MENSUAL")
+        pdf_lienzo.setFont("Helvetica", 10)
+        
+        fecha_final = datetime.date.today()
+        hace_un_mes_date = fecha_final - datetime.timedelta(days=30)
+        pdf_lienzo.drawString(30, 720, f"Rango Auditoría Mensual: {hace_un_mes_date} hasta {fecha_final} | Últimos 30 Días")
+
+        hace_un_mes_dt = timezone.now() - datetime.timedelta(days=30)
+        facturas_mes = TransaccionFactura.objects.filter(fecha_registro__gte=hace_un_mes_dt)
+
+        total_bs = sum(float(f.total_bs or 0.00) for f in facturas_mes)
+        total_usd = sum(float(f.total_usd or 0.00) for f in facturas_mes)
+
+        pdf_lienzo.setFillColor(colors.black)
+        pdf_lienzo.setFont("Helvetica-Bold", 12)
+        pdf_lienzo.drawString(30, 640, "MÉTRICAS ACUMULADAS EN EL CIERRE DE MES:")
+        
+        pdf_lienzo.setFont("Courier-Bold", 11)
+        pdf_lienzo.drawString(40, 600, f"• TOTAL FACTURAS PROCESADAS EN EL MES: {facturas_mes.count()} Docs")
+        pdf_lienzo.drawString(40, 580, f"• TOTAL ACUMULADO FACTURADO EN BS:     {total_bs:,.2f} Bs.")
+        pdf_lienzo.drawString(40, 560, f"• TOTAL ACUMULADO FACTURADO EN USD:    $ {total_usd:,.2f} USD")
+
+        pdf_lienzo.showPage()
+        pdf_lienzo.save()
+        buffer_memoria.seek(0)
+        
+        nombre_archivo = f"Cierre_Mensual_SotoSystem_{fecha_final.strftime('%Y-%m')}.pdf"
+        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_archivo, content_type='application/pdf')
+    except Exception as e:
+        print(f"❌ [SOTO CRITICAL MONTHLY PDF]: {str(e)}")
+        return HttpResponse(f"Fallo Mensual: {str(e)}", status=500, content_type="text/plain")
 
 # =====================================================================
 # 📱 NÚCLEO EXCLUSIVO PAGO MÓVIL V2.0 - PROVIDENCIA SENIAT 2026

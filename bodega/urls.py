@@ -30,13 +30,14 @@ urlpatterns = [
     # 👑 ENDPOINT DE REGISTRO INICIAL SAAS COMERCIAL (EL CABLE DEL BOTÓN NARANJA)
     path('api/v1/registro-inicial-saas/', views.registro_inicial_saas_api, name='registro_inicial_saas'),
 
-    # 🎯 REPARACIÓN DE ENRUTADO CORE (Comentado temporalmente para diagnosticar views)
+    # 🎯 LA COMPUERTA EXCLUSIVA DE LA PASARELA DE PAGO (SUBIDA ATÓMICA POST)
     path('api/v1/procesar-transaccion/', views.procesar_transaccion, name='procesar_transaccion'),
 
-    # 🔒 LA COMPUERTA DEL ERP (Comentado temporalmente para aislar el error del PDF)
-    path('api/v1/ejecutar-cierre-pdf/', views.ejecutar_cierre_pdf_api, name='ejecutar_cierre_pdf'),
+    # 📊 HISTORIAL GENERAL DEL ERP: El cable de bajada dedicado para la grilla Cyan
+    path('api/v1/historial-movimientos-api/', views.listado_historial_movimientos_api, name='historial_movimientos_api'),
 
-    # 📈 CAMINOS DE AUDITORÍA OPERATIVA SOTO SYSTEM (BUILD 2026)
+    # 🔒 LAS COMPUERTAS DE LOS REPORTES FISCALES EN PDF DE REPORTLAB
+    path('api/v1/ejecutar-cierre-pdf/', views.ejecutar_cierre_pdf_api, name='ejecutar_cierre_pdf'),
     path('api/v1/ejecutar-cierre-semanal/', views.ejecutar_cierre_semanal_pdf_api, name='cierre_semanal_pdf'),
     path('api/v1/ejecutar-cierre-mensual/', views.ejecutar_cierre_mensual_pdf_api, name='cierre_mensual_pdf'),
 
