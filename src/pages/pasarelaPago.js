@@ -7,9 +7,8 @@ import { Home } from './home.js';
 // 💰 ENGINE DE CAJA MASTER: LIQUIDADOR DE VUELTO MULTIMONEDA GLOBAL SOTO POS
 // =========================================================================
 window.calcularVueltoEnCaliente = function(totalVentaUsd, tasaBcv) {
-    // Si los parámetros no llegan dinámicos, los pescamos directamente del DOM del formulario
     const totalRealUsd = totalVentaUsd || parseFloat(window.App?.state?.montoTotal || 0.00);
-    const tasaRealBcv = tasaBcv || parseFloat(window.TasaCambioModulo?.state?.precio_bcv || 780.00); // 🎯 Toma tu tasa actual de la captura
+    const tasaRealBcv = tasaBcv || parseFloat(window.TasaCambioModulo?.state?.precio_bcv || 780.00);
 
     const montoRecibidoInput = document.getElementById('pm-pago-cliente');
     const montoRecibido = montoRecibidoInput ? parseFloat(montoRecibidoInput.value) : 0.00;
@@ -17,40 +16,34 @@ window.calcularVueltoEnCaliente = function(totalVentaUsd, tasaBcv) {
     const cuadroUsd = document.getElementById('vuelto-usd');
     const cuadroVes = document.getElementById('vuelto-ves');
 
-    // Si la casilla está vacía o el monto recibido es menor al total de la compra, limpiamos la pizarra
     if (!montoRecibido || montoRecibido <= totalRealUsd) {
         if (cuadroUsd) cuadroUsd.innerHTML = "$0.00";
         if (cuadroVes) cuadroVes.innerHTML = "0.00 Bs.";
         return;
     }
 
-    // Algoritmo matemático exacto de desglose de vuelto
     const vueltoUsd = montoRecibido - totalRealUsd;
     const vueltoVes = vueltoUsd * tasaRealBcv;
 
-    // Inyectamos con formato limpio en las tarjetas neón de tu pasarela
     if (cuadroUsd) cuadroUsd.innerHTML = `$${vueltoUsd.toFixed(2)}`;
     if (cuadroVes) cuadroVes.innerHTML = `${vueltoVes.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.`;
 };
 
 const PasarelaPago = {
-    // Propiedad mutable global para tu calculadora manual o API del BCV
     tasaActivaBCV: 0.00, 
 
-    // Estado transaccional compacto que leerán Daniela IA y tu Server.cjs
     estadoTransaccion: {
-        metodoSeleccionado: 'PAGO_MOVIL', // PAGO_MOVIL, BIOPAGO, PUNTO
+        metodoSeleccionado: 'PAGO_MOVIL', 
         montoBs: 0.00,
         montoUSD: 0.00,
         referenciaBancaria: '',
-        estatus: 'PENDIENTE', // PENDING_GATEWAY, COMPLETED, FAILED
+        estatus: 'PENDIENTE', 
         rifCliente: ''
     },
 
     pagosProcesados: [],
 
     // 🎯 ENLAZADOR REMOTO CLOUD INTEGRADO SOTO SYSTEM (2026)
-    // Ubicación: Dentro del objeto PasarelaPago, justo arriba del método render()
     procesarDespachoFactura() {
         console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
         const tx = this.estadoTransaccion;
@@ -66,19 +59,25 @@ const PasarelaPago = {
             metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
         }
 
+        // 🚨 VISOR DE RAYOS X CONTABLE: Auditamos qué está leyendo JavaScript antes de empaquetar
+        console.log("💰 [SOTO CONTROL INTERNO]: Verificando variables de caja ->", {
+            "totalBs_detectado": totalBs,
+            "totalUsd_detectado": totalUsd,
+            "cedula_detectada": cedulaCliente,
+            "metodo_detectado": metodoFinalLabel
+        });
+
         // 🎯 DISPARADOR CLOUD INTEGRADO SOTO SYSTEM: Sincronización exacta con las llaves de Django Views
         const datosOrden = {
-            "accion": "CREAR_VENTA", // 👑 EL INTERRUPTOR: Obliga a Django a procesar esto como una inserción nueva
+            "accion": "CREAR_VENTA", 
             "cliente_identificacion": cedulaCliente,
             "tasa_bcv": tx.tasaActivaBCV || window.TasaCambioModulo?.state?.precio_bcv || 780.00,
             "total_usd": totalUsd,
-            "metodo_pago": metodoFinalLabel === "PAGO_MOVIL_QR" ? "PAGO_MOVIL" : metodoFinalLabel, // Homologamos a la palabra de Django
+            "metodo_pago": metodoFinalLabel === "PAGO_MOVIL_QR" ? "PAGO_MOVIL" : metodoFinalLabel, 
             "articulos": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
             "soporte_pago_movil": tx.soportePagoMovil || null
         };
 
-
-        // Conexión limpia y directa a tu urls.py en la nube de Railway
         const urlApiTransaccion = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
         window.fetch(urlApiTransaccion, {
@@ -90,39 +89,35 @@ const PasarelaPago = {
             if (!res.ok) throw new Error("Rebote fiscal en Django (Status: " + res.status + ")");
             return res.json();
         })
-                .then(data => {
+        .then(data => {
             console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
             
-            // 🔮 CAPTURA DE NÚMERO FISCAL REMOTO: Pescamos la referencia devuelta por Django en la nube
-            const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
+            const refFactura = data.numero_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
             
-            // =========================================================================
-            // 📊 ALIMENTACIÓN INTEGRAL DE LOS COMPONENTES DEL ERP (REGLAS DE LA A A LA I)
-            // =========================================================================
-            const nuevoMovimientoContable = {
+            // 🎯 CORRECTOR DE LLAVES LOCALES SOTO SYSTEM: Mapeo exacto para la Extensión I del ERP
+            const nuevoMovementoContable = {
                 ref: refFactura,
                 hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
                 cedula: cedulaCliente,
-                // Mapeamos los nombres y cantidades para la Extensión I (Historial Detallado)
                 productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
-                metodo: metodoFinalLabel, // Guarda: "PAGO_MOVIL", "BIOPAGO_BDV" o "PUNTO (UBII)", "PUNTO (DEBITO)", etc.
+                metodo: metodoFinalLabel, 
                 montoBs: totalBs,
                 montoUsd: totalUsd,
-                // Inyectamos el soporte auditado de Pago Móvil con el banco y los 4 dígitos
+                valorBsReal: totalBs,
+                valorUsdReal: totalUsd,
                 detallesPagoMovil: tx.soportePagoMovil || null
             };
 
-            // A. Sincronización en Caliente de la RAM del ERP (Para Cierres y Gráficas de Turno)
+            // A. Sincronización en Caliente de la RAM del ERP
             if (!window.ErpModulo) window.ErpModulo = { state: { movimientosDiarios: [] } };
             if (!window.ErpModulo.state) window.ErpModulo.state = { movimientosDiarios: [] };
             if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
             
-            // Empujamos el registro al inicio del array para que aparezca de primero en el monitor
-            window.ErpModulo.state.movimientosDiarios.unshift(nuevoMovimientoContable);
+            window.ErpModulo.state.movimientosDiarios.unshift(nuevoMovementoContable);
 
-            // B. Persistencia Total en el Disco (A prueba de apagones o bajones de luz en Baradida)
+            // B. Persistencia Total en el Disco
             const historialHistorico = JSON.parse(localStorage.getItem('APIO_MOVIMIENTOS_DIARIOS')) || [];
-            historialHistorico.unshift(nuevoMovimientoContable);
+            historialHistorico.unshift(nuevoMovementoContable);
             localStorage.setItem('APIO_MOVIMIENTOS_DIARIOS', JSON.stringify(historialHistorico));
 
             // C. Disparador de Conciliación en Caliente del ERP
@@ -131,6 +126,17 @@ const PasarelaPago = {
             }
 
             console.log("📊 [SOTO AUDIT SUCCESS]: Componentes del ERP alimentados de la A a la I.");
+            
+            // Invocamos la copa dorada pasándole las variables de montos calculados
+            if (typeof window.PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+                window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            } else if (typeof PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+                PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error de comunicación asíncrona en la Pasarela:", error.message);
+            alert("⚠️ Error contable: No se pudo conectar con el servidor remoto para cerrar la venta.");
 
             // =========================================================================
             // 🎭 INVOCACIÓN ELÁSTICA DE LA ANIMACIÓN DE LA COPA DORADA
