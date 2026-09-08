@@ -96,18 +96,19 @@ const PasarelaPago = {
             // 🔮 CAPTURA DE NÚMERO FISCAL REMOTO: Pescamos la referencia devuelta por Django en la nube
             const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
             
-                        // 🎯 CORRECTOR DE LLAVES LOCALES SOTO SYSTEM: Mapeo exacto para la Extensión I del ERP
+            // =========================================================================
+            // 📊 ALIMENTACIÓN INTEGRAL DE LOS COMPONENTES DEL ERP (REGLAS DE LA A A LA I)
+            // =========================================================================
             const nuevoMovimientoContable = {
                 ref: refFactura,
                 hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
                 cedula: cedulaCliente,
+                // Mapeamos los nombres y cantidades para la Extensión I (Historial Detallado)
                 productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
-                metodo: metodoFinalLabel, 
-                // 👑 LAS LLAVES CORE REPARADAS: Pasamos los montos reales con el nombre exacto
+                metodo: metodoFinalLabel, // Guarda: "PAGO_MOVIL", "BIOPAGO_BDV" o "PUNTO (UBII)", "PUNTO (DEBITO)", etc.
                 montoBs: totalBs,
                 montoUsd: totalUsd,
-                valorBsReal: totalBs,
-                valorUsdReal: totalUsd,
+                // Inyectamos el soporte auditado de Pago Móvil con el banco y los 4 dígitos
                 detallesPagoMovil: tx.soportePagoMovil || null
             };
 
