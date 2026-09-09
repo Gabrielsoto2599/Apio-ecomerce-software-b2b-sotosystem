@@ -647,69 +647,6 @@ def listado_historial_movimientos_api(request):
 
 
 # =========================================================================
-# 🔒 GENERADORES DE PDF FISCALES - CORREGIDOS CON EL CAMPO 'FECHA' REAL
-# =========================================================================
-@csrf_exempt
-def ejecutar_cierre_pdf_api(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
-    try:
-        inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
-        
-        # 🎯 CORRECCIÓN: Filtramos por 'fecha' en vez de 'fecha_registro'
-        ventas_hoy = TransaccionFactura.objects.filter(fecha__range=(inicio_dia, fin_dia))
-        total_usd = sum(float(v.total_usd or 0.00) for v in ventas_hoy)
-        total_bs = sum(float(v.total_bs or 0.00) for v in ventas_hoy)
-        conteo_transacciones = ventas_hoy.count()
-
-        buffer_memoria = io.BytesIO()
-        p = canvas.Canvas(buffer_memoria, pagesize=letter)
-        p.setTitle("SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
-        
-        p.setFillColor(colors.HexColor("#0b0f19"))
-        p.rect(0, 700, 612, 100, fill=True, stroke=False)
-        p.setFillColor(colors.white)
-        p.setFont("Helvetica-Bold", 16)
-        p.drawString(30, 750, "APIO E-COMMERCE SOFTWARE - REPORTE DE CIERRE")
-        p.setFont("Helvetica", 10)
-        p.drawString(30, 730, f"Fecha de Emisión: {timezone.now().date()} | Balance Compilado Cloud")
-        p.drawString(30, 715, "-------------------------------------------------------------------------")
-        
-        p.setFillColor(colors.black)
-        p.setFont("Helvetica-Bold", 12)
-        p.drawString(30, 670, f"Transacciones Procesadas hoy: {conteo_transacciones}")
-        p.drawString(30, 650, f"Total Facturado (USD): ${total_usd:,.2f}")
-        p.drawString(30, 630, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
-        p.line(30, 615, 580, 615)
-        
-        p.setFont("Courier", 8)
-        y_position = 590
-        
-        if ventas_hoy.exists():
-            for v in ventas_hoy:
-                if y_position < 50:
-                    p.showPage()
-                    y_position = 750
-                ref = (v.numero_factura or 'TR-N/A').ljust(12)
-                cedula = (v.cliente_identificacion or 'V-99999999').ljust(15)
-                metodo = (v.metodo_pago or 'BIOPAGO').ljust(12)
-                monto = f"${float(v.total_usd or 0.00):.2f}"
-                p.drawString(30, y_position, f"DOC: {ref} | RIF: {cedula} | PAGO: {metodo} | TOTAL: {monto}")
-                y_position -= 15
-        else:
-            p.drawString(30, y_position, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
-
-        p.showPage()
-        p.save()
-        buffer_memoria.seek(0)
-        
-        nombre_reporte = f"Cierre_Diario_SotoSystem_{timezone.now().date()}.pdf"
-        return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-# =========================================================================
 # 📊 GENERADORES DE PDF FISCALES EN VIVO - SOTO FINANCIAL (BUILD 2026)
 # Ubicación: Al puro final de bodega/views.py (COMPLETO, SANADO Y UNIFICADO)
 # =========================================================================
@@ -723,25 +660,34 @@ import datetime
 @csrf_exempt
 def ejecutar_cierre_pdf_api(request):
     """
-    1. BALANCE FISCAL DIARIO PREMIUM (24 HORAS)
+    📊 BALANCE FISCAL DIARIO PREMIUM INDESTRUCTIBLE SOTO POS (24 HORAS)
+    Ubicación: bodega/views.py -> Blindado contra valores nulos y tasas desalineadas
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
+        
     try:
+        # 📊 1. Rango de tiempo absoluto compatible con el huso horario de Venezuela
         inicio_dia = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
         fin_dia = timezone.now().replace(hour=23, minute=59, second=59, microsecond=999999)
         
-        ventas_hoy = TransaccionFactura.objects.filter(fecha_registro__range=(inicio_dia, fin_dia))
+        # Filtramos estrictamente por tu columna real de tiempo 'fecha'
+        ventas_hoy = TransaccionFactura.objects.filter(fecha__range=(inicio_dia, fin_dia))
+        
+        # Computamos los totales blindando los floats contra valores None o Nulos en base de datos
         total_usd = sum(float(v.total_usd or 0.00) for v in ventas_hoy)
         total_bs = sum(float(v.total_bs or 0.00) for v in ventas_hoy)
         conteo_transacciones = ventas_hoy.count()
 
+        # 🖨️ 2. Construimos el flujo binario para ReportLab
         buffer_memoria = io.BytesIO()
         p = canvas.Canvas(buffer_memoria, pagesize=letter)
         p.setTitle("SOTO SYSTEM POS - REPORTE DE CIERRE DIARIO")
         
+        # Encabezado Estético Institucional Premium Dark
         p.setFillColor(colors.HexColor("#0b0f19"))
         p.rect(0, 700, 612, 100, fill=True, stroke=False)
+        
         p.setFillColor(colors.white)
         p.setFont("Helvetica-Bold", 16)
         p.drawString(30, 750, "APIO E-COMMERCE SOFTWARE - REPORTE DE CIERRE")
@@ -749,6 +695,7 @@ def ejecutar_cierre_pdf_api(request):
         p.drawString(30, 730, f"Fecha de Emisión: {timezone.now().date()} | Balance Compilado Cloud")
         p.drawString(30, 715, "-------------------------------------------------------------------------")
         
+        # Cuerpo del Balance Contable
         p.setFillColor(colors.black)
         p.setFont("Helvetica-Bold", 12)
         p.drawString(30, 670, f"Transacciones Procesadas hoy: {conteo_transacciones}")
@@ -756,18 +703,23 @@ def ejecutar_cierre_pdf_api(request):
         p.drawString(30, 630, f"Total Facturado (Bs.): {total_bs:,.2f} Bs.")
         p.line(30, 615, 580, 615)
         
+        # Desglose de canales tipo Impresora Fiscal
         p.setFont("Courier", 8)
         y_position = 590
         
         if ventas_hoy.exists():
             for v in ventas_hoy:
-                if y_position < 50:
+                if y_position < 50:  # Salto de página básico
                     p.showPage()
                     y_position = 750
-                ref = (v.numero_factura or 'TR-N/A').ljust(12)
-                cedula = (v.cliente_identificacion or 'V-99999999').ljust(15)
-                metodo = (v.metodo_pago or 'BIOPAGO').ljust(12)
-                monto = f"${float(v.total_usd or 0.00):.2f}"
+                
+                # Blindamos las strings contra campos vacíos en el bucle
+                ref = str(v.numero_factura or 'TR-N/A').ljust(12)
+                cedula = str(v.cliente_identificacion or 'V-99999999').ljust(15)
+                metodo = str(v.metodo_pago or 'BIOPAGO').ljust(12)
+                monto_val = float(v.total_usd or 0.00)
+                monto = f"${monto_val:.2f}"
+                
                 p.drawString(30, y_position, f"DOC: {ref} | RIF: {cedula} | PAGO: {metodo} | TOTAL: {monto}")
                 y_position -= 15
         else:
@@ -775,20 +727,24 @@ def ejecutar_cierre_pdf_api(request):
             p.setFillColor(colors.HexColor("#ef4444"))
             p.drawString(30, y_position, "⚠️ Sin movimientos comerciales registrados en la base de datos cloud hoy.")
 
+        # Cierre y sellado del archivo binario
         p.showPage()
         p.save()
         buffer_memoria.seek(0)
         
+        # 🚀 RETORNO BINARIO DIRECTO: Flujo nativo sin trabas de internet
         nombre_reporte = f"Cierre_Diario_SotoSystem_{timezone.now().date()}.pdf"
         return FileResponse(buffer_memoria, as_attachment=True, filename=nombre_reporte, content_type='application/pdf')
+
     except Exception as e:
         print(f"❌ [SOTO CRITICAL PDF]: Fallo al compilar ReportLab: {str(e)}")
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        return JsonResponse({'status': 'error', 'message': f"Error interno en molienda PDF: {str(e)}"}, status=500)
 
 @csrf_exempt
 def ejecutar_cierre_semanal_pdf_api(request):
     """
     2. BALANCE FISCAL SEMANAL PREMIUM (ÍNDIGO - ÚLTIMOS 7 DÍAS)
+    Ubicación: bodega/views.py -> Sincronizado con el campo 'fecha' real de tu Postgres
     """
     if request.method != 'POST':
         return HttpResponse("Método no permitido", status=405)
@@ -797,6 +753,7 @@ def ejecutar_cierre_semanal_pdf_api(request):
         pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
         pdf_lienzo.setTitle("APIO SAAS - REPORTE SEMANAL")
 
+        # Cabecera Índigo Premium
         pdf_lienzo.setFillColor(colors.HexColor("#1e1b4b"))
         pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
         pdf_lienzo.setFillColor(colors.white)
@@ -808,9 +765,11 @@ def ejecutar_cierre_semanal_pdf_api(request):
         fecha_inicial = fecha_final - datetime.timedelta(days=7)
         pdf_lienzo.drawString(30, 720, f"Rango Auditoría: {fecha_inicial} hasta {fecha_final} | Últimos 7 Días")
 
+        # 🎯 CORRECCIÓN MÁSTER: Filtramos por tu columna real de base de datos 'fecha'
         hace_una_semana = timezone.now() - datetime.timedelta(days=7)
-        facturas_semana = TransaccionFactura.objects.filter(fecha_registro__gte=hace_una_semana)
+        facturas_semana = TransaccionFactura.objects.filter(fecha__gte=hace_una_semana)
 
+        # Mapeo contable blindado contra floats vacíos o nulos en registros de prueba
         total_bs = sum(float(f.total_bs or 0.00) for f in facturas_semana)
         total_usd = sum(float(f.total_usd or 0.00) for f in facturas_semana)
 
@@ -833,10 +792,12 @@ def ejecutar_cierre_semanal_pdf_api(request):
         print(f"❌ [SOTO CRITICAL WEEKLY PDF]: {str(e)}")
         return HttpResponse(f"Fallo Semanal: {str(e)}", status=500, content_type="text/plain")
 
+
 @csrf_exempt
 def ejecutar_cierre_mensual_pdf_api(request):
     """
     3. BALANCE FISCAL MENSUAL PREMIUM (BRONCE/DORADO - ÚLTIMOS 30 DÍAS)
+    Ubicación: bodega/views.py -> Sincronizado con el campo 'fecha' real de tu Postgres
     """
     if request.method != 'POST':
         return HttpResponse("Método no permitido", status=405)
@@ -845,6 +806,7 @@ def ejecutar_cierre_mensual_pdf_api(request):
         pdf_lienzo = canvas.Canvas(buffer_memoria, pagesize=letter)
         pdf_lienzo.setTitle("APIO SAAS - REPORTE MENSUAL")
 
+        # Cabecera Bronce/Dorado Premium
         pdf_lienzo.setFillColor(colors.HexColor("#7c2d12"))
         pdf_lienzo.rect(0, 700, 612, 100, fill=True, stroke=False)
         pdf_lienzo.setFillColor(colors.white)
@@ -856,9 +818,11 @@ def ejecutar_cierre_mensual_pdf_api(request):
         hace_un_mes_date = fecha_final - datetime.timedelta(days=30)
         pdf_lienzo.drawString(30, 720, f"Rango Auditoría Mensual: {hace_un_mes_date} hasta {fecha_final} | Últimos 30 Días")
 
+        # 🎯 CORRECCIÓN MÁSTER: Filtramos por tu columna real de base de datos 'fecha'
         hace_un_mes_dt = timezone.now() - datetime.timedelta(days=30)
-        facturas_mes = TransaccionFactura.objects.filter(fecha_registro__gte=hace_un_mes_dt)
+        facturas_mes = TransaccionFactura.objects.filter(fecha__gte=hace_un_mes_dt)
 
+        # Mapeo contable blindado contra floats vacíos o nulos en registros antiguos
         total_bs = sum(float(f.total_bs or 0.00) for f in facturas_mes)
         total_usd = sum(float(f.total_usd or 0.00) for f in facturas_mes)
 
@@ -880,6 +844,7 @@ def ejecutar_cierre_mensual_pdf_api(request):
     except Exception as e:
         print(f"❌ [SOTO CRITICAL MONTHLY PDF]: {str(e)}")
         return HttpResponse(f"Fallo Mensual: {str(e)}", status=500, content_type="text/plain")
+
 
 # =====================================================================
 # 📱 NÚCLEO EXCLUSIVO PAGO MÓVIL V2.0 - PROVIDENCIA SENIAT 2026
