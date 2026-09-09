@@ -819,7 +819,7 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
         return;
     }
 
-    // 2. Mapeamos las ventas extraídas de internet a filas reales del DOM
+    // 2. Mapeamos las ventas extraídos de internet a filas reales del DOM
     tbody.innerHTML = lista.map(mov => {
         const metodo = (mov.metodo || mov.metodo_pago || "BIOPAGO").toUpperCase().trim();
         let metadatosPagoMovilHtml = "";
@@ -840,15 +840,46 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
             `;
         }
 
-        // BYPASS DE MONTOS: Pescamos las variables del JSON homologadas con el cambio de fecha de tu Django
+        // =========================================================================
+        // 📅 TRADUCTOR DE HUSO HORARIO CLOUD: Convierte la hora de Inglaterra a Venezuela
+        // =========================================================================
+        let horaSaneadaFinal = mov.hora || "En vivo";
+        
+        if (mov.hora && mov.hora.includes(":")) {
+            try {
+                // Separamos la hora cruda que manda Django (Ej: "01:35 AM")
+                const [tiempoCrudo, periodo] = mov.hora.split(' ');
+                let [hrs, mins] = tiempoCrudo.split(':').map(Number);
+                
+                // Convertimos a formato militar de 24 horas para hacer la matemática
+                if (periodo === 'PM' && hrs < 12) hrs += 12;
+                if (periodo === 'AM' && hrs === 12) hrs = 0;
+                
+                // Restamos las 4 horas exactas del desfase atlántico de Railway
+                hrs = hrs - 4;
+                if (hrs < 0) hrs += 24; // Ajuste si cruza la medianoche hacia atrás
+                
+                // Re-formateamos de vuelta al look de 12 horas de taquilla
+                const nuevoPeriodo = hrs >= 12 ? 'PM' : 'AM';
+                hrs = hrs % 12;
+                hrs = hrs ? hrs : 12; // El cero serán las 12
+                
+                horaSaneadaFinal = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${nuevoPeriodo}`;
+            } catch (err) {
+                horaSaneadaFinal = mov.hora; // Fallback elástico por seguridad
+            }
+        }
+
+        // 👑 BYPASS DE MONTOS INTACTO: Pescamos las variables del JSON homologadas
         const valorBsReal = parseFloat(mov.valorBsReal || mov.montoBs || mov.monto_bs || 0);
         const valorUsdReal = parseFloat(mov.valorUsdReal || mov.montoUsd || mov.monto_usd || 0);
 
         return `
             <tr style="border-bottom: 1px solid #1e293b; background-color: rgba(255,255,255, 0.01);">
                 <td style="padding: 14px; color: #a855f7; font-weight: bold; font-size: 11px; font-family: monospace;">
-                    ${mov.ref || 'TR-' + Math.floor(10000 + Math.random() * 90000)}<br>
-                    <span style="color: #64748b; font-size: 9px;">${mov.hora || 'En vivo'}</span>
+                    ${mov.ref || 'TR-N/A'}<br>
+                    <!-- 👑 INYECCIÓN HORARIA REPARADA: Cambiamos mov.hora por horaSaneadaFinal -->
+                    <span style="color: #64748b; font-size: 9px;">${horaSaneadaFinal}</span>
                 </td>
                 <td style="padding: 14px; color: #cbd5e1; font-family: monospace;">${mov.cedula || 'V-CONSUMIDOR-FINAL'}</td>
                 <td style="padding: 14px; color: #94a3b8; font-family: 'Inter', sans-serif; line-height: 1.4; font-size: 11px;">
@@ -860,7 +891,7 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
                         ${metodo.replace('_', ' ')}
                     </span>
                 </td>
-                <!-- 👑 COLUMNA MÁSTER CYAN PREMIUM SOTO SYSTEM -->
+                <!-- 👑 COLUMNA MÁSTER CYAN PREMIUM SOTO SYSTEM MANTENIDA -->
                 <td style="padding: 14px; text-align: right; color: #00D2FF; font-size: 13px; font-family: monospace;">
                     ${valorBsReal.toLocaleString('es-VE', {minimumFractionDigits: 2})} Bs.<br>
                     <span style="color: #10b981; font-size: 10px;">$${valorUsdReal.toFixed(2)}</span>
@@ -869,7 +900,6 @@ window.ErpModulo.reinyectarFilasTabla = async function() {
         `;
     }).join(''); // 🔒 CIERRE 1: Clausura el bucle .map()
 }; // 🔒 CIERRE 2: Clausura la función principal de la Extensión I
-
 
 // Sello de acoplamiento universal
 window.ErpModulo = window.ErpModulo || {};
