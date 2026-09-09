@@ -119,17 +119,16 @@ const PasarelaPago = {
             // =========================================================================
             // 📊 ALIMENTACIÓN INTEGRAL DE LOS COMPONENTES DEL ERP (REGLAS DE LA A A LA I)
             // =========================================================================
-            // 🎯 CORRECTOR DE LLAVES LOCALES SOTO SYSTEM: Mapeo de montos reales capturados arriba
-            const nuevoMovementoContable = {
+            const nuevoMovimientoContable = {
                 ref: refFactura,
                 hora: horaFormateadaFija, // 📅 Inyectamos la hora formateada regional sin desfases
                 cedula: cedulaCliente,
+                // Mapeamos los nombres y cantidades para la Extensión I (Historial Detallado)
                 productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
-                metodo: metodoFinalLabel, 
+                metodo: metodoFinalLabel, // Guarda: "PAGO_MOVIL", "BIOPAGO_BDV" o "PUNTO (UBII)", "PUNTO (DEBITO)", etc.
                 montoBs: totalBs,
                 montoUsd: totalUsd,
-                valorBsReal: totalBs,
-                valorUsdReal: totalUsd,
+                // Inyectamos el soporte auditado de Pago Móvil con el banco y los 4 dígitos
                 detallesPagoMovil: tx.soportePagoMovil || null
             };
 
