@@ -49,7 +49,7 @@ const PasarelaPago = {
 
     pagosProcesados: [],
 
-        // 🎯 ENLAZADOR REMOTO CLOUD INTEGRADO SOTO SYSTEM (BUILD 2026)
+       // 🎯 ENLAZADOR REMOTO CLOUD INTEGRADO SOTO SYSTEM (BUILD 2026)
     procesarDespachoFactura() {
         console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
         const tx = this.estadoTransaccion;
@@ -74,25 +74,17 @@ const PasarelaPago = {
         
         let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
         if (metodoFinalLabel === "PUNTO" && tx.subTipoTarjeta) {
-            metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`
+            metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
         }
-        
-        // 📅 FORMATO DE HORA SOTO SYSTEM (CALIBRACIÓN VENEZUELA GMT-4)
-        // Forzamos la resta matemática exacta de 4 horas para destruir el adelanto de red
-        const ahoraUTC = new Date();
-        const ahoraVE = new Date(ahoraUTC.getTime() - (4 * 60 * 60 * 1000));
-        
-        let horas = ahoraVE.getHours();
-        const minutos = String(ahoraVE.getMinutes()).padStart(2, '0');
-        
-        // Evaluamos de forma manual el AM/PM real del territorio nacional
-        const ampm = horas >= 12 ? 'PM' : 'AM';
-        
-        // Conversión matemática estricta a formato de 12 horas
-        horas = horas % 12;
-        horas = horas ? horas : 12; // Si da 0, lo transformamos en las 12
-        const horaFormateadaFija = `${String(horas).padStart(2, '0')}:${minutos} ${ampm}`;
 
+        // 🎯 CORRECTOR DE HORA INMUTABLE SOTO SYSTEM: Forzamos la hora de tu laptop calculada con el GMT-4
+        const ahoraVE = new Date(new Date().getTime() - (4 * 60 * 60 * 1000));
+        let horasVE = ahoraVE.getHours();
+        const minutosVE = String(ahoraVE.getMinutes()).padStart(2, '0');
+        const ampmVE = horasVE >= 12 ? 'PM' : 'AM';
+        horasVE = horasVE % 12;
+        horasVE = horasVE ? horasVE : 12;
+        const horaNacionalFija = `${String(horasVE).padStart(2, '0')}:${minutosVE} ${ampmVE}`;
 
         // 🎯 DISPARADOR CLOUD INTEGRADO SOTO SYSTEM: Sincronización exacta con las llaves de Django Views
         const datosOrden = {
@@ -110,7 +102,6 @@ const PasarelaPago = {
 
         window.fetch(urlApiTransaccion, {
             method: 'POST',
-            
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosOrden)
         })
@@ -118,29 +109,29 @@ const PasarelaPago = {
             if (!res.ok) throw new Error("Rebote fiscal en Django (Status: " + res.status + ")");
             return res.json();
         })
-                .then(data => {
+        .then(data => {
             console.log("✅ [SOTO POS BACKEND SUCCESS]: Venta registrada en PostgreSQL de Railway.");
             
-            // 🔮 CAPTURA DE NÚMERO FISCAL REMOTO: Pescamos la referencia devuelta por Django en la nube
-            const refFactura = data.referencia_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
+            const refFactura = data.numero_factura || data.ref || `TR-${Math.floor(100000 + Math.random() * 900000)}`;
             
             // =========================================================================
             // 📊 ALIMENTACIÓN INTEGRAL DE LOS COMPONENTES DEL ERP (REGLAS DE LA A A LA I)
             // =========================================================================
+            // 🎯 MAPEO CONTABLE REPARADO: Asignamos 'horaNacionalFija' de forma obligatoria
             const nuevoMovimientoContable = {
                 ref: refFactura,
-                hora: horaFormateadaFija, // 📅 Inyectamos la hora formateada regional sin desfases
+                hora: horaNacionalFija, // 👑 CANCELACIÓN DE RED: Forzamos los 15 minutos PM reales de Lara
                 cedula: cedulaCliente,
-                // Mapeamos los nombres y cantidades para la Extensión I (Historial Detallado)
                 productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
-                metodo: metodoFinalLabel, // Guarda: "PAGO_MOVIL", "BIOPAGO_BDV" o "PUNTO (UBII)", "PUNTO (DEBITO)", etc.
+                metodo: metodoFinalLabel, 
                 montoBs: totalBs,
                 montoUsd: totalUsd,
-                // Inyectamos el soporte auditado de Pago Móvil con el banco y los 4 dígitos
+                valorBsReal: totalBs,
+                valorUsdReal: totalUsd,
                 detallesPagoMovil: tx.soportePagoMovil || null
             };
 
-            // A. Sincronización en Caliente de la RAM del ERP (Para Cierres y Gráficas de Turno)
+            // A. Sincronización en Caliente de la RAM del ERP
             if (!window.ErpModulo) window.ErpModulo = { state: { movimientosDiarios: [] } };
             if (!window.ErpModulo.state) window.ErpModulo.state = { movimientosDiarios: [] };
             if (!window.ErpModulo.state.movimientosDiarios) window.ErpModulo.state.movimientosDiarios = [];
@@ -160,6 +151,18 @@ const PasarelaPago = {
 
             console.log("📊 [SOTO AUDIT SUCCESS]: Componentes del ERP alimentados de la A a la I.");
 
+            // Invocamos la copa dorada pasándole las variables de montos reales y corregidos
+            if (typeof window.PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+                window.PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            } else if (typeof PasarelaPago.dispararAnimacionExitoVisual === 'function') {
+                PasarelaPago.dispararAnimacionExitoVisual(refFactura, metodoFinalLabel, cedulaCliente, totalBs);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error de comunicación asíncrona en la Pasarela:", error.message);
+            alert("⚠️ Error contable: No se pudo conectar con el servidor remoto para cerrar la venta.");
+     
+            
             // =========================================================================
             // 🎭 INVOCACIÓN ELÁSTICA DE LA ANIMACIÓN DE LA COPA DORADA
             // =========================================================================
