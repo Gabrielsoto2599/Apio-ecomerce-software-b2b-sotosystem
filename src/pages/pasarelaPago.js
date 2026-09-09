@@ -49,16 +49,27 @@ const PasarelaPago = {
 
     pagosProcesados: [],
 
-    // 🎯 ENLAZADOR REMOTO CLOUD INTEGRADO SOTO SYSTEM (2026)
-    // Ubicación: Dentro del objeto PasarelaPago, justo arriba del método render()
+        // 🎯 ENLAZADOR REMOTO CLOUD INTEGRADO SOTO SYSTEM (BUILD 2026)
     procesarDespachoFactura() {
         console.log("📡 [SOTO TRANSMISIÓN]: Despachando payload directo hacia Railway Cloud...");
         const tx = this.estadoTransaccion;
 
         // Recolección ligera de la compra desde la RAM de Electron
         const carritoProductos = window.App?.state?.carritoActual || window.CatalogoB2B?.state?.carrito || [];
-        const totalBs = parseFloat(document.getElementById('total-neto-pagar')?.innerText || "0.00");
-        const totalUsd = parseFloat(tx.montoTotalUsd || window.App?.state?.totalFacturaUsd || 0.00);
+        
+        // 👑 BYPASS DE EQUILIBRIO DE CAJA: Si el ID del HTML no existe, extraemos el monto real de la RAM
+        const totalBs = parseFloat(document.getElementById('total-neto-pagar')?.innerText 
+            || document.getElementById('total-pagar')?.innerText 
+            || tx.montoBs 
+            || window.App?.state?.montoTotalBs 
+            || 0.00);
+
+        const totalUsd = parseFloat(tx.montoTotalUsd 
+            || window.App?.state?.totalFacturaUsd 
+            || tx.montoUSD 
+            || window.App?.state?.montoTotal 
+            || 0.00);
+
         const cedulaCliente = tx.rifCliente || document.getElementById('cliente-identificacion')?.value || "V-CONSUMIDOR-FINAL";
         
         let metodoFinalLabel = tx.metodoSeleccionado || "EFECTIVO";
@@ -66,23 +77,32 @@ const PasarelaPago = {
             metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
         }
 
+        // 📅 FORMATO DE HORA CORREGIDO: Captura la hora física de tu laptop al milisegundo
+        const ahora = new Date();
+        let horas = ahora.getHours();
+        const minutos = String(ahora.getMinutes()).padStart(2, '0');
+        const ampm = horas >= 12 ? 'PM' : 'AM';
+        horas = horas % 12;
+        horas = horas ? horas : 12; // El cero serán las 12
+        const horaFormateadaFija = `${String(horas).padStart(2, '0')}:${minutos} ${ampm}`;
+
         // 🎯 DISPARADOR CLOUD INTEGRADO SOTO SYSTEM: Sincronización exacta con las llaves de Django Views
         const datosOrden = {
-            "accion": "CREAR_VENTA", // 👑 EL INTERRUPTOR: Obliga a Django a procesar esto como una inserción nueva
+            "accion": "CREAR_VENTA", 
             "cliente_identificacion": cedulaCliente,
             "tasa_bcv": tx.tasaActivaBCV || window.TasaCambioModulo?.state?.precio_bcv || 780.00,
             "total_usd": totalUsd,
-            "metodo_pago": metodoFinalLabel === "PAGO_MOVIL_QR" ? "PAGO_MOVIL" : metodoFinalLabel, // Homologamos a la palabra de Django
+            "metodo_pago": metodoFinalLabel === "PAGO_MOVIL_QR" ? "PAGO_MOVIL" : metodoFinalLabel, 
             "articulos": carritoProductos.map(p => ({ sku: p.sku, cantidad: p.cantidad, nombre: p.nombre })),
             "soporte_pago_movil": tx.soportePagoMovil || null
         };
-
 
         // Conexión limpia y directa a tu urls.py en la nube de Railway
         const urlApiTransaccion = 'https://apio-ecomerce-software-b2b-sotosystem-production.up.railway.app/api/v1/procesar-transaccion/';
 
         window.fetch(urlApiTransaccion, {
             method: 'POST',
+            
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosOrden)
         })
@@ -99,16 +119,17 @@ const PasarelaPago = {
             // =========================================================================
             // 📊 ALIMENTACIÓN INTEGRAL DE LOS COMPONENTES DEL ERP (REGLAS DE LA A A LA I)
             // =========================================================================
-            const nuevoMovimientoContable = {
+            // 🎯 CORRECTOR DE LLAVES LOCALES SOTO SYSTEM: Mapeo de montos reales capturados arriba
+            const nuevoMovementoContable = {
                 ref: refFactura,
-                hora: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }),
+                hora: horaFormateadaFija, // 📅 Inyectamos la hora formateada regional sin desfases
                 cedula: cedulaCliente,
-                // Mapeamos los nombres y cantidades para la Extensión I (Historial Detallado)
                 productos: carritoProductos.map(p => `${p.cantidad}x ${p.nombre}`).join(', ') || "Víveres Generales Bodega",
-                metodo: metodoFinalLabel, // Guarda: "PAGO_MOVIL", "BIOPAGO_BDV" o "PUNTO (UBII)", "PUNTO (DEBITO)", etc.
+                metodo: metodoFinalLabel, 
                 montoBs: totalBs,
                 montoUsd: totalUsd,
-                // Inyectamos el soporte auditado de Pago Móvil con el banco y los 4 dígitos
+                valorBsReal: totalBs,
+                valorUsdReal: totalUsd,
                 detallesPagoMovil: tx.soportePagoMovil || null
             };
 
