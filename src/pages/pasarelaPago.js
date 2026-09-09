@@ -77,13 +77,17 @@ const PasarelaPago = {
             metodoFinalLabel = `PUNTO (${tx.subTipoTarjeta})`;
         }
 
-        // 📅 FORMATO DE HORA CORREGIDO: Captura la hora física de tu laptop al milisegundo
+                // 📅 FORMATO DE HORA MILITAR REGIONAL VEN: Sincronización exacta con el reloj real de la laptop
         const ahora = new Date();
         let horas = ahora.getHours();
         const minutos = String(ahora.getMinutes()).padStart(2, '0');
+        
+        // Evaluamos de forma manual el AM/PM para destruir cualquier desfase de Node
         const ampm = horas >= 12 ? 'PM' : 'AM';
+        
+        // Conversión estricta a formato de 12 horas
         horas = horas % 12;
-        horas = horas ? horas : 12; // El cero serán las 12
+        horas = horas ? horas : 12; // Si es 0, lo transformamos en 12
         const horaFormateadaFija = `${String(horas).padStart(2, '0')}:${minutos} ${ampm}`;
 
         // 🎯 DISPARADOR CLOUD INTEGRADO SOTO SYSTEM: Sincronización exacta con las llaves de Django Views
